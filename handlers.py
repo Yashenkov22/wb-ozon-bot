@@ -507,7 +507,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
     msg: types.Message = data.get('msg')
 
     async with aiohttp.ClientSession() as aiosession:
-        _url = f"http://localhost:1435/pickUpPoint/{lat}/{lon}"
+        _url = f"http://172.17.0.2:1435/pickUpPoint/{lat}/{lon}"
         response = await aiosession.get(url=_url)
 
         res = await response.json()
