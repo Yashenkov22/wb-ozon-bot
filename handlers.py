@@ -518,7 +518,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         del_zone = deliveryRegions[-1]
 
-        _url = f"http://localhost:1435/product/{del_zone}/{product_id}"
+        _url = f"https://127.0.0.1:1435/product/{del_zone}/{product_id}"
         response = await aiosession.get(url=_url)
         res = await response.json()
 
