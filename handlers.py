@@ -219,7 +219,7 @@ async def list_product(callback: types.Message | types.CallbackQuery,
         
 
 @main_router.message(OzonProduct.product)
-async def proccess_lat(message: types.Message | types.CallbackQuery,
+async def proccess_product(message: types.Message | types.CallbackQuery,
                         state: FSMContext,
                         bot: Bot):
     data = await state.get_data()
@@ -230,7 +230,7 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
 
     _kb = create_or_add_cancel_btn(_kb)
 
-    await message.answer('beginning')
+    # await message.answer('beginning')
     try:
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
@@ -257,7 +257,7 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
                         if q.find(k) != -1:
                             name, price = q.split(':')
                             price = price.replace('\\', '').replace('"', '')
-                            price = price.split()[0]
+                            price = price.split()[:-1]
                             print(price)
                             _d[k] = price
                             break
