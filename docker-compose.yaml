@@ -19,8 +19,8 @@ services:
     # depends_on:
     #   - ngrok
     command: sh -c 'python main.py'
-    networks:
-      - bot_network
+    # networks:
+    #   - bot_network
       # - redis_network
     logging:
       driver: "json-file"
@@ -45,11 +45,11 @@ services:
   #     options:
   #         max-size: "20m"
 
-networks:
-  bot_network:
-    name: django_fastapi_common-network
-    external: true
-  redis_network:
+# networks:
+#   bot_network:
+#     name: django_fastapi_common-network
+#     external: true
+#   redis_network:
 
 # volumes:
 #   redis_tg_bot_data:
