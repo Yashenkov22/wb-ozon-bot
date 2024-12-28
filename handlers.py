@@ -37,12 +37,12 @@ start_text = '💱<b>Добро пожаловать в MoneySwap!</b>\n\nНаш
 moscow_tz = pytz.timezone('Europe/Moscow')
 
 
-import logging
+# import logging
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
-logger.info("Это информационное сообщение")
+# logger.info("Это информационное сообщение")
 
 
 @main_router.message(Command('start'))
@@ -50,7 +50,7 @@ async def start(message: types.Message | types.CallbackQuery,
                 state: FSMContext,
                 bot: Bot):
     
-    logger.info('hi')
+    # logger.info('hi')
     
     await state.update_data(action=None)
 
@@ -234,7 +234,7 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
     try:
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
-            _url = f"http://5.61.53.235:1441/product/{message.text}"
+            _url = f"http://ozonapi_container:1441/product/{message.text}"
 
             response = await aiosession.get(url=_url)
 
@@ -297,7 +297,8 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
             
         await message.delete()
     except Exception as ex:
-        logger.info(ex)
+        # logger.info(ex)
+        pass
 
 
 @main_router.callback_query(F.data.startswith('done'))
@@ -523,7 +524,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
     print('beginning')
 
     async with aiohttp.ClientSession() as aiosession:
-        _url = f"http://172.17.0.2:8080/pickUpPoint/{lat}/{lon}"
+        _url = f"http://wildberriesapi_container:1435/pickUpPoint/{lat}/{lon}"
         response = await aiosession.get(url=_url)
 
         res = await response.json()
@@ -534,7 +535,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         del_zone = deliveryRegions[-1]
 
-        _url = f"http://172.17.0.2:8080/product/{del_zone}/{product_id}"
+        _url = f"http://wildberriesapi_container:1435/product/{del_zone}/{product_id}"
         response = await aiosession.get(url=_url)
         res = await response.json()
 
