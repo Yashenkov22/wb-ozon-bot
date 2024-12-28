@@ -37,10 +37,20 @@ start_text = '💱<b>Добро пожаловать в MoneySwap!</b>\n\nНаш
 moscow_tz = pytz.timezone('Europe/Moscow')
 
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+logger.info("Это информационное сообщение")
+
+
 @main_router.message(Command('start'))
 async def start(message: types.Message | types.CallbackQuery,
                 state: FSMContext,
                 bot: Bot):
+    
+    logger.info('hi')
     
     await state.update_data(action=None)
 
@@ -287,7 +297,7 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
             
         await message.delete()
     except Exception as ex:
-        print(ex)
+        logger.info(ex)
 
 
 @main_router.callback_query(F.data.startswith('done'))
