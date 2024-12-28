@@ -257,7 +257,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                         if q.find(k) != -1:
                             name, price = q.split(':')
                             price = price.replace('\\', '').replace('"', '')
-                            price = price.split()[:-1]
+                            price = float(''.join(price.split()[:-1]))
                             print(price)
                             _d[k] = price
                             break
