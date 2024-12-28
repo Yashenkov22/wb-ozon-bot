@@ -221,7 +221,7 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
 
     async with aiohttp.ClientSession() as aiosession:
         # _url = f"http://5.61.53.235:1441/product/{message.text}"
-        _url = f"http://localhost:1441/product/{message.text}"
+        _url = f"http://172.18.0.4:1441/product/{message.text}"
 
         response = await aiosession.get(url=_url)
 
@@ -518,7 +518,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         del_zone = deliveryRegions[-1]
 
-        _url = f"http://127.0.0.1:1435/product/{del_zone}/{product_id}"
+        _url = f"http://172.17.0.2:1435/product/{del_zone}/{product_id}"
         response = await aiosession.get(url=_url)
         res = await response.json()
 
