@@ -234,7 +234,7 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
     try:
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
-            _url = f"http://ozonapi_container:1441/product/{message.text}"
+            _url = f"http://172.18.0.4:8080/product/{message.text}"
 
             response = await aiosession.get(url=_url)
 
@@ -524,7 +524,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
     print('beginning')
 
     async with aiohttp.ClientSession() as aiosession:
-        _url = f"http://wildberriesapi_container:1435/pickUpPoint/{lat}/{lon}"
+        _url = f"http://172.18.0.2:8080/pickUpPoint/{lat}/{lon}"
         response = await aiosession.get(url=_url)
 
         res = await response.json()
@@ -535,7 +535,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         del_zone = deliveryRegions[-1]
 
-        _url = f"http://wildberriesapi_container:1435/product/{del_zone}/{product_id}"
+        _url = f"http://172.18.0.2:8080/product/{del_zone}/{product_id}"
         response = await aiosession.get(url=_url)
         res = await response.json()
 
