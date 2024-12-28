@@ -220,7 +220,9 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
     _kb = create_or_add_cancel_btn(_kb)
 
     async with aiohttp.ClientSession() as aiosession:
-        _url = f"http://5.61.53.235:1441/product/{message.text}"
+        # _url = f"http://5.61.53.235:1441/product/{message.text}"
+        _url = f"http://localhost:1441/product/{message.text}"
+
         response = await aiosession.get(url=_url)
 
         res = await response.text()
@@ -505,7 +507,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
     msg: types.Message = data.get('msg')
 
     async with aiohttp.ClientSession() as aiosession:
-        _url = f"http://localhost:8000/pickUpPoint/{lat}/{lon}"
+        _url = f"http://localhost:1435/pickUpPoint/{lat}/{lon}"
         response = await aiosession.get(url=_url)
 
         res = await response.json()
@@ -516,7 +518,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         del_zone = deliveryRegions[-1]
 
-        _url = f"http://localhost:8000/product/{del_zone}/{product_id}"
+        _url = f"http://localhost:1435/product/{del_zone}/{product_id}"
         response = await aiosession.get(url=_url)
         res = await response.json()
 
