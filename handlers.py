@@ -42,7 +42,6 @@ async def start(message: types.Message | types.CallbackQuery,
                 state: FSMContext,
                 bot: Bot):
     
-    print('start')
     await state.update_data(action=None)
 
     if isinstance(message, types.CallbackQuery):
@@ -220,6 +219,8 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
     _kb = create_done_kb(marker='ozon_product')
 
     _kb = create_or_add_cancel_btn(_kb)
+
+    await message.answer('beginning')
 
     async with aiohttp.ClientSession() as aiosession:
         # _url = f"http://5.61.53.235:1441/product/{message.text}"
