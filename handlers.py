@@ -224,7 +224,7 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
     try:
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
-            _url = f"http://172.18.0.4:8080/product/{message.text}"
+            _url = f"http://5.61.53.235:1441/product/{message.text}"
 
             response = await aiosession.get(url=_url)
 
