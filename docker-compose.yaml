@@ -13,9 +13,8 @@ services:
     build: .
     env_file:
       - ./.env
-    container_name: send_bot
     ports:
-      - '8002:8002'
+      - '8004:8004'
     # depends_on:
     #   - ngrok
     command: sh -c 'python main.py'
