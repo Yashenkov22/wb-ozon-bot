@@ -41,6 +41,8 @@ moscow_tz = pytz.timezone('Europe/Moscow')
 async def start(message: types.Message | types.CallbackQuery,
                 state: FSMContext,
                 bot: Bot):
+    
+    print('start')
     await state.update_data(action=None)
 
     if isinstance(message, types.CallbackQuery):
