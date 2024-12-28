@@ -221,72 +221,73 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
     _kb = create_or_add_cancel_btn(_kb)
 
     await message.answer('beginning')
+    try:
+        async with aiohttp.ClientSession() as aiosession:
+            # _url = f"http://5.61.53.235:1441/product/{message.text}"
+            _url = f"http://172.18.0.4:8080/product/{message.text}"
 
-    async with aiohttp.ClientSession() as aiosession:
-        # _url = f"http://5.61.53.235:1441/product/{message.text}"
-        _url = f"http://172.18.0.4:8080/product/{message.text}"
+            response = await aiosession.get(url=_url)
 
-        response = await aiosession.get(url=_url)
+            res = await response.text()
 
-        res = await response.text()
+            w = re.findall(r'\"cardPrice.*currency?', res)
+            print(w)
 
-        w = re.findall(r'\"cardPrice.*currency?', res)
-        print(w)
+            w = w[0].split(',')[:3]
 
-        w = w[0].split(',')[:3]
+            _d = {
+                'price': None,
+                'originalPrice': None,
+                'cardPrice': None,
+            }
 
-        _d = {
-            'price': None,
-            'originalPrice': None,
-            'cardPrice': None,
-        }
+            for k in _d:
+                if not all(v for v in _d.values()):
+                    for q in w:
+                        if q.find(k) != -1:
+                            name, price = q.split(':')
+                            price = price.replace('\\', '').replace('"', '')
+                            price = price.split()[0]
+                            print(price)
+                            _d[k] = price
+                            break
+                else:
+                    break
 
-        for k in _d:
-            if not all(v for v in _d.values()):
-                for q in w:
-                    if q.find(k) != -1:
-                        name, price = q.split(':')
-                        price = price.replace('\\', '').replace('"', '')
-                        price = price.split()[0]
-                        print(price)
-                        _d[k] = price
-                        break
-            else:
-                break
+            print(_d)
 
-        print(_d)
-
-        price_text = '|'.join(str(v) for v in _d.items())
+            price_text = '|'.join(str(v) for v in _d.items())
 
 
-        # for q in w:
-        #     # print(q)
-        #     for k in _d:
-        #         if q.find(k) != -1:
-        #             name, price = q.split(':')
-        #             price = price.replace('\\', '').replace('"', '')
-        #             print(price)
-        #             break
-# {\"isAvailable\":true, \"cardPrice\":\"177 ₽\", \"price\":\"179 ₽\", \"originalPrice\":\"469 ₽\",
+            # for q in w:
+            #     # print(q)
+            #     for k in _d:
+            #         if q.find(k) != -1:
+            #             name, price = q.split(':')
+            #             price = price.replace('\\', '').replace('"', '')
+            #             print(price)
+            #             break
+    # {\"isAvailable\":true, \"cardPrice\":\"177 ₽\", \"price\":\"179 ₽\", \"originalPrice\":\"469 ₽\",
 
-        # print(res)
+            # print(res)
 
-    _text = f'Ваш продукт\n{message.text}\nЦена продукта: {price_text}'
+        _text = f'Ваш продукт\n{message.text}\nЦена продукта: {price_text}'
 
-    await state.update_data(ozon_product=message.text)
+        await state.update_data(ozon_product=message.text)
 
-    if msg:
-        await bot.edit_message_text(text=_text,
-                                    chat_id=message.chat.id,
-                                    message_id=msg.message_id,
-                                    reply_markup=_kb.as_markup())
-    else:
-        await bot.send_message(chat_id=message.chat.id,
-                               text=_text,
-                               reply_markup=_kb.as_markup())
-        
-    await message.delete()
-    
+        if msg:
+            await bot.edit_message_text(text=_text,
+                                        chat_id=message.chat.id,
+                                        message_id=msg.message_id,
+                                        reply_markup=_kb.as_markup())
+        else:
+            await bot.send_message(chat_id=message.chat.id,
+                                text=_text,
+                                reply_markup=_kb.as_markup())
+            
+        await message.delete()
+    except Exception as ex:
+        print(ex)
 
 
 @main_router.callback_query(F.data.startswith('done'))
