@@ -1,6 +1,8 @@
 services:
   ngrok:
     image: ngrok/ngrok:latest
+    networks:
+      - ngrok_network
     volumes:
       - ./ngrok.yml:/etc/ngrok.yml
     command:
@@ -21,7 +23,7 @@ services:
     command: sh -c 'python main.py'
     networks:
       - bot_network
-      # - redis_network
+      - ngrok_network
     logging:
       driver: "json-file"
       options:
@@ -49,7 +51,7 @@ networks:
   bot_network:
     name: local_network
     external: true
-#   redis_network:
+  ngrok_network:
 
 # volumes:
 #   redis_tg_bot_data:
