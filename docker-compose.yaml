@@ -1,13 +1,13 @@
 services:
-  # ngrok:
-  #   image: ngrok/ngrok:latest
-  #   volumes:
-  #     - ./ngrok.yml:/etc/ngrok.yml
-  #   command:
-  #     - "start"
-  #     - "--all"
-  #     - "--config"
-  #     - "/etc/ngrok.yml"
+  ngrok:
+    image: ngrok/ngrok:latest
+    volumes:
+      - ./ngrok.yml:/etc/ngrok.yml
+    command:
+      - "start"
+      - "--all"
+      - "--config"
+      - "/etc/ngrok.yml"
   
   bot:
     build: .

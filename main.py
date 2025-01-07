@@ -35,7 +35,7 @@ from config import (TOKEN,
 from handlers import main_router
 
 #TG BOT
-# bot = Bot(TOKEN, parse_mode="HTML")
+bot = Bot(TOKEN, parse_mode="HTML")
 
 # #####
 # # api_client = Client('my_account',
@@ -43,41 +43,41 @@ from handlers import main_router
 # #                     api_hash=API_HASH)
 # #####
 
-# dp = Dispatcher()
-# dp.include_router(main_router)
+dp = Dispatcher()
+dp.include_router(main_router)
 
 # #Add session and database connection in handlers 
 # dp.update.middleware(DbSessionMiddleware(session_pool=session))
 
 # #Initialize web server
-# app = FastAPI(docs_url='/docs_send')
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-# event_loop = asyncio.get_event_loop()
-# config = Config(app=app,
-#                 loop=event_loop,
-#                 host='0.0.0.0',
-#                 port=8002)
-# server = Server(config)
+app = FastAPI(docs_url='/docs_send')
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+event_loop = asyncio.get_event_loop()
+config = Config(app=app,
+                loop=event_loop,
+                host='0.0.0.0',
+                port=8001)
+server = Server(config)
 
 
 # fast_api_router = APIRouter(prefix='/bot_api')
 # # app.include_router(fast_api_router)
 
 # #For set webhook
-# WEBHOOK_PATH = f'/webhook_send'
+WEBHOOK_PATH = f'/webhook_'
 
 # #Set webhook and create database on start
-# @app.on_event('startup')
-# async def on_startup():
-#     await bot.set_webhook(f"{PUBLIC_URL}{WEBHOOK_PATH}",
-#                           drop_pending_updates=True,
-#                           allowed_updates=['message', 'callback_query'])
+@app.on_event('startup')
+async def on_startup():
+    await bot.set_webhook(f"{PUBLIC_URL}{WEBHOOK_PATH}",
+                          drop_pending_updates=True,
+                          allowed_updates=['message', 'callback_query'])
     
 #     # Base.prepare(engine, reflect=True)
 
@@ -89,10 +89,10 @@ from handlers import main_router
 
 
 # #Endpoint for incoming updates
-# @app.post(WEBHOOK_PATH)
-# async def bot_webhook(update: dict):
-#     tg_update = types.Update(**update)
-#     await dp.feed_update(bot=bot, update=tg_update)
+@app.post(WEBHOOK_PATH)
+async def bot_webhook(update: dict):
+    tg_update = types.Update(**update)
+    await dp.feed_update(bot=bot, update=tg_update)
 
 
 # @app.get('/send_to_tg_group')
@@ -147,8 +147,8 @@ from handlers import main_router
     ###
 
 
-async def main():
-    bot = Bot(TOKEN, parse_mode="HTML")
+# async def main():
+#     bot = Bot(TOKEN, parse_mode="HTML")
     # w = await bot.get_my_commands()
     # print(w)
     # await bot.set_my_commands([
@@ -164,8 +164,8 @@ async def main():
 
 
 
-    dp = Dispatcher()
-    dp.include_router(main_router)
+    # dp = Dispatcher()
+    # dp.include_router(main_router)
     # dp.update.middleware(DbSessionMiddleware(session_pool=session))
 
     # engine = create_engine(db_url,
@@ -174,13 +174,13 @@ async def main():
     # Base.prepare(engine, reflect=True)
     
 
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+    # await bot.delete_webhook(drop_pending_updates=True)
+    # await dp.start_polling(bot)
     # await event_loop.run_until_complete(server.serve())
     # uvicorn.run('main:app', host='0.0.0.0', port=8001)
 
 
-if __name__ == '__main__':
-    asyncio.run(main())
 # if __name__ == '__main__':
-#     event_loop.run_until_complete(server.serve())
+#     asyncio.run(main())
+if __name__ == '__main__':
+    event_loop.run_until_complete(server.serve())
