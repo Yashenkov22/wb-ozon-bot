@@ -23,7 +23,7 @@ from aiogram.fsm.storage.redis import RedisStorage
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-# from db.base import engine, session, Base
+from db.base import engine, session, Base
 
 from middlewares.db import DbSessionMiddleware
 
@@ -51,7 +51,8 @@ dp.include_router(main_router)
 scheduler = AsyncIOScheduler()
 
 # #Add session and database connection in handlers 
-dp.update.middleware(DbSessionMiddleware(scheduler=scheduler))
+dp.update.middleware(DbSessionMiddleware(session_pool=session,
+                                         scheduler=scheduler))
 
 # #Initialize web server
 app = FastAPI(docs_url='/docs_send')
@@ -76,12 +77,21 @@ server = Server(config)
 # #For set webhook
 WEBHOOK_PATH = f'/webhook_'
 
+
+
+async def init_db():
+    async with engine.begin() as conn:
+        # Создаем таблицы
+        await conn.run_sync(Base.metadata.create_all)
+
 # #Set webhook and create database on start
 @app.on_event('startup')
 async def on_startup():
     await bot.set_webhook(f"{PUBLIC_URL}{WEBHOOK_PATH}",
                           drop_pending_updates=True,
                           allowed_updates=['message', 'callback_query'])
+    
+    await init_db()
     
 #     # Base.prepare(engine, reflect=True)
 

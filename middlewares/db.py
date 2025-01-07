@@ -6,14 +6,16 @@ from aiogram.types import TelegramObject
 from pyrogram import Client
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-# from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncEngine
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncEngine
 from sqlalchemy.orm import sessionmaker
 
 
 class DbSessionMiddleware(BaseMiddleware):
     def __init__(self,
+                 session_pool: async_sessionmaker,
                  scheduler: AsyncIOScheduler):
         super().__init__()
+        self.session_pool = session_pool
         self.scheduler = scheduler
         # self.api_client = api_client
         # self.engine = engine
@@ -25,8 +27,8 @@ class DbSessionMiddleware(BaseMiddleware):
             data: Dict[str, Any],
     ) -> Any:
 
-        # with self.session_pool() as session:
-        #     data["session"] = session
+        async with self.session_pool() as session:
+            data["session"] = session
 
         data['scheduler'] = self.scheduler
         

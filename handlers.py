@@ -17,6 +17,8 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.orm import Session, joinedload, sessionmaker
 from sqlalchemy import insert, select, update, or_
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config import BEARER_TOKEN, FEEDBACK_REASON_PREFIX
@@ -29,7 +31,7 @@ from keyboards import (create_start_kb,
                        create_bot_start_kb)
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
-from utils.handlers import save_data_to_storage
+from utils.handlers import save_data_to_storage, check_user
 
 
 main_router = Router()
@@ -50,14 +52,17 @@ moscow_tz = pytz.timezone('Europe/Moscow')
 @main_router.message(Command('start'))
 async def start(message: types.Message | types.CallbackQuery,
                 state: FSMContext,
+                session: AsyncSession,
                 bot: Bot,
                 scheduler: AsyncIOScheduler):
     
+    await check_user(message,
+                     session)
+    
     # logger.info('hi')
-    print(scheduler)
-    print(type(scheduler))
-    scheduler.print_jobs()
-
+    # print(scheduler)
+    # print(type(scheduler))
+    # scheduler.print_jobs()
     
     await state.update_data(action=None)
 
@@ -77,7 +82,7 @@ async def start(message: types.Message | types.CallbackQuery,
 @main_router.callback_query(F.data == 'cancel')
 async def callback_cancel(callback: types.Message | types.CallbackQuery,
                             state: FSMContext,
-                            bot: Bot):
+                            bot: Bot,):
     # await start(callback,
     #             state,
     #             bot)
@@ -93,16 +98,22 @@ async def callback_cancel(callback: types.Message | types.CallbackQuery,
 
 async def to_back(callback: types.Message | types.CallbackQuery,
                     state: FSMContext,
-                    bot: Bot):
+                    session: AsyncSession,
+                    bot: Bot,
+                    scheduler: AsyncIOScheduler):
     await start(callback,
                 state,
-                bot)
+                session,
+                bot,
+                scheduler)
     
 
 @main_router.callback_query(F.data == 'to_main')
 async def callback_cancel(callback: types.Message | types.CallbackQuery,
                             state: FSMContext,
-                            bot: Bot):
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
     # callback_data = callback.data.split('_')[-1]
 
     # await redirect_to_(callback,
@@ -111,7 +122,9 @@ async def callback_cancel(callback: types.Message | types.CallbackQuery,
     #               marker='wb')
     await start(callback,
                 state,
-                bot)
+                session,
+                bot,
+                scheduler)
     # await start(callback,
     #             state,
     #             bot)
@@ -183,7 +196,7 @@ async def add_product(callback: types.Message | types.CallbackQuery,
     data = await state.get_data()
 
     msg: types.Message = data.get('msg')
-    _text = 'Введите идентификатор продукта\nПример : spetsialnoe-chistyashchee-sredstvo-dlya-posudomoechnoy-mashiny-intensivnyy-ochistitel-somat-intensve-1594468872/?avtc=1&avte=4&avts=1735371267'
+    _text = 'Отправьте ссылку на товар'
 
     _kb = create_or_add_cancel_btn()
 
@@ -228,6 +241,7 @@ async def list_product(callback: types.Message | types.CallbackQuery,
 @main_router.message(OzonProduct.product)
 async def proccess_product(message: types.Message | types.CallbackQuery,
                         state: FSMContext,
+                        session: AsyncSession,
                         bot: Bot):
     data = await state.get_data()
 
@@ -237,11 +251,19 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     _kb = create_or_add_cancel_btn(_kb)
 
+    ozon_link = message.text
+
+    _prefix = 'product/'
+
+    _idx = ozon_link.rfind('product/')
+
+    product_id = ozon_link[(_idx + len(_prefix)):]
+
     # await message.answer('beginning')
     try:
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
-            _url = f"http://172.18.0.4:8080/product/{message.text}"
+            _url = f"http://172.18.0.4:8080/product/{product_id}"
 
             response = await aiosession.get(url=_url)
 
@@ -311,7 +333,9 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 @main_router.callback_query(F.data.startswith('done'))
 async def callback_done(callback: types.Message | types.CallbackQuery,
                     state: FSMContext,
-                    bot: Bot):
+                    session: AsyncSession,
+                    bot: Bot,
+                    scheduler: AsyncIOScheduler):
     data = await state.get_data()
 
     action = data.get('action')
@@ -361,7 +385,9 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
                           show_alert=True)
     await start(callback,
                 state,
-                bot)
+                session,
+                bot,
+                scheduler)
 
 
 @main_router.callback_query(F.data == 'add_punkt')

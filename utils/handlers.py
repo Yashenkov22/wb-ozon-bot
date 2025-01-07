@@ -1,10 +1,12 @@
+from datetime import datetime
+
 from aiogram import types, Bot
 from aiogram.fsm.context import FSMContext
 
-# from sqlalchemy import update
-# from sqlalchemy.orm import Session
+from sqlalchemy import update, select, and_, or_, insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# # from db.base import Base
+from db.base import User
 
 
 async def save_data_to_storage(callback: types.CallbackQuery,
@@ -33,6 +35,50 @@ async def save_data_to_storage(callback: types.CallbackQuery,
     return _text
 
 
+async def add_user(message: types.Message,
+                   session: AsyncSession):
+    data = {
+        'tg_id': message.from_user.id,
+        'username': message.from_user.username,
+        'first_name': message.from_user.first_name,
+        'last_name': message.from_user.last_name,
+        'time_create': datetime.now(),
+    }
+
+    query = (
+        insert(
+            User
+        )\
+        .values(**data)
+    )
+    try:
+        await session.execute(query)
+        await session.commit()
+    except Exception as ex:
+        print(ex)
+        await session.rollback()
+    else:
+        print('user added')
+        return True
+
+
+async def check_user(message: types.Message,
+                     session: AsyncSession):
+    async with session as session:
+        query = (
+            select(User)\
+            .where(User.tg_id == message.from_user.id)
+        )
+    
+        res = await session.execute(query)
+
+        res = res.scalar_one_or_none()
+
+        if res:
+            return True
+        else:
+            return await add_user(message,
+                                    session)
 
 
 # async def try_add_file_ids_to_db(message: types.Message,
