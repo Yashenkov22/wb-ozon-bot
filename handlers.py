@@ -17,6 +17,8 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.orm import Session, joinedload, sessionmaker
 from sqlalchemy import insert, select, update, or_
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 from config import BEARER_TOKEN, FEEDBACK_REASON_PREFIX
 
 from keyboards import (create_start_kb,
@@ -48,9 +50,14 @@ moscow_tz = pytz.timezone('Europe/Moscow')
 @main_router.message(Command('start'))
 async def start(message: types.Message | types.CallbackQuery,
                 state: FSMContext,
-                bot: Bot):
+                bot: Bot,
+                scheduler: AsyncIOScheduler):
     
     # logger.info('hi')
+    print(scheduler)
+    print(type(scheduler))
+    scheduler.print_jobs()
+
     
     await state.update_data(action=None)
 

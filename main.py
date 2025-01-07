@@ -10,6 +10,8 @@ from uvicorn import Config, Server
 
 from pyrogram import Client
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 from starlette.middleware.cors import CORSMiddleware
 
 from fastapi import FastAPI, APIRouter
@@ -46,8 +48,10 @@ bot = Bot(TOKEN, parse_mode="HTML")
 dp = Dispatcher()
 dp.include_router(main_router)
 
+scheduler = AsyncIOScheduler()
+
 # #Add session and database connection in handlers 
-# dp.update.middleware(DbSessionMiddleware(session_pool=session))
+dp.update.middleware(DbSessionMiddleware(scheduler=scheduler))
 
 # #Initialize web server
 app = FastAPI(docs_url='/docs_send')
