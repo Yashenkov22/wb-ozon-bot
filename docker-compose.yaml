@@ -73,5 +73,5 @@ networks:
     external: true
   ngrok_network:
 
-# volumes:
-#   redis_tg_bot_data:
+volumes:
+  postgres-data:
