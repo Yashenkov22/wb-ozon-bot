@@ -98,7 +98,7 @@ async def on_startup():
                           drop_pending_updates=True,
                           allowed_updates=['message', 'callback_query'])
     
-    await init_db()
+    # await init_db()
     
 #     # Base.prepare(engine, reflect=True)
 

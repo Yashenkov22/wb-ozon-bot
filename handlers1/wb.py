@@ -35,7 +35,6 @@ from states import SwiftSepaStates, ProductStates, OzonProduct
 from utils.handlers import save_data_to_storage, check_user
 
 from db.base import WbProduct, WbPunkt, User
-# from .base import redirect_to_
 
 
 wb_router = Router()

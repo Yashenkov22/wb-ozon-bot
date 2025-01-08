@@ -33,6 +33,7 @@ from keyboards import (create_start_kb,
 from states import SwiftSepaStates, ProductStates, OzonProduct
 from utils.handlers import save_data_to_storage, check_user
 
+from db.base import OzonProduct as OzonProductModel, User
 # from .base import start
 
 
@@ -171,3 +172,23 @@ async def list_product(callback: types.Message | types.CallbackQuery,
     else:
         await callback.answer(text='Нет добавленных Ozon товаров',
                               show_alert=True)
+
+
+@ozon_router.message(F.text == 'test_ozon_pr')
+async def test_db_ozon(message: types.Message,
+                       session: AsyncSession):
+    user_id = message.from_user.id
+
+    query = (
+        select(OzonProductModel)\
+        .join(User,
+              OzonProductModel.user_id == User.id)\
+        .where(User.id == user_id)
+    )
+
+    ozon_product = await session.execute(query)
+
+    ozon_product = ozon_product.scalar_one_or_none()
+
+    if ozon_product:
+        await message.answer(f'{ozon_product.__dict__}')
