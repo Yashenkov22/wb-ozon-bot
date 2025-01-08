@@ -83,24 +83,24 @@ async def test_db_ozon(message: types.Message,
     user_id = message.from_user.id
 
     query = (
-        select(OzonProductModel)\
+        select(OzonProductModel.link)\
         .join(User,
               OzonProductModel.user_id == User.tg_id)\
         .where(User.tg_id == user_id)
     )
-    async with session as session:
-        ozon_product = await session.execute(query)
+    # async with session as session:
+    ozon_product = await session.execute(query)
 
-        ozon_product = ozon_product.scalars().all()
+    ozon_product = ozon_product.scalar_one_or_none()
 
-        ozon_product = ozon_product[0]
+    # ozon_product = ozon_product[0]
 
-        print('ozon product', ozon_product.user_id, ozon_product.user, ozon_product.link)
+    # print('ozon product', ozon_product.user_id, ozon_product.user, ozon_product.link)
 
-        if ozon_product:
-            await message.answer(f'привет {ozon_product.user_id}, {ozon_product.user}, {ozon_product.link}, {ozon_product.actual_price}')
-        else:
-            await message.answer('не получилось')
+    if ozon_product:
+        await message.answer(f'привет {ozon_product}')
+    else:
+        await message.answer('не получилось')
 
 
 @main_router.callback_query(F.data.startswith('bot'))
