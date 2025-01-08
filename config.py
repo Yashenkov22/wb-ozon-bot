@@ -19,19 +19,18 @@ PUBLIC_URL = os.environ.get('PUBLIC_URL')
 #DATABASE
 DB_USER = os.environ.get('DB_USER')
 DB_PASS = os.environ.get('DB_PASS')
-DB_HOST = os.environ.get('DB_HOST')
+POSTGRES_HOST = os.environ.get('DB_HOST')
 DB_PORT = os.environ.get('DB_PORT')
 DB_NAME = os.environ.get('DB_NAME')
-
 
 PGBOUNCER_HOST = os.environ.get('PGBOUNCER_HOST')
 
 
 db_url = URL.create(
-    'postgresql+psycopg2',
+    'postgresql+asyncpg',
     username=DB_USER,
     password=DB_PASS,
-    host=PGBOUNCER_HOST,
+    host=POSTGRES_HOST,
     port=DB_PORT,
     database=DB_NAME,
 )
