@@ -174,23 +174,23 @@ async def list_product(callback: types.Message | types.CallbackQuery,
                               show_alert=True)
 
 
-@ozon_router.message(F.text == 'test_ozon_pr')
-async def test_db_ozon(message: types.Message,
-                       session: AsyncSession):
-    user_id = message.from_user.id
+# @ozon_router.message(F.text == 'test_ozon_pr')
+# async def test_db_ozon(message: types.Message,
+#                        session: AsyncSession):
+#     user_id = message.from_user.id
 
-    query = (
-        select(OzonProductModel)\
-        .join(User,
-              OzonProductModel.user_id == User.id)\
-        .where(User.id == user_id)
-    )
+#     query = (
+#         select(OzonProductModel)\
+#         .join(User,
+#               OzonProductModel.user_id == User.id)\
+#         .where(User.id == user_id)
+#     )
 
-    ozon_product = await session.execute(query)
+#     ozon_product = await session.execute(query)
 
-    ozon_product = ozon_product.scalar_one_or_none()
+#     ozon_product = ozon_product.scalar_one_or_none()
 
-    print('ozon product', ozon_product)
+#     print('ozon product', ozon_product)
 
-    if ozon_product:
-        await message.answer(f'привет {ozon_product.user_id}, {ozon_product.user}, {ozon_product.link}, {ozon_product.actual_price}')
+#     if ozon_product:
+#         await message.answer(f'привет {ozon_product.user_id}, {ozon_product.user}, {ozon_product.link}, {ozon_product.actual_price}')
