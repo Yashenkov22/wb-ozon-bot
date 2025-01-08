@@ -153,6 +153,7 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
 
     _text = await save_data_to_storage(callback,
                                         state,
+                                        session,
                                         callback_data)
     
     await callback.answer(text=_text,
