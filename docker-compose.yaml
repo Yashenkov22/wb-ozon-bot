@@ -48,7 +48,6 @@ services:
     # command: postgres -c max_connections=100 -c shared_buffers=2GB -c work_mem=16MB -c maintenance_work_mem=512MB -c effective_cache_size=6GB
     logging:
       driver: "json-file"
-      options:
 
   # redis_tg_bot_db:
   #   image: redis:alpine
