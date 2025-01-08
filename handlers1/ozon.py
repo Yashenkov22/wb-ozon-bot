@@ -191,4 +191,4 @@ async def test_db_ozon(message: types.Message,
     ozon_product = ozon_product.scalar_one_or_none()
 
     if ozon_product:
-        await message.answer(f'{ozon_product.__dict__}')
+        await message.answer(f'привет {ozon_product.user_id}, {ozon_product.user}, {ozon_product.link}, {ozon_product.actual_price}')
