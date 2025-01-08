@@ -50,9 +50,9 @@ bot = Bot(TOKEN, parse_mode="HTML")
 # #####
 
 dp = Dispatcher()
+dp.include_router(main_router)
 dp.include_router(wb_router)
 dp.include_router(ozon_router)
-dp.include_router(main_router)
 
 scheduler = AsyncIOScheduler()
 
