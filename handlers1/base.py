@@ -95,7 +95,8 @@ async def test_db_ozon(message: types.Message,
 
     if ozon_product:
         await message.answer(f'привет {ozon_product.user_id}, {ozon_product.user}, {ozon_product.link}, {ozon_product.actual_price}')
-
+    else:
+        await message.answer('не получилось')
 
 @main_router.callback_query(F.data.startswith('bot'))
 async def redirect_to_(callback: types.CallbackQuery,
