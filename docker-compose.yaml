@@ -36,8 +36,8 @@ services:
     restart: always
     networks:
       - bot_network
-    # ports:
-    #   - '5432:5432'
+    ports:
+      - '5432:5432'
     env_file:
       - ./.env
     cpus: '1.0'
