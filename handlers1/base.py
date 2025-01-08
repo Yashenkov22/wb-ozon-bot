@@ -83,7 +83,12 @@ async def test_db_ozon(message: types.Message,
     user_id = message.from_user.id
 
     query = (
-        select(OzonProductModel.link)\
+        select(
+            OzonProductModel.link,
+            OzonProductModel.actual_price,
+            OzonProductModel.basic_price,
+            OzonProductModel.time_create,
+            OzonProductModel.user_id)\
         .join(User,
               OzonProductModel.user_id == User.tg_id)\
         .where(User.tg_id == user_id)
@@ -91,14 +96,18 @@ async def test_db_ozon(message: types.Message,
     # async with session as session:
     ozon_product = await session.execute(query)
 
-    ozon_product = ozon_product.scalar_one_or_none()
+    ozon_product = ozon_product.fetchall()
+
+    ozon_product = ozon_product[0]
+
+    link, actual_price, basic_price, time_create, _user_id = ozon_product
 
     # ozon_product = ozon_product[0]
 
     # print('ozon product', ozon_product.user_id, ozon_product.user, ozon_product.link)
 
     if ozon_product:
-        await message.answer(f'привет {ozon_product}')
+        await message.answer(f'Привет {_user_id}\nТвой товар\n{link}\nОсновная цена: {basic_price}\nАктуальная цена: {actual_price}\nДата создания отслеживания: {time_create}')
     else:
         await message.answer('не получилось')
 
