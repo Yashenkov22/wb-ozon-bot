@@ -149,29 +149,63 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 @ozon_router.callback_query(F.data == 'list_product')
 async def list_product(callback: types.Message | types.CallbackQuery,
                         state: FSMContext,
+                        session: AsyncSession,
                         bot: Bot):
-    data = await state.get_data()
+    user_id = callback.from_user.id
 
-    _kb = create_or_add_cancel_btn()
+    query = (
+        select(
+            OzonProductModel.link,
+            OzonProductModel.actual_price,
+            OzonProductModel.basic_price,
+            OzonProductModel.time_create,
+            OzonProductModel.user_id)\
+        .join(User,
+              OzonProductModel.user_id == User.tg_id)\
+        .where(User.tg_id == user_id)
+    )
+    # async with session as session:
+    ozon_product = await session.execute(query)
 
-    msg = data.get('msg')
+    ozon_product = ozon_product.fetchall()
 
-    ozon_product = data.get('ozon_product')
+    ozon_product = ozon_product[0]
+
+    link, actual_price, basic_price, time_create, _user_id = ozon_product
+
+    # ozon_product = ozon_product[0]
+
+    # print('ozon product', ozon_product.user_id, ozon_product.user, ozon_product.link)
 
     if ozon_product:
-        _text = f'Ваш Ozon товар:\n{ozon_product}'
-        if msg:
-            await bot.edit_message_text(chat_id=callback.message.chat.id,
-                                        text=_text,
-                                        message_id=msg.message_id,
-                                        reply_markup=_kb.as_markup())
-        else:
-            await bot.send_message(chat_id=callback.message.chat.id,
-                                   text=_text,
-                                   reply_markup=_kb.as_markup())
+        _kb = create_or_add_cancel_btn()
+        await callback.message.edit_text(f'Привет {_user_id}\nТвой товар\n{link}\nОсновная цена: {basic_price}\nАктуальная цена: {actual_price}\nДата создания отслеживания: {time_create}',
+                                         reply_markup=_kb.as_markup())
     else:
-        await callback.answer(text='Нет добавленных Ozon товаров',
-                              show_alert=True)
+        await callback.answer('не получилось')
+
+    # data = await state.get_data()
+
+    # _kb = create_or_add_cancel_btn()
+
+    # msg = data.get('msg')
+
+    # ozon_product = data.get('ozon_product')
+
+    # if ozon_product:
+    #     _text = f'Ваш Ozon товар:\n{ozon_product}'
+    #     if msg:
+    #         await bot.edit_message_text(chat_id=callback.message.chat.id,
+    #                                     text=_text,
+    #                                     message_id=msg.message_id,
+    #                                     reply_markup=_kb.as_markup())
+    #     else:
+    #         await bot.send_message(chat_id=callback.message.chat.id,
+    #                                text=_text,
+    #                                reply_markup=_kb.as_markup())
+    # else:
+    #     await callback.answer(text='Нет добавленных Ozon товаров',
+    #                           show_alert=True)
 
 
 # @ozon_router.message(F.text == 'test_ozon_pr')

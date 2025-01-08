@@ -41,7 +41,7 @@ def create_bot_start_kb(marker: Literal['wb', 'ozon']):
     else:
         _kb.add(types.InlineKeyboardButton(text='Добавить товар',
                                            callback_data='add_product'))
-        _kb.add(types.InlineKeyboardButton(text='Посмотреть список товаров',
+        _kb.add(types.InlineKeyboardButton(text='Посмотреть товар',
                                            callback_data='list_product'))
 
     return _kb
