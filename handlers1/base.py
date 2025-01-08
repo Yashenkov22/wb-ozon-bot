@@ -86,7 +86,7 @@ async def test_db_ozon(message: types.Message,
         select(OzonProductModel)\
         .join(User,
               OzonProductModel.user_id == User.id)\
-        .where(User.id == user_id)
+        .where(User.tg_id == user_id)
     )
 
     ozon_product = await session.execute(query)

@@ -67,10 +67,11 @@ async def save_data_to_storage(callback: types.CallbackQuery,
 
             try:
                 await session.commit()
+                _text = 'Ozon товар успешно добавлен'
             except Exception as ex:
                 print(ex)
                 await session.rollback()
-            _text = 'Ozon товар успешно добавлен'
+                _text = 'Ozon товар не был добавлен'
             pass
         case 'wb_product':
         # if _basic_price and _product_price:
