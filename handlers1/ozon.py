@@ -169,6 +169,11 @@ async def list_product(callback: types.Message | types.CallbackQuery,
 
     ozon_product = ozon_product.fetchall()
 
+    if not ozon_product:
+        await callback.answer(text='Нет добавленных Ozon товаров',
+                              show_alert=True)
+        return
+
     ozon_product = ozon_product[0]
 
     link, actual_price, basic_price, time_create, _user_id = ozon_product
