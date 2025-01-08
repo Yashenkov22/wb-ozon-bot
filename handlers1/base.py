@@ -75,9 +75,11 @@ async def start(message: types.Message | types.CallbackQuery,
         print(ex)
 
 
-@main_router.message(F.text == 'test_ozon_pr')
+@main_router.message(Command('test_ozon_pr'))
 async def test_db_ozon(message: types.Message,
-                       session: AsyncSession):
+                       state: FSMContext,
+                       session: AsyncSession,
+                       bot: Bot):
     user_id = message.from_user.id
 
     query = (
