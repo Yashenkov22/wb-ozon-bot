@@ -34,7 +34,11 @@ from config import (TOKEN,
                     API_HASH,
                     REDIS_HOST,
                     REDIS_PASSWORD)
-from handlers import main_router
+# from handlers import main_router
+
+from handlers1.base import main_router
+from handlers1.ozon import ozon_router
+from handlers1.wb import wb_router
 
 #TG BOT
 bot = Bot(TOKEN, parse_mode="HTML")
@@ -46,6 +50,8 @@ bot = Bot(TOKEN, parse_mode="HTML")
 # #####
 
 dp = Dispatcher()
+dp.include_router(wb_router)
+dp.include_router(ozon_router)
 dp.include_router(main_router)
 
 scheduler = AsyncIOScheduler()
@@ -82,6 +88,7 @@ WEBHOOK_PATH = f'/webhook_'
 async def init_db():
     async with engine.begin() as conn:
         # Создаем таблицы
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
 # #Set webhook and create database on start

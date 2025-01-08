@@ -6,11 +6,12 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy import update, select, and_, or_, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.base import User
+from db.base import User, WbProduct, WbPunkt, OzonProduct
 
 
 async def save_data_to_storage(callback: types.CallbackQuery,
                                state: FSMContext,
+                               session: AsyncSession,
                                callback_data: str):
     data = await state.get_data()
 
@@ -21,16 +22,91 @@ async def save_data_to_storage(callback: types.CallbackQuery,
             lat = data.get('lat')
             lon = data.get('lon')
 
-            _text = 'Wb пукнт не удалось добавить'
+            data = {
+                'lat': lat,
+                'lon': lon,
+                'user_id': callback.from_user.id,
+                'time_create': datetime.now(),
+            }
+
+            query = (
+                insert(WbPunkt)\
+                .values(**data)
+            )
+
+            await session.execute(query)
+
+            try:
+                await session.commit()
+                _text = 'Wb пукнт успешно добавлен'
+            except Exception:
+                await session.rollback()
+                _text = 'Wb пукнт не удалось добавить'
 
             if lat and lon:
                 list_punkt.append([lat, lon])
                 await state.update_data(list_punkt=list_punkt)
 
-                _text = 'Wb пукнт успешно добавлен'
+                # _text = 'Wb пукнт успешно добавлен'
         case 'ozon_product':
-            # print(data.get('ozon_product'))
+            data = {
+                'link': data.get('ozon_link'),
+                'short_link': data.get('ozon_product_id'),
+                'actual_price': data.get('ozon_actual_price'),
+                'basic_price': data.get('ozon_basic_price'),
+                'time_create': datetime.now(),
+                'user_id': callback.from_user.id,
+            }
+            
+            query = (
+                insert(OzonProduct)\
+                .values(**data)
+            )
+
+            await session.execute(query)
+
+            try:
+                await session.commit()
+            except Exception as ex:
+                print(ex)
+                await session.rollback()
             _text = 'Ozon товар успешно добавлен'
+            pass
+        case 'wb_product':
+        # if _basic_price and _product_price:
+            query = (
+                select(WbPunkt.id)\
+                .join(User,
+                        WbPunkt.user_id == User.id)\
+                .where(User.id == callback.from_user.id)
+            )
+
+            _wb_punkt_id = await session.execute(query)
+
+            _wb_punkt_id = _wb_punkt_id.scalar_one_or_none()
+
+            if _wb_punkt_id:
+                data = {
+                    'link': data.get('wb_product_link'),
+                    'short_link': data.get('wb_product_id'),
+                    'basic_price': data.get('wb_basic_price'),
+                    'actual_price': data.get('wb_product_price'),
+                    'time_create': datetime.now(),
+                    'user_id': callback.from_user.id,
+                    'wb_punkt_id': _wb_punkt_id,
+                }
+                
+                query = (
+                    insert(WbProduct)\
+                    .values(**data)
+                )
+                await session.execute(query)
+
+                try:
+                    await session.commit()
+                except Exception as ex:
+                    print(ex)
+            _text = 'Wb товар успешно добавлен'
 
     return _text
 

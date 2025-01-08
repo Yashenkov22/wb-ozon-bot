@@ -23,18 +23,19 @@ class User(Base):
     last_name = Column(String, nullable=True)
     time_create = Column(DATETIME)
 
-    products = relationship("Product", back_populates="user")
+    ozon_products = relationship("OzonProduct", back_populates="user")
+    wb_punkts = relationship("WbPunkt", back_populates="user")
+    wb_products = relationship("WbProduct", back_populates="user")
 
 
-class Product(Base):
-    __tablename__ = 'products'
+class WbPunkt(Base):
+    __tablename__ = 'wb_punkts'
     
     id = Column(Integer, primary_key=True, index=True)
-    link = Column(String)
-    short_link = Column(String)
-    basic_price = Column(Float)
-    actual_price = Column(Float)
-    expected_price = Column(Float)
+    lat = Column(Float)
+    lon = Column(Float)
+    zone = Column(Integer, default=None, nullable=True)
+    # expected_price = Column(Float)
     # username = Column(String, nullable=True)
     # first_name = Column(String, nullable=True)
     # last_name = Column(String, nullable=True)
@@ -42,7 +43,49 @@ class Product(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     
     # Связь с пользователем
-    user = relationship(User, back_populates="products")
+    user = relationship(User, back_populates="wb_punkts")
+    wb_products = relationship('WbProduct', back_populates="wb_punkt")
+
+
+class OzonProduct(Base):
+    __tablename__ = 'ozon_products'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    link = Column(String)
+    short_link = Column(String)
+    basic_price = Column(Float)
+    actual_price = Column(Float)
+    # expected_price = Column(Float)
+    # username = Column(String, nullable=True)
+    # first_name = Column(String, nullable=True)
+    # last_name = Column(String, nullable=True)
+    time_create = Column(DATETIME)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    
+    # Связь с пользователем
+    user = relationship(User, back_populates="ozon_products")
+
+
+class WbProduct(Base):
+    __tablename__ = 'wb_products'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    link = Column(String)
+    short_link = Column(String)
+    basic_price = Column(Float)
+    actual_price = Column(Float)
+    # expected_price = Column(Float)
+    # username = Column(String, nullable=True)
+    # first_name = Column(String, nullable=True)
+    # last_name = Column(String, nullable=True)
+    time_create = Column(DATETIME)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'))
+    
+    # Связь с пользователем
+    user = relationship(User, back_populates="wb_products")
+    wb_punkt = relationship(WbPunkt, back_populates="wb_products")
+
 
 # Создаем асинхронный движок и сессию
 DATABASE_URL = "sqlite+aiosqlite:///./test.db"
