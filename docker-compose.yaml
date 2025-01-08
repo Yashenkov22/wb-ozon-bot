@@ -33,7 +33,7 @@ services:
 
   psql_db:
     image: postgres:14
-    restart: always
+    # restart: always
     networks:
       - bot_network
     ports:
