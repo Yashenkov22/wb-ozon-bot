@@ -7,7 +7,7 @@ from config import db_url
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
-from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, DateTime, TIMESTAMP
 
 # Определяем базовый класс для моделей
 Base = declarative_base()
@@ -21,7 +21,7 @@ class User(Base):
     username = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
-    time_create = Column(DATETIME)
+    time_create = Column(TIMESTAMP)
 
     ozon_products = relationship("OzonProduct", back_populates="user")
     wb_punkts = relationship("WbPunkt", back_populates="user")
@@ -39,7 +39,7 @@ class WbPunkt(Base):
     # username = Column(String, nullable=True)
     # first_name = Column(String, nullable=True)
     # last_name = Column(String, nullable=True)
-    time_create = Column(DATETIME)
+    time_create = Column(TIMESTAMP)
     user_id = Column(Integer, ForeignKey('users.tg_id'))
     
     # Связь с пользователем
@@ -59,7 +59,7 @@ class OzonProduct(Base):
     # username = Column(String, nullable=True)
     # first_name = Column(String, nullable=True)
     # last_name = Column(String, nullable=True)
-    time_create = Column(DATETIME)
+    time_create = Column(TIMESTAMP)
     user_id = Column(Integer, ForeignKey('users.tg_id'))
     
     # Связь с пользователем
@@ -78,7 +78,7 @@ class WbProduct(Base):
     # username = Column(String, nullable=True)
     # first_name = Column(String, nullable=True)
     # last_name = Column(String, nullable=True)
-    time_create = Column(DATETIME)
+    time_create = Column(TIMESTAMP)
     user_id = Column(Integer, ForeignKey('users.tg_id'))
     wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'))
     

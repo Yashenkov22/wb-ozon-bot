@@ -102,6 +102,7 @@ async def test_db_ozon(message: types.Message,
     else:
         await message.answer('не получилось')
 
+
 @main_router.callback_query(F.data.startswith('bot'))
 async def redirect_to_(callback: types.CallbackQuery,
                         state: FSMContext,
