@@ -91,7 +91,9 @@ async def test_db_ozon(message: types.Message,
 
     ozon_product = await session.execute(query)
 
-    ozon_product = ozon_product.scalar_one_or_none()
+    ozon_product = ozon_product.scalars().all()
+
+    ozon_product = ozon_product[0]
 
     print('ozon product', ozon_product.user_id, ozon_product.user, ozon_product.link)
 
