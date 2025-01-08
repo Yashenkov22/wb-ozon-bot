@@ -16,8 +16,8 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'users'
     
-    id = Column(Integer, primary_key=True, index=True)
-    tg_id = Column(Integer)
+    tg_id = Column(Integer, primary_key=True, index=True)
+    # tg_id = Column(Integer)
     username = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
@@ -40,7 +40,7 @@ class WbPunkt(Base):
     # first_name = Column(String, nullable=True)
     # last_name = Column(String, nullable=True)
     time_create = Column(DATETIME)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.tg_id'))
     
     # Связь с пользователем
     user = relationship(User, back_populates="wb_punkts")
@@ -60,7 +60,7 @@ class OzonProduct(Base):
     # first_name = Column(String, nullable=True)
     # last_name = Column(String, nullable=True)
     time_create = Column(DATETIME)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.tg_id'))
     
     # Связь с пользователем
     user = relationship(User, back_populates="ozon_products")
@@ -79,7 +79,7 @@ class WbProduct(Base):
     # first_name = Column(String, nullable=True)
     # last_name = Column(String, nullable=True)
     time_create = Column(DATETIME)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(Integer, ForeignKey('users.tg_id'))
     wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'))
     
     # Связь с пользователем

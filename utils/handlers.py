@@ -78,8 +78,8 @@ async def save_data_to_storage(callback: types.CallbackQuery,
             query = (
                 select(WbPunkt.id)\
                 .join(User,
-                        WbPunkt.user_id == User.id)\
-                .where(User.id == callback.from_user.id)
+                        WbPunkt.user_id == User.tg_id)\
+                .where(User.tg_id == callback.from_user.id)
             )
 
             _wb_punkt_id = await session.execute(query)
