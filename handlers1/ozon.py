@@ -98,11 +98,15 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     await state.update_data(ozon_link=ozon_link)
 
-    _prefix = 'product/'
+    if _idx := ozon_link.find('/t/') != -1:
+        _prefix = '/t/'
+        ozon_product_id = 'croppedLink|' + ozon_link[_idx+len(_prefix):]
+    else:
+        _prefix = 'product/'
 
-    _idx = ozon_link.rfind('product/')
+        _idx = ozon_link.rfind('product/')
 
-    ozon_product_id = ozon_link[(_idx + len(_prefix)):]
+        ozon_product_id = ozon_link[(_idx + len(_prefix)):]
 
     await state.update_data(ozon_product_id=ozon_product_id)
 
