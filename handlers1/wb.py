@@ -131,7 +131,7 @@ async def add_punkt(callback: types.Message | types.CallbackQuery,
             'lon': float(lon),
             'zone': del_zone,
             'user_id': callback.from_user.id,
-            'time_create': datetime.now(),
+            'time_create': datetime.now(tz=pytz.timezone('Europe/Moscow')),
         }
 
         query = (
