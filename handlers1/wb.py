@@ -277,18 +277,18 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
     else:
         _text = 'Нет добавленных пунктов'
 
-        msg: types.Message = data.get('msg')
+    msg: types.Message = data.get('msg')
 
-        _kb = create_or_add_cancel_btn()
+    _kb = create_or_add_cancel_btn()
 
-        if msg:
-            await bot.edit_message_text(text=_text,
-                                        chat_id=msg.chat.id,
-                                        message_id=msg.message_id,
-                                        reply_markup=_kb.as_markup())
-        else:
-            await callback.message.answer(text=_text,
-                                reply_markup=_kb.as_markup())        
+    if msg:
+        await bot.edit_message_text(text=_text,
+                                    chat_id=msg.chat.id,
+                                    message_id=msg.message_id,
+                                    reply_markup=_kb.as_markup())
+    else:
+        await callback.message.answer(text=_text,
+                            reply_markup=_kb.as_markup())        
 
 
 @wb_router.callback_query(F.data == 'check_price')
