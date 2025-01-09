@@ -209,3 +209,7 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
     #             session,
     #             bot,
     #             scheduler)
+
+@main_router.message()
+async def any_input(message: types.Message):
+    await message.answer(text=message.text)
