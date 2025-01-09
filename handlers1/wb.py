@@ -342,7 +342,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                WbProduct.time_create,
                WbPunkt.zone)\
         .join(WbPunkt,
-                WbProduct.wb_punkt_id == WbPunkt.id)\
+                User.tg_id == WbPunkt.user_id)\
         .join(User,
               WbProduct.user_id == User.tg_id)\
         .where(User.tg_id == callback.from_user.id)
@@ -358,6 +358,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     if not _data:
         await callback.answer(text='Сначала добавьте товар',
                               show_alert=True)
+        return
 
     wb_product_detail = _data[0]
 
