@@ -461,13 +461,13 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     data = await state.get_data()
     msg: types.Message = data.get('msg')
 
-    if not data.get('lat') or not data.get('lon'):
-        await callback.answer(text='Сначала добавьте пункт выдачи',
-                              show_alert=True)
-        # await start(callback,
-        #             state,
-        #             bot)
-        return
+    # if not data.get('lat') or not data.get('lon'):
+    #     await callback.answer(text='Сначала добавьте пункт выдачи',
+    #                           show_alert=True)
+    #     # await start(callback,
+    #     #             state,
+    #     #             bot)
+    #     return
 
     # await state.set_state(ProductStates._id)
     # _text = 'Отправьте ссылку на товар'
