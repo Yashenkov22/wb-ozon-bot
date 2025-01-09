@@ -263,7 +263,7 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
         wb_punkt_data = res.fetchall()
 
     if wb_punkt_data:
-        lat, lon, time_create, username, first_name, last_name = wb_punkt_data
+        lat, lon, time_create, username, first_name, last_name = wb_punkt_data[0]
 
         _user = username if username else f'{first_name} {last_name}'
 
