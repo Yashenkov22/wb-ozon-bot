@@ -101,6 +101,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
     if _idx := ozon_link.find('/t/') != -1:
         _prefix = '/t/'
         ozon_product_id = 'croppedLink|' + ozon_link[_idx+len(_prefix):]
+        print(ozon_product_id)
     else:
         _prefix = 'product/'
 
@@ -124,33 +125,36 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
             w = re.findall(r'\"cardPrice.*currency?', res)
             print(w)
 
-            w = w[0].split(',')[:3]
+            if w:
+                w = w[0].split(',')[:3]
 
-            _d = {
-                'price': None,
-                'originalPrice': None,
-                'cardPrice': None,
-            }
+                _d = {
+                    'price': None,
+                    'originalPrice': None,
+                    'cardPrice': None,
+                }
 
-            for k in _d:
-                if not all(v for v in _d.values()):
-                    for q in w:
-                        if q.find(k) != -1:
-                            name, price = q.split(':')
-                            price = price.replace('\\', '').replace('"', '')
-                            price = float(''.join(price.split()[:-1]))
-                            print(price)
-                            _d[k] = price
-                            break
-                else:
-                    break
+                for k in _d:
+                    if not all(v for v in _d.values()):
+                        for q in w:
+                            if q.find(k) != -1:
+                                name, price = q.split(':')
+                                price = price.replace('\\', '').replace('"', '')
+                                price = float(''.join(price.split()[:-1]))
+                                print(price)
+                                _d[k] = price
+                                break
+                    else:
+                        break
 
-            print(_d)
+                print(_d)
 
-            await state.update_data(ozon_basic_price=_d.get('price', 0))
-            await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
+                await state.update_data(ozon_basic_price=_d.get('price', 0))
+                await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
 
-            price_text = '|'.join(str(v) for v in _d.items())
+                price_text = '|'.join(str(v) for v in _d.items())
+            else:
+                _text = 'Возникли проблемы'
 
         _text = f'Ваш продукт\n{message.text}\nЦена продукта: {price_text}'
 
