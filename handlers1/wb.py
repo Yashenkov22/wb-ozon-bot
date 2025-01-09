@@ -265,9 +265,13 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
     if wb_punkt_data:
         lat, lon, time_create, username, first_name, last_name = wb_punkt_data[0]
 
+        time_create: datetime
+
+        # time_create.astimezone()
+
         _user = username if username else f'{first_name} {last_name}'
 
-        _text = f'Ваш пункт выдачи\nКоординаты: {lat}, {lon}\nПользователь: {_user}\nВремя добавления пункта выдачи: {time_create}'
+        _text = f'Ваш пункт выдачи\nКоординаты: {lat}, {lon}\nПользователь: {_user}\nВремя добавления пункта выдачи: {time_create.astimezone()}'
 
     # if _list_punkt:
     #     _text = ''
