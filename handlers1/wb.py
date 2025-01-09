@@ -274,8 +274,8 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
     #     for _id, punkt in enumerate(_list_punkt, start=1):
     #         _sub_text = f'{_id}. Широта: {punkt[0]}, Долгота: {punkt[-1]}'
     #         _text += _sub_text + '\n'
-    # else:
-    #     _text = 'Нет добавленных пунктов'
+    else:
+        _text = 'Нет добавленных пунктов'
 
         msg: types.Message = data.get('msg')
 
@@ -288,10 +288,7 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
                                         reply_markup=_kb.as_markup())
         else:
             await callback.message.answer(text=_text,
-                                reply_markup=_kb.as_markup())
-    else:
-        await callback.message.answer('проблема')
-        
+                                reply_markup=_kb.as_markup())        
 
 
 @wb_router.callback_query(F.data == 'check_price')
