@@ -364,9 +364,9 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     wb_product_detail = _data[0]
 
-    link, actaul_price, basic_price, user_id, time_create = wb_product_detail
+    link, actaul_price, basic_price, user_id, time_create, zone = wb_product_detail
 
-    _text = f'Привет {user_id}\nТвой WB товар\n{link}\nОсновная цена: {basic_price}\nАктуальная цена: {actaul_price}\nДата начала отслеживания: {time_create}'
+    _text = f'Привет {user_id}\nТвой WB товар\n{link}\nЗона доставки: {zone}\nОсновная цена: {basic_price}\nАктуальная цена: {actaul_price}\nДата начала отслеживания: {time_create}'
 
     _kb = create_or_add_cancel_btn()
 
