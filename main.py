@@ -94,6 +94,7 @@ async def init_db():
 # #Set webhook and create database on start
 @app.on_event('startup')
 async def on_startup():
+    await bot.delete_webhook()
     await bot.set_webhook(f"{PUBLIC_URL}{WEBHOOK_PATH}",
                           drop_pending_updates=True,
                           allowed_updates=['message', 'callback_query'])
