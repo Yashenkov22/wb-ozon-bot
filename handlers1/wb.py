@@ -566,6 +566,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                WbProduct.basic_price,
                WbProduct.user_id,
                WbProduct.time_create,
+               WbProduct.push_price,
                WbPunkt.zone)\
         .select_from(WbProduct)\
         .join(User,
@@ -589,14 +590,14 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     wb_product_detail = _data[0]
 
-    link, actaul_price, basic_price, user_id, time_create, zone = wb_product_detail
+    link, actaul_price, basic_price, user_id, time_create, push_price, zone = wb_product_detail
 
     # Преобразование времени в московскую временную зону
     time_create: datetime
     moscow_tz = pytz.timezone('Europe/Moscow')
     moscow_time = time_create.astimezone(moscow_tz)
 
-    _text = f'Привет {user_id}\nТвой WB товар\n{link}\nЗона доставки: {zone}\nОсновная цена: {basic_price}\nАктуальная цена: {actaul_price}\nДата начала отслеживания: {moscow_time}'
+    _text = f'Привет {user_id}\nТвой WB товар\n{link}\nЗона доставки: {zone}\nОсновная цена: {basic_price}\nАктуальная цена: {actaul_price}\nОтслеживаемая цена: {push_price}\nДата начала отслеживания: {moscow_time}'
 
     _kb = create_or_add_cancel_btn()
 
