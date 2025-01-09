@@ -268,17 +268,34 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
 @wb_router.callback_query(F.data == 'check_price')
 async def check_price_wb(callback: types.Message | types.CallbackQuery,
                     state: FSMContext,
+                    session: AsyncSession,
                     bot: Bot):
     data = await state.get_data()
     msg: types.Message = data.get('msg')
 
-    if not data.get('lat') or not data.get('lon'):
-        await callback.answer(text='Сначала добавьте пункт выдачи',
+    query = (
+        select(WbPunkt.zone)\
+        .join(User,
+              WbPunkt.user_id == User.tg_id)\
+        .where(User.tg_id == callback.from_user.id)
+    )
+
+    res = await session.execute(query)
+
+    del_zone = res.scalar_one_or_none()
+
+    if not res:
+        await callback.answer(text='Не получилось найти пункт выдачи',
                               show_alert=True)
-        # await start(callback,
-        #             state,
-        #             bot)
         return
+
+    # if not data.get('lat') or not data.get('lon'):
+    #     await callback.answer(text='Сначала добавьте пункт выдачи',
+    #                           show_alert=True)
+    #     # await start(callback,
+    #     #             state,
+    #     #             bot)
+    #     return
 
     await state.set_state(ProductStates._id)
     _text = 'Отправьте ссылку на товар'
