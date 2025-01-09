@@ -6,7 +6,7 @@ import aiohttp
 
 import pytz
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from aiogram import Router, types, Bot, F
 from aiogram.types import BufferedInputFile, URLInputFile
@@ -267,7 +267,7 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
 
         _user = username if username else f'{first_name} {last_name}'
 
-        _text = f'Ваш пункт выдачи\nКоординаты: {lat}, {lon}\nПользователь: {_user}\nВремя добавления пункта выдачи: {time_create}'
+        _text = f'Ваш пункт выдачи\nКоординаты: {lat}, {lon}\nПользователь: {_user}\nВремя добавления пункта выдачи: {time_create.astimezone(timezone.utc)}'
 
     # if _list_punkt:
     #     _text = ''
