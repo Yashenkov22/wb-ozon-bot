@@ -120,6 +120,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
             response = await aiosession.get(url=_url)
 
+            print(response.status)
+
             res = await response.text()
 
             print(res)
