@@ -40,12 +40,57 @@ from db.base import WbProduct, WbPunkt, User
 wb_router = Router()
 
 
+# @wb_router.callback_query(F.data == 'add_punkt')
+# async def add_punkt(callback: types.Message | types.CallbackQuery,
+#                     state: FSMContext,
+#                     session: AsyncSession,
+#                     bot: Bot):
+#     await state.set_state(SwiftSepaStates.coords)
+#     data = await state.get_data()
+
+#     query = (
+#         select(
+#             WbPunkt.id
+#         )\
+#         .join(User,
+#               WbPunkt.user_id == User.tg_id)\
+#         .where(User.tg_id == callback.from_user.id)
+#     )
+
+#     res = await session.execute(query)
+
+#     _wb_punkt = res.scalar_one_or_none()
+
+#     if _wb_punkt:
+#         await callback.answer(text='Пункт выдачи уже добален',
+#                               show_alert=True)
+        
+#         return
+
+#     msg: types.Message = data.get('msg')
+#     _text = 'Введите координаты пункта доставки в формате: latitude, longitude\nПример: 59.915643, 30.402345'
+
+#     _kb = create_or_add_cancel_btn()
+
+#     if msg:
+#         await bot.edit_message_text(text=_text,
+#                                     chat_id=msg.chat.id,
+#                                     message_id=msg.message_id,
+#                                     reply_markup=_kb.as_markup())
+#     else:
+#         await callback.message.answer(text=_text,
+#                              reply_markup=_kb.as_markup())
+
+
 @wb_router.callback_query(F.data == 'add_punkt')
 async def add_punkt(callback: types.Message | types.CallbackQuery,
                     state: FSMContext,
                     session: AsyncSession,
                     bot: Bot):
-    await state.set_state(SwiftSepaStates.coords)
+    
+    lat, lon = ('55.707106', '37.572854')
+
+    # await state.set_state(SwiftSepaStates.coords)
     data = await state.get_data()
 
     query = (
@@ -66,20 +111,75 @@ async def add_punkt(callback: types.Message | types.CallbackQuery,
                               show_alert=True)
         
         return
+    
 
-    msg: types.Message = data.get('msg')
-    _text = 'Введите координаты пункта доставки в формате: latitude, longitude\nПример: 59.915643, 30.402345'
+    async with aiohttp.ClientSession() as aiosession:
+        _url = f"http://172.18.0.2:8080/pickUpPoint/{lat}/{lon}"
+        response = await aiosession.get(url=_url)
+
+        res = await response.json()
+
+        deliveryRegions = res.get('deliveryRegions')
+
+        print(deliveryRegions)
+
+        del_zone = deliveryRegions[-1]
+    
+        _data = {
+            'lat': float(lat),
+            'lon': float(lon),
+            'zone': del_zone,
+            'user_id': callback.from_user.id,
+            'time_create': datetime.now(),
+        }
+
+        query = (
+            insert(WbPunkt)\
+            .values(**_data)
+        )
+
+        await session.execute(query)
+
+        try:
+            await session.commit()
+            _text = 'Wb пукнт успешно добавлен'
+        except Exception:
+            await session.rollback()
+            _text = 'Wb пукнт не удалось добавить'
+
+    # _text = f"Ваши данные:\nШирота: {lat}\nДолгота: {lon}\nЗона доставки: {del_zone}"
+
+    await state.update_data(del_zone=del_zone)
 
     _kb = create_or_add_cancel_btn()
 
-    if msg:
-        await bot.edit_message_text(text=_text,
-                                    chat_id=msg.chat.id,
-                                    message_id=msg.message_id,
-                                    reply_markup=_kb.as_markup())
-    else:
-        await callback.message.answer(text=_text,
-                             reply_markup=_kb.as_markup())
+    await callback.message.edit_text(text=_text,
+                                        reply_markup=_kb.as_markup())
+
+    # if msg:
+    #     await bot.edit_message_text(text=_text,
+    #                                 chat_id=msg.chat.id,
+    #                                 message_id=msg.message_id,
+    #                                 reply_markup=_kb.as_markup())
+    # else:
+    #     await message.answer(text=_text,
+    #                          reply_markup=_kb.as_markup())
+        
+    # await message.delete()
+
+    # msg: types.Message = data.get('msg')
+    # _text = 'Введите координаты пункта доставки в формате: latitude, longitude\nПример: 59.915643, 30.402345'
+
+    # _kb = create_or_add_cancel_btn()
+
+    # if msg:
+    #     await bot.edit_message_text(text=_text,
+    #                                 chat_id=msg.chat.id,
+    #                                 message_id=msg.message_id,
+    #                                 reply_markup=_kb.as_markup())
+    # else:
+    #     await callback.message.answer(text=_text,
+    #                          reply_markup=_kb.as_markup())
 
 
 @wb_router.message(SwiftSepaStates.coords)
