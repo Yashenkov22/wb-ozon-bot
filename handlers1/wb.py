@@ -269,6 +269,20 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
 
         # time_create.astimezone()
 
+        # Создание объекта datetime с временной зоной UTC
+        # utc_time = datetime.now(pytz.utc)
+        print("UTC Time:", time_create)
+
+        # Преобразование времени в московскую временную зону
+        moscow_tz = pytz.timezone('Europe/Moscow')
+        moscow_time = time_create.astimezone(moscow_tz)
+        print("Moscow Time:", moscow_time)
+
+        # Преобразование времени в другую временную зону, например, в Нью-Йорк
+        new_york_tz = pytz.timezone('America/New_York')
+        new_york_time = time_create.astimezone(new_york_tz)
+        print("New York Time:", new_york_time)
+
         _user = username if username else f'{first_name} {last_name}'
 
         _text = f'Ваш пункт выдачи\nКоординаты: {lat}, {lon}\nПользователь: {_user}\nВремя добавления пункта выдачи: {time_create.astimezone()}'
