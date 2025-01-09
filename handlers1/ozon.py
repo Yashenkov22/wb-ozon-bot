@@ -172,7 +172,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
             
         await message.delete()
     except Exception as ex:
-        price(ex)
+        print(ex)
         pass
         
 
