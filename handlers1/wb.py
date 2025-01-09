@@ -380,8 +380,8 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                 _basic_price = size.get('price').get('basic')
                 _product_price = size.get('price').get('product')
 
-                _basic_price = str(_basic_price)
-                _product_price = str(_product_price)
+                _basic_price = str(_basic_price)[:-2]
+                _product_price = str(_product_price)[:-2]
 
                 print('основная:', _basic_price)
                 print('актупльная:', _product_price)
@@ -433,7 +433,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         #             await session.commit()
         #         except Exception as ex:
         #             print(ex)
-                _text = f'Основная цена товара: {str(_basic_price)[:-2]}\nАктуальная цена товара: {str(_product_price)[:-2]}'
+                _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}'
             else:
                 _text = 'Не удалось найти цену товара'
         # for key in d.get('products')[0].get('sizes'):
