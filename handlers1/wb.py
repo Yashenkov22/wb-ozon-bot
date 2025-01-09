@@ -252,7 +252,6 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
             User.first_name,
             User.last_name,
         )\
-        .select_from(WbPunkt)\
         .join(User,
               WbPunkt.user_id == User.tg_id)\
         .where(User.tg_id == callback.from_user.id)
@@ -290,6 +289,8 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
         else:
             await callback.message.answer(text=_text,
                                 reply_markup=_kb.as_markup())
+    else:
+        await callback.message.answer('проблема')
         
 
 
