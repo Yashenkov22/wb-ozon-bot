@@ -198,13 +198,18 @@ async def list_product(callback: types.Message | types.CallbackQuery,
 
     link, actual_price, basic_price, time_create, _user_id = ozon_product
 
+    # Преобразование времени в московскую временную зону
+    time_create: datetime
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    moscow_time = time_create.astimezone(moscow_tz)
+
     # ozon_product = ozon_product[0]
 
     # print('ozon product', ozon_product.user_id, ozon_product.user, ozon_product.link)
 
     if ozon_product:
         _kb = create_or_add_cancel_btn()
-        await callback.message.edit_text(f'Привет {_user_id}\nТвой товар\n{link}\nОсновная цена: {basic_price}\nАктуальная цена: {actual_price}\nДата создания отслеживания: {time_create}',
+        await callback.message.edit_text(f'Привет {_user_id}\nТвой товар\n{link}\nОсновная цена: {basic_price}\nАктуальная цена: {actual_price}\nДата создания отслеживания: {moscow_time}',
                                          reply_markup=_kb.as_markup())
     else:
         await callback.answer('не получилось')
