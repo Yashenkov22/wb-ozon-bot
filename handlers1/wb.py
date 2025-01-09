@@ -380,13 +380,13 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                 _basic_price = size.get('price').get('basic')
                 _product_price = size.get('price').get('product')
 
-                print('основная:', _basic_price[:-2])
-                print('актупльная:', _product_price[:-2])
+                print('основная:', str(_basic_price)[:-2])
+                print('актупльная:', str(_product_price)[:-2])
 
                 await state.update_data(wb_product_link=wb_product_link)
                 await state.update_data(wb_product_id=wb_product_id)
-                await state.update_data(wb_basic_price=_basic_price)
-                await state.update_data(wb_product_price=_product_price)
+                await state.update_data(wb_basic_price=float(_basic_price))
+                await state.update_data(wb_product_price=float(_product_price))
                 # await state.update_data(wb_del_zone=del_zone)
 
 
