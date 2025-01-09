@@ -98,7 +98,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     await state.update_data(ozon_link=ozon_link)
 
-    if ozon_link.find('/t/') != -1:
+    if ozon_link.startswith('https://ozon.ru/t/'):
         _idx = ozon_link.find('/t/')
         print(_idx)
         _prefix = '/t/'
@@ -112,6 +112,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         ozon_product_id = ozon_link[(_idx + len(_prefix)):]
 
     await state.update_data(ozon_product_id=ozon_product_id)
+
+    print('do request')
 
     try:
         async with aiohttp.ClientSession() as aiosession:
