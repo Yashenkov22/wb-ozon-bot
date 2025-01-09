@@ -380,8 +380,8 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                 _basic_price = size.get('price').get('basic')
                 _product_price = size.get('price').get('product')
 
-                _basic_price = str(_basic_price)[:-2]
-                _product_price = str(_product_price)[:-2]
+                _basic_price = _basic_price
+                _product_price = _product_price
 
                 print('основная:', str(_basic_price)[:-2])
                 print('актупльная:', str(_product_price)[:-2])
