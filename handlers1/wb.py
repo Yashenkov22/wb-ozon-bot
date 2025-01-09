@@ -353,6 +353,8 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     _data = res.fetchall()
 
+    print(_data)
+
     if not _data:
         await callback.answer(text='Сначала добавьте товар',
                               show_alert=True)
