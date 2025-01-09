@@ -294,8 +294,8 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         #         except Exception as ex:
         #             print(ex)
                 _text = f'Основная цена товара: {str(_basic_price)[:-2]}\nАктуальная цена товара: {str(_product_price)[:-2]}'
-        else:
-            _text = 'Не удалось найти цену товара'
+            else:
+                _text = 'Не удалось найти цену товара'
         # for key in d.get('products')[0].get('sizes'):
         #     print(key)
         
