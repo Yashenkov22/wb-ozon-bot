@@ -79,6 +79,8 @@ async def add_product(callback: types.Message | types.CallbackQuery,
     else:
         await callback.message.answer(text=_text,
                              reply_markup=_kb.as_markup())
+    
+    await callback.answer()
         
 
 @ozon_router.message(OzonProduct.product)
