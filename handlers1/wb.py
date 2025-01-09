@@ -342,10 +342,11 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                WbProduct.user_id,
                WbProduct.time_create,
                WbPunkt.zone)\
-        .join(WbPunkt,
-                User.tg_id == WbPunkt.user_id)\
+        .select_from(WbProduct)\
         .join(User,
               WbProduct.user_id == User.tg_id)\
+        .join(WbPunkt,
+                User.tg_id == WbPunkt.user_id)\
         .where(User.tg_id == callback.from_user.id)
     )
 
