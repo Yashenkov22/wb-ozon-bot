@@ -85,8 +85,22 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
 
     await state.update_data(lat=lat,
                             lon=lon)
+    
+    async with aiohttp.ClientSession() as aiosession:
+        _url = f"http://172.18.0.2:8080/pickUpPoint/{lat}/{lon}"
+        response = await aiosession.get(url=_url)
 
-    _text = f"Ваши данные:\nШирота: {lat}\nДолгота: {lon}"
+        res = await response.json()
+
+        deliveryRegions = res.get('deliveryRegions')
+
+        print(deliveryRegions)
+
+        del_zone = deliveryRegions[-1]
+
+    _text = f"Ваши данные:\nШирота: {lat}\nДолгота: {lon}\nЗона доставки: {del_zone}"
+
+    await state.update_data(del_zone=del_zone)
 
     if msg:
         await bot.edit_message_text(text=_text,
@@ -182,19 +196,34 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     msg: types.Message = data.get('msg')
 
+    query = (
+        select(WbPunkt.zone)\
+        .join(User,
+              WbPunkt.user_id == User.tg_id)\
+        .where(User.tg_id == message.from_user.id)
+    )
+
+    res = await session.execute(query)
+
+    del_zone = res.scalar_one_or_none()
+
+    if not res:
+        await message.answer('Не получилось найти пункт выдачи')
+        return
+
     # print('beginning')
 
     async with aiohttp.ClientSession() as aiosession:
-        _url = f"http://172.18.0.2:8080/pickUpPoint/{lat}/{lon}"
-        response = await aiosession.get(url=_url)
+        # _url = f"http://172.18.0.2:8080/pickUpPoint/{lat}/{lon}"
+        # response = await aiosession.get(url=_url)
 
-        res = await response.json()
+        # res = await response.json()
 
-        deliveryRegions = res.get('deliveryRegions')
+        # deliveryRegions = res.get('deliveryRegions')
 
-        print(deliveryRegions)
+        # print(deliveryRegions)
 
-        del_zone = deliveryRegions[-1]
+        # del_zone = deliveryRegions[-1]
 
         _url = f"http://172.18.0.2:8080/product/{del_zone}/{wb_product_id}"
         response = await aiosession.get(url=_url)
@@ -221,6 +250,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                 await state.update_data(wb_product_id=wb_product_id)
                 await state.update_data(wb_basic_price=_basic_price)
                 await state.update_data(wb_product_price=_product_price)
+                # await state.update_data(wb_del_zone=del_zone)
 
 
         # sizes = d.get('products')[0].get('sizes')[0]

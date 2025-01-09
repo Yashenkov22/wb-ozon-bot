@@ -21,10 +21,12 @@ async def save_data_to_storage(callback: types.CallbackQuery,
 
             lat = data.get('lat')
             lon = data.get('lon')
+            del_zone = data.get('del_zone')
 
             data = {
                 'lat': float(lat),
                 'lon': float(lon),
+                'zone': del_zone,
                 'user_id': callback.from_user.id,
                 'time_create': datetime.now(),
             }
