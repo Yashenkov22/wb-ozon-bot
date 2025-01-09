@@ -40,6 +40,8 @@ services:
     #   - '5432:5432'
     env_file:
       - ./.env
+    environment:
+      - TZ=Europe/Moscow
     cpus: '1.0'
     mem_limit: 2g
     volumes:
