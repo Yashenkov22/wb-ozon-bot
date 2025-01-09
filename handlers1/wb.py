@@ -492,7 +492,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         # print(res)
 
     # _kb = create_done_kb(marker='wb_product')
-    _kb = create_or_add_cancel_btn(_kb)
+    _kb = create_or_add_cancel_btn()
 
     if msg:
         await bot.edit_message_text(text=_text,
