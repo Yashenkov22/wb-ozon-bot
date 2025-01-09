@@ -43,9 +43,29 @@ wb_router = Router()
 @wb_router.callback_query(F.data == 'add_punkt')
 async def add_punkt(callback: types.Message | types.CallbackQuery,
                     state: FSMContext,
+                    session: AsyncSession,
                     bot: Bot):
     await state.set_state(SwiftSepaStates.coords)
     data = await state.get_data()
+
+    query = (
+        select(
+            WbPunkt.id
+        )\
+        .join(User,
+              WbPunkt.user_id == User.tg_id)\
+        .where(User.tg_id == callback.from_user.id)
+    )
+
+    res = await session.execute(query)
+
+    _wb_punkt = res.scalar_one_or_none()
+
+    if _wb_punkt:
+        await callback.answer(text='Пункт выдачи уже добален',
+                              show_alert=True)
+        
+        return
 
     msg: types.Message = data.get('msg')
     _text = 'Введите координаты пункта доставки в формате: latitude, longitude\nПример: 59.915643, 30.402345'
