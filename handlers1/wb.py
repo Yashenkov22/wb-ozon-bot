@@ -297,10 +297,10 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
 
 
 @wb_router.callback_query(F.data == 'check_price')
-async def check_price_wb(callback: types.Message | types.CallbackQuery,
-                    state: FSMContext,
-                    session: AsyncSession,
-                    bot: Bot):
+async def add_wb_product(callback: types.Message | types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot):
     data = await state.get_data()
     msg: types.Message = data.get('msg')
 
@@ -482,7 +482,8 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         #             await session.commit()
         #         except Exception as ex:
         #             print(ex)
-                _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}'
+                await state.set_state(ProductStates.push_price)
+                _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}\nВведите сумму, если цена продукта станет ниже или равной этой сумме - мы Вас уведомим'
             else:
                 _text = 'Не удалось найти цену товара'
         # for key in d.get('products')[0].get('sizes'):
@@ -490,8 +491,43 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         
         # print(res)
 
+    # _kb = create_done_kb(marker='wb_product')
+    _kb = create_or_add_cancel_btn(_kb)
+
+    if msg:
+        await bot.edit_message_text(text=_text,
+                                    chat_id=msg.chat.id,
+                                    message_id=msg.message_id,
+                                    reply_markup=_kb.as_markup())
+    else:
+        await message.answer(text=_text,
+                             reply_markup=_kb.as_markup())
+
+    await message.delete()
+
+
+
+@wb_router.message(ProductStates.push_price)
+async def proccess_push_price(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot):
+    data = await state.get_data()
+
+    msg = data.get('msg')
+    
+    push_price = message.text
+
+    await state.update_data(push_price=push_price)
+
     _kb = create_done_kb(marker='wb_product')
     _kb = create_or_add_cancel_btn(_kb)
+
+    link = data.get('wb_product_link')
+    basic_price = data.get('wb_basic_price')
+    product_price = data.get('wb_product_price')
+
+    _text = f'Ваш товар: {link}\nОсновная цена: {basic_price}\nАктуальная цена: {product_price}\nожидаемая цена: {push_price}'
 
     if msg:
         await bot.edit_message_text(text=_text,

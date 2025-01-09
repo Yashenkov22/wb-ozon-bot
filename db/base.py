@@ -74,6 +74,7 @@ class WbProduct(Base):
     short_link = Column(String)
     basic_price = Column(Float)
     actual_price = Column(Float)
+    push_price = Column(Float)
     # del_zone = Column(Integer)
     # expected_price = Column(Float)
     # username = Column(String, nullable=True)

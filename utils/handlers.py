@@ -97,6 +97,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                         'time_create': datetime.now(),
                         'user_id': callback.from_user.id,
                         'wb_punkt_id': _wb_punkt_id,
+                        'push_price': float(data.get('push_price')),
                     }
                     
                     query = (
