@@ -86,6 +86,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                         state: FSMContext,
                         session: AsyncSession,
                         bot: Bot):
+    print(22)
     data = await state.get_data()
 
     msg: types.Message = data.get('msg')
