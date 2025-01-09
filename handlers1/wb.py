@@ -267,7 +267,7 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
 
         _user = username if username else f'{first_name} {last_name}'
 
-        _text = f'Ваш пункт выдачи\nКоординаты: {lat}, {lon}\nПользователь: {_user}\nВремя добавления пункта выдачи: {time_create.astimezone(timezone.utc)}'
+        _text = f'Ваш пункт выдачи\nКоординаты: {lat}, {lon}\nПользователь: {_user}\nВремя добавления пункта выдачи: {time_create}'
 
     # if _list_punkt:
     #     _text = ''
