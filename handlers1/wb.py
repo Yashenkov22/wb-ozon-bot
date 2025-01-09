@@ -316,7 +316,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
 
 @wb_router.callback_query(F.data == 'view_price')
-async def check_price_wb(callback: types.Message | types.CallbackQuery,
+async def view_price_wb(callback: types.Message | types.CallbackQuery,
                         state: FSMContext,
                         session: AsyncSession,
                         bot: Bot):
@@ -352,6 +352,10 @@ async def check_price_wb(callback: types.Message | types.CallbackQuery,
     res = await session.execute(query)
 
     _data = res.fetchall()
+
+    if not _data:
+        await callback.answer(text='Сначала добавьте товар',
+                              show_alert=True)
 
     wb_product_detail = _data[0]
 
