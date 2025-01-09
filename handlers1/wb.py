@@ -314,6 +314,62 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     await message.delete()
 
+
+@wb_router.callback_query(F.data == 'view_price')
+async def check_price_wb(callback: types.Message | types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot):
+    data = await state.get_data()
+    msg: types.Message = data.get('msg')
+
+    if not data.get('lat') or not data.get('lon'):
+        await callback.answer(text='Сначала добавьте пункт выдачи',
+                              show_alert=True)
+        # await start(callback,
+        #             state,
+        #             bot)
+        return
+
+    # await state.set_state(ProductStates._id)
+    # _text = 'Отправьте ссылку на товар'
+
+    query = (
+        select(WbProduct.link,
+               WbProduct.actual_price,
+               WbProduct.basic_price,
+               WbProduct.user_id,
+               WbProduct.time_create,
+               WbPunkt.zone)\
+        .join(WbPunkt,
+                WbProduct.wb_punkt_id == WbPunkt.id)\
+        .join(User,
+              WbProduct.user_id == User.tg_id)\
+        .where(User.tg_id == callback.from_user.id)
+    )
+
+
+    res = await session.execute(query)
+
+    _data = res.fetchall()
+
+    wb_product_detail = _data[0]
+
+    link, actaul_price, basic_price, user_id, time_create = wb_product_detail
+
+    _text = f'Привет {user_id}\nТвой WB товар\n{link}\nОсновная цена: {basic_price}\nАктуальная цена: {actaul_price}\nДата начала отслеживания: {time_create}'
+
+    _kb = create_or_add_cancel_btn()
+
+    if msg:
+        await bot.edit_message_text(text=_text,
+                                    chat_id=msg.chat.id,
+                                    message_id=msg.message_id,
+                                    reply_markup=_kb.as_markup())
+    else:
+        await callback.message.answer(text=_text,
+                             reply_markup=_kb.as_markup())
+
 # @wb_router.callback_query(F.data.startswith('done'))
 # async def add_punkt_callback_done(callback: types.Message | types.CallbackQuery,
 #                                     state: FSMContext,
