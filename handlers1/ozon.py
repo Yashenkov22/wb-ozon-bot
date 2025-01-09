@@ -119,6 +119,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
             res = await response.text()
 
+            print(res)
+
             w = re.findall(r'\"cardPrice.*currency?', res)
             print(w)
 
