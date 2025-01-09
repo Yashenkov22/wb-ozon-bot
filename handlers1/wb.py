@@ -329,7 +329,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
     # await state.update_data(wb_product_id=wb_product_id)
     data = await state.get_data()
 
-    lat, lon = data.get('list_punkt')[0]
+    # lat, lon = data.get('list_punkt')[0]
 
     msg: types.Message = data.get('msg')
 
