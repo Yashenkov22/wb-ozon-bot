@@ -102,9 +102,10 @@ async def add_punkt(callback: types.Message | types.CallbackQuery,
         .where(User.tg_id == callback.from_user.id)
     )
 
-    res = await session.execute(query)
+    async with session as session:
+        res = await session.execute(query)
 
-    _wb_punkt = res.scalar_one_or_none()
+        _wb_punkt = res.scalar_one_or_none()
 
     if _wb_punkt:
         await callback.answer(text='Пункт выдачи уже добален',
@@ -137,15 +138,15 @@ async def add_punkt(callback: types.Message | types.CallbackQuery,
             insert(WbPunkt)\
             .values(**_data)
         )
+        async with session as session:
+            await session.execute(query)
 
-        await session.execute(query)
-
-        try:
-            await session.commit()
-            _text = 'Wb пукнт успешно добавлен'
-        except Exception:
-            await session.rollback()
-            _text = 'Wb пукнт не удалось добавить'
+            try:
+                await session.commit()
+                _text = 'Wb пукнт успешно добавлен'
+            except Exception:
+                await session.rollback()
+                _text = 'Wb пукнт не удалось добавить'
 
     # _text = f"Ваши данные:\nШирота: {lat}\nДолгота: {lon}\nЗона доставки: {del_zone}"
 
@@ -237,31 +238,57 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
 @wb_router.callback_query(F.data == 'list_punkt')
 async def list_punkt(callback: types.Message | types.CallbackQuery,
                     state: FSMContext,
+                    session: AsyncSession,
                     bot: Bot):
     data = await state.get_data()
 
-    _list_punkt = data.get('list_punkt')
+    # _list_punkt = data.get('list_punkt')
+    query = (
+        select(
+            WbPunkt.lat,
+            WbPunkt.lon,
+            WbPunkt.time_create,
+            User.username,
+            User.first_name,
+            User.last_name,
+        )\
+        .join(User,
+              WbPunkt.user_id == User.tg_id)\
+        .where(User.tg_id == callback.from_user.id)
+    )
 
-    if _list_punkt:
-        _text = ''
-        for _id, punkt in enumerate(_list_punkt, start=1):
-            _sub_text = f'{_id}. Широта: {punkt[0]}, Долгота: {punkt[-1]}'
-            _text += _sub_text + '\n'
-    else:
-        _text = 'Нет добавленных пунктов'
+    async with session as session:
+        res = await session.execute(query)
 
-    msg: types.Message = data.get('msg')
+        wb_punkt_data = res.fetchall()
 
-    _kb = create_or_add_cancel_btn()
+    if wb_punkt_data:
+        lat, lon, time_create, username, first_name, last_name = wb_punkt_data
 
-    if msg:
-        await bot.edit_message_text(text=_text,
-                                    chat_id=msg.chat.id,
-                                    message_id=msg.message_id,
-                                    reply_markup=_kb.as_markup())
-    else:
-        await callback.message.answer(text=_text,
-                             reply_markup=_kb.as_markup())
+        _user = username if username else f'{first_name} {last_name}'
+
+        _text = f'Ваш пункт выдачи\nКоординаты: {lat}, {lon}\nПользователь: {_user}\nВремя добавления пункта выдачи: {time_create}'
+
+    # if _list_punkt:
+    #     _text = ''
+    #     for _id, punkt in enumerate(_list_punkt, start=1):
+    #         _sub_text = f'{_id}. Широта: {punkt[0]}, Долгота: {punkt[-1]}'
+    #         _text += _sub_text + '\n'
+    # else:
+    #     _text = 'Нет добавленных пунктов'
+
+        msg: types.Message = data.get('msg')
+
+        _kb = create_or_add_cancel_btn()
+
+        if msg:
+            await bot.edit_message_text(text=_text,
+                                        chat_id=msg.chat.id,
+                                        message_id=msg.message_id,
+                                        reply_markup=_kb.as_markup())
+        else:
+            await callback.message.answer(text=_text,
+                                reply_markup=_kb.as_markup())
         
 
 
@@ -279,23 +306,41 @@ async def check_price_wb(callback: types.Message | types.CallbackQuery,
               WbPunkt.user_id == User.tg_id)\
         .where(User.tg_id == callback.from_user.id)
     )
+    async with session as session:
+        res = await session.execute(query)
 
-    res = await session.execute(query)
+        del_zone = res.scalar_one_or_none()
 
-    del_zone = res.scalar_one_or_none()
+        if not del_zone:
+            await callback.answer(text='Не получилось найти пункт выдачи',
+                                show_alert=True)
+            return
 
-    if not res:
-        await callback.answer(text='Не получилось найти пункт выдачи',
+        # if not data.get('lat') or not data.get('lon'):
+        #     await callback.answer(text='Сначала добавьте пункт выдачи',
+        #                           show_alert=True)
+        #     # await start(callback,
+        #     #             state,
+        #     #             bot)
+        #     return
+
+        query = (
+            select(
+                WbProduct.id
+            )\
+            .join(User,
+                WbProduct.user_id == User.tg_id)\
+            .where(User.tg_id == callback.from_user.id)
+        )
+
+        res = await session.execute(query)
+
+        check_product_by_user = res.scalar_one_or_none()
+
+    if check_product_by_user:
+        await callback.answer(text='Продукт уже добален',
                               show_alert=True)
         return
-
-    # if not data.get('lat') or not data.get('lon'):
-    #     await callback.answer(text='Сначала добавьте пункт выдачи',
-    #                           show_alert=True)
-    #     # await start(callback,
-    #     #             state,
-    #     #             bot)
-    #     return
 
     await state.set_state(ProductStates._id)
     _text = 'Отправьте ссылку на товар'
@@ -339,10 +384,10 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
               WbPunkt.user_id == User.tg_id)\
         .where(User.tg_id == message.from_user.id)
     )
+    async with session as session:
+        res = await session.execute(query)
 
-    res = await session.execute(query)
-
-    del_zone = res.scalar_one_or_none()
+        del_zone = res.scalar_one_or_none()
 
     if not res:
         await message.answer('Не получилось найти пункт выдачи')
@@ -490,10 +535,10 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
         .where(User.tg_id == callback.from_user.id)
     )
 
+    async with session as session:
+        res = await session.execute(query)
 
-    res = await session.execute(query)
-
-    _data = res.fetchall()
+        _data = res.fetchall()
 
     print(_data)
 

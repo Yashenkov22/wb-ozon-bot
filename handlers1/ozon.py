@@ -43,7 +43,26 @@ ozon_router = Router()
 @ozon_router.callback_query(F.data == 'add_product')
 async def add_product(callback: types.Message | types.CallbackQuery,
                     state: FSMContext,
+                    session: AsyncSession,
                     bot: Bot):
+    query = (
+        select(
+            OzonProductModel.id
+        )\
+        .join(User,
+              OzonProductModel.user_id == User.tg_id)\
+        .where(User.tg_id == callback.from_user.id)
+    )
+    async with session as session:
+        res = await session.execute(query)
+
+        check_product_by_user = res.scalar_one_or_none()
+
+    if check_product_by_user:
+        await callback.answer(text='Продукт уже добален',
+                              show_alert=True)
+        return
+
     await state.set_state(OzonProduct.product)
     data = await state.get_data()
 
@@ -165,9 +184,10 @@ async def list_product(callback: types.Message | types.CallbackQuery,
         .where(User.tg_id == user_id)
     )
     # async with session as session:
-    ozon_product = await session.execute(query)
+    async with session as session:
+        ozon_product = await session.execute(query)
 
-    ozon_product = ozon_product.fetchall()
+        ozon_product = ozon_product.fetchall()
 
     if not ozon_product:
         await callback.answer(text='Нет добавленных Ozon товаров',
