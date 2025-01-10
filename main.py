@@ -56,7 +56,7 @@ dp.include_router(main_router)
 
 scheduler = AsyncIOScheduler()
 
-scheduler.start()
+# scheduler.start()
 
 # #Add session and database connection in handlers 
 dp.update.middleware(DbSessionMiddleware(session_pool=session,
