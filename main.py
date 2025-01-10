@@ -56,6 +56,8 @@ dp.include_router(main_router)
 
 scheduler = AsyncIOScheduler()
 
+scheduler.start()
+
 # #Add session and database connection in handlers 
 dp.update.middleware(DbSessionMiddleware(session_pool=session,
                                          scheduler=scheduler))
@@ -96,8 +98,8 @@ async def init_db():
 async def on_startup():
     await bot.delete_webhook()
     await bot.set_webhook(f"{PUBLIC_URL}{WEBHOOK_PATH}",
-                          drop_pending_updates=True,
                           allowed_updates=['message', 'callback_query'])
+                        #   drop_pending_updates=True,
     
     await init_db()
     

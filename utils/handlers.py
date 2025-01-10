@@ -6,12 +6,18 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy import update, select, and_, or_, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 from db.base import User, WbProduct, WbPunkt, OzonProduct
+
+from utils.scheduler import push_check_wb_price
 
 
 async def save_data_to_storage(callback: types.CallbackQuery,
                                state: FSMContext,
                                session: AsyncSession,
+                               bot: Bot,
+                               scheduler: AsyncIOScheduler,
                                callback_data: str):
     data = await state.get_data()
     async with session as session:
@@ -94,6 +100,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                         'short_link': data.get('wb_product_id'),
                         'basic_price': data.get('wb_basic_price'),
                         'actual_price': data.get('wb_product_price'),
+                        'now_price': data.get('wb_product_price'),
                         'time_create': datetime.now(),
                         'user_id': callback.from_user.id,
                         'wb_punkt_id': _wb_punkt_id,
@@ -110,7 +117,19 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                         await session.commit()
                     except Exception as ex:
                         print(ex)
-                _text = 'Wb товар успешно добавлен'
+                    else:
+                        # scheduler.add_job()
+                        scheduler.add_job(push_check_wb_price,
+                                          trigger='cron',
+                                          hour=datetime.now().hour,
+                                          minute=datetime.now().minute + 1,
+                                          start_date=datetime.now(),
+                                          kwargs={'callback': callback,
+                                                  'session': session,
+                                                  'bot': bot})
+                    _text = 'Wb товар успешно добавлен'
+                else:
+                    _text = 'Что то пошло не так'
 
     return _text
 
