@@ -149,7 +149,7 @@ async def redirect_to_(callback: types.CallbackQuery,
     # JobModel = Base.classes.apscheduler_jobs
 
     print(Base)
-    print(Base.metadata)
+    print(Base.metadata.classes)
 ###
 
     # query = (
