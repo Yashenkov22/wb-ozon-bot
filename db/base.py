@@ -94,7 +94,12 @@ class WbProduct(Base):
 
 _engine = create_engine(_db_url, echo=True)
 
-Base.metadata.reflect(bind=_engine)
+Base = automap_base()
+
+
+# Base.prepare(engine, reflect=True)
+Base.prepare(autoload_with=_engine)
+# Base.metadata.reflect(bind=_engine)
 
 engine = create_async_engine(db_url, echo=True)
 # AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
