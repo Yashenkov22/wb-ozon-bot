@@ -60,13 +60,6 @@ dp.include_router(ozon_router)
 dp.include_router(wb_router)
 dp.include_router(main_router)
 
-JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
-
-scheduler = AsyncIOScheduler()
-
-scheduler.add_jobstore('sqlalchemy', url=JOB_STORE_URL)
-
-scheduler.start()
 
 # #Add session and database connection in handlers 
 dp.update.middleware(DbSessionMiddleware(session_pool=session,
@@ -97,6 +90,13 @@ server = Server(config)
 # #For set webhook
 WEBHOOK_PATH = f'/webhook_'
 
+JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
+
+scheduler = AsyncIOScheduler()
+
+scheduler.add_jobstore('sqlalchemy', url=JOB_STORE_URL)
+
+scheduler.start()
 
 
 async def init_db():
