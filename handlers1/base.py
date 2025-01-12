@@ -35,7 +35,7 @@ from states import SwiftSepaStates, ProductStates, OzonProduct
 from utils.handlers import save_data_to_storage, check_user
 from utils.scheduler import test_scheduler
 
-from db.base import OzonProduct as OzonProductModel, User
+from db.base import OzonProduct as OzonProductModel, User, Base
 
 
 main_router = Router()
@@ -131,6 +131,7 @@ async def test_db_ozon(message: types.Message,
 @main_router.callback_query(F.data.startswith('bot'))
 async def redirect_to_(callback: types.CallbackQuery,
                         state: FSMContext,
+                        session: AsyncSession,
                         bot: Bot,
                         scheduler: AsyncIOScheduler,
                         marker: str = None):
@@ -143,6 +144,24 @@ async def redirect_to_(callback: types.CallbackQuery,
 
     data = await state.get_data()
     msg = data.get('msg')
+
+
+    JobModel = Base.classes.apscheduler_jobs
+###
+
+    query = (
+        select(JobModel.name,
+               JobModel.id)
+    )
+
+    res = await session.execute(query)
+    res = res.fetchall()
+
+    for r in res:
+        print(r._data)
+###
+
+
 
     _text = f'{marker.upper()} бот\nВыберите действие'
 
@@ -164,7 +183,9 @@ async def redirect_to_(callback: types.CallbackQuery,
 @main_router.callback_query(F.data == 'cancel')
 async def callback_cancel(callback: types.Message | types.CallbackQuery,
                             state: FSMContext,
-                            bot: Bot,):
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
     # await start(callback,
     #             state,
     #             bot)
@@ -174,7 +195,9 @@ async def callback_cancel(callback: types.Message | types.CallbackQuery,
 
     await redirect_to_(callback,
                        state,
+                       session,
                        bot,
+                       scheduler,
                        marker=action)
     
 
@@ -220,7 +243,9 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
     
     await redirect_to_(callback,
                        state,
+                       session,
                        bot,
+                       scheduler,
                        marker=action)
     
     # await callback.answer(text='Пункт выдачи добавлен.',
