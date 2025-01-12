@@ -148,19 +148,19 @@ async def redirect_to_(callback: types.CallbackQuery,
 
     JobModel = Base.metadata.tables['apscheduler_jobs']
 
-    print(JobModel)
+    print(JobModel.__dict__)
 ###
 
-    query = (
-        select(JobModel.name,
-               JobModel.id)
-    )
+    # query = (
+    #     select(JobModel.name,
+    #            JobModel.id)
+    # )
 
-    res = await session.execute(query)
-    res = res.fetchall()
+    # res = await session.execute(query)
+    # res = res.fetchall()
 
-    for r in res:
-        print(r._data)
+    # for r in res:
+    #     print(r._data)
 ###
 
 
