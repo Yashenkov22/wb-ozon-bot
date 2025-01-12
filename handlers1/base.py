@@ -60,7 +60,9 @@ async def start(message: types.Message | types.CallbackQuery,
     # print(type(scheduler))
     scheduler.print_jobs()
 
-    scheduler.add_job(test_scheduler, 'cron', second=30, args=(message.from_user.id, ))
+    _job = scheduler.add_job(test_scheduler, 'cron', second=30, args=(message.from_user.id, ))
+
+    print(_job, _job.__dict__)
 
     scheduler.print_jobs()
     
