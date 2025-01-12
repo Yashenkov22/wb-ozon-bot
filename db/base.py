@@ -86,21 +86,6 @@ class WbProduct(Base):
     wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'))
 
 
-class CustomSchedulerJob(Base):
-    __tablename__ = 'custom_scheduler_jobs'
-
-    id = Column(String(191), primary_key=True, nullable=False)
-    next_run_time = Column(Float, nullable=True)
-    job_state = Column(BLOB, nullable=False)
-    job_name = Column(String(255), nullable=True)
-    job_args = Column(JSON, nullable=True)
-    created_at = Column(TIMESTAMP, server_default='CURRENT_TIMESTAMP')
-
-    user_id = Column(Integer, ForeignKey('users.tg_id'))
-    
-    # Связь с пользователем
-
-
 # Создаем асинхронный движок и сессию
 # DATABASE_URL = "sqlite+aiosqlite:///test.db"
 engine = create_async_engine(db_url, echo=True)
