@@ -38,6 +38,15 @@ db_url = URL.create(
     database=DB_NAME,
 )
 
+_db_url = URL.create(
+    'postgresql+psycopg2',
+    username=DB_USER,
+    password=DB_PASS,
+    host=DB_HOST,
+    port=DB_PORT,
+    database=DB_NAME,
+)
+
 # Client Bot API
 API_ID = os.environ.get('API_ID')
 API_HASH = os.environ.get('API_HASH')

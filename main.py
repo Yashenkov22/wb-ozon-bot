@@ -114,7 +114,7 @@ async def on_startup():
     scheduler.start()
     
     # await init_db()
-    Base.metadata.reflect(bind=engine)
+    # Base.metadata.reflect(bind=engine)
     
 #     # Base.prepare(engine, reflect=True)
 

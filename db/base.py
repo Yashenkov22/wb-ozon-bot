@@ -2,7 +2,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from config import db_url
+from config import db_url, _db_url
 
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -91,6 +91,11 @@ class WbProduct(Base):
 
 # Создаем асинхронный движок и сессию
 # DATABASE_URL = "sqlite+aiosqlite:///test.db"
+
+_engine = create_engine(_db_url, echo=True)
+
+Base.metadata.ferlect(bind=_engine)
+
 engine = create_async_engine(db_url, echo=True)
 # AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 session = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
