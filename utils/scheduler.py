@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from db.base import WbProduct, WbPunkt, User
 
-from main import bot
+from bot22 import bot
 
 
 async def push_check_wb_price(callback: types.CallbackQuery,

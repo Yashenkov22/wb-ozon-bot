@@ -41,11 +41,13 @@ from handlers1.base import main_router
 from handlers1.ozon import ozon_router
 from handlers1.wb import wb_router
 
+from bot22 import bot
+
 
 ### WEBHOOK ###
 
 #TG BOT
-bot = Bot(TOKEN, parse_mode="HTML")
+# bot = Bot(TOKEN, parse_mode="HTML")
 
 # #####
 # # api_client = Client('my_account',
