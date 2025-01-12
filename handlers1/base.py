@@ -70,7 +70,7 @@ async def start(message: types.Message | types.CallbackQuery,
                              'cron',
                              second=30,
                              args=(message.from_user.id, ),
-                             name=job_name)
+                             id=job_name)
 
     scheduler.print_jobs()
     
