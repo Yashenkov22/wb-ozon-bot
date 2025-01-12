@@ -60,9 +60,17 @@ async def start(message: types.Message | types.CallbackQuery,
     # print(type(scheduler))
     scheduler.print_jobs()
 
-    _job = scheduler.add_job(test_scheduler, 'cron', second=30, args=(message.from_user.id, ))
+    _product_name = 'wb'
 
-    print(_job, _job.__dir__)
+    _product_id = 'test_product_id'
+
+    job_name = f'{message.from_user.id}_{_product_name}_{_product_id}'
+
+    _job = scheduler.add_job(test_scheduler,
+                             'cron',
+                             second=30,
+                             args=(message.from_user.id, ),
+                             name=job_name)
 
     scheduler.print_jobs()
     

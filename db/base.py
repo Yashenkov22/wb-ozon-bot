@@ -7,7 +7,7 @@ from config import db_url
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
-from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, DateTime, TIMESTAMP
+from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, DateTime, TIMESTAMP, BLOB, JSON
 
 # Определяем базовый класс для моделей
 Base = declarative_base()
@@ -84,10 +84,21 @@ class WbProduct(Base):
     time_create = Column(TIMESTAMP(timezone=True))
     user_id = Column(Integer, ForeignKey('users.tg_id'))
     wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'))
+
+
+class CustomSchedulerJob(Base):
+    __tablename__ = 'custom_scheduler_jobs'
+
+    id = Column(String(191), primary_key=True, nullable=False)
+    next_run_time = Column(Float, nullable=True)
+    job_state = Column(BLOB, nullable=False)
+    job_name = Column(String(255), nullable=True)
+    job_args = Column(JSON, nullable=True)
+    created_at = Column(TIMESTAMP, server_default='CURRENT_TIMESTAMP')
+
+    user_id = Column(Integer, ForeignKey('users.tg_id'))
     
     # Связь с пользователем
-    user = relationship(User, back_populates="wb_products")
-    wb_punkt = relationship(WbPunkt, back_populates="wb_products")
 
 
 # Создаем асинхронный движок и сессию
