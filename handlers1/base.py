@@ -160,7 +160,7 @@ async def redirect_to_(callback: types.CallbackQuery,
     res = res.fetchall()
 
     for r in res:
-        print(r.name, r.id)
+        print(r)
 ###
 
 
