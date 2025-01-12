@@ -94,7 +94,6 @@ scheduler = AsyncIOScheduler()
 
 scheduler.add_jobstore('sqlalchemy', url=JOB_STORE_URL)
 
-scheduler.start()
 
 dp.update.middleware(DbSessionMiddleware(session_pool=session,
                                          scheduler=scheduler))
@@ -112,6 +111,7 @@ async def on_startup():
     await bot.set_webhook(f"{PUBLIC_URL}{WEBHOOK_PATH}",
                           allowed_updates=['message', 'callback_query'])
                         #   drop_pending_updates=True,
+    scheduler.start()
     
     # await init_db()
     
