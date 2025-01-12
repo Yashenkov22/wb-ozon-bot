@@ -16,6 +16,9 @@ WEBAPP_URL_THREE = os.environ.get('WEBAPP_URL_THREE')
 PUBLIC_URL = os.environ.get('PUBLIC_URL')
 
 
+JOB_STORE_URL = os.environ.get('JOB_STORE_URL')
+
+
 #DATABASE
 DB_USER = os.environ.get('DB_USER')
 DB_PASS = os.environ.get('POSTGRES_PASSWORD')

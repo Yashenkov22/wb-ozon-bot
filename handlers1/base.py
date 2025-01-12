@@ -31,7 +31,9 @@ from keyboards import (create_start_kb,
                        create_bot_start_kb)
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
+
 from utils.handlers import save_data_to_storage, check_user
+from utils.scheduler import test_scheduler
 
 from db.base import OzonProduct as OzonProductModel, User
 
@@ -56,7 +58,11 @@ async def start(message: types.Message | types.CallbackQuery,
     # logger.info('hi')
     # print(scheduler)
     # print(type(scheduler))
-    # scheduler.print_jobs()
+    scheduler.print_jobs()
+
+    scheduler.add_job(test_scheduler, 'cron', second=30, args=(message.from_user.id, ))
+
+    scheduler.print_jobs()
     
     await state.update_data(action=None)
 
@@ -116,7 +122,10 @@ async def test_db_ozon(message: types.Message,
 async def redirect_to_(callback: types.CallbackQuery,
                         state: FSMContext,
                         bot: Bot,
+                        scheduler: AsyncIOScheduler,
                         marker: str = None):
+    scheduler.print_jobs()
+
     if not marker:
         marker = callback.data.split('_')[-1]
 

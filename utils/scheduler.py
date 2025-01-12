@@ -8,6 +8,8 @@ from sqlalchemy import select
 
 from db.base import WbProduct, WbPunkt, User
 
+from main import bot
+
 
 async def push_check_wb_price(callback: types.CallbackQuery,
                               session: AsyncSession,
@@ -72,3 +74,10 @@ async def push_check_wb_price(callback: types.CallbackQuery,
 
                 print('основная:', _basic_price)
                 print('актупльная:', _product_price)
+
+
+async def test_scheduler(user_id: str):
+    # user_id = message.from_user.id
+
+    await bot.send_message(chat_id=user_id,
+                           text='test scheduler every 30 sec')

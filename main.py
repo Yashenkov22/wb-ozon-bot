@@ -11,6 +11,7 @@ from uvicorn import Config, Server
 from pyrogram import Client
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
 from starlette.middleware.cors import CORSMiddleware
 
@@ -23,7 +24,7 @@ from aiogram.fsm.storage.redis import RedisStorage
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from db.base import engine, session, Base
+from db.base import engine, session, Base, db_url
 
 from middlewares.db import DbSessionMiddleware
 
@@ -40,6 +41,9 @@ from handlers1.base import main_router
 from handlers1.ozon import ozon_router
 from handlers1.wb import wb_router
 
+
+### WEBHOOK ###
+
 #TG BOT
 bot = Bot(TOKEN, parse_mode="HTML")
 
@@ -54,9 +58,13 @@ dp.include_router(ozon_router)
 dp.include_router(wb_router)
 dp.include_router(main_router)
 
+JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
+
 scheduler = AsyncIOScheduler()
 
-# scheduler.start()
+scheduler.add_jobstore('sqlalchemy', url=JOB_STORE_URL)
+
+scheduler.start()
 
 # #Add session and database connection in handlers 
 dp.update.middleware(DbSessionMiddleware(session_pool=session,
@@ -101,7 +109,7 @@ async def on_startup():
                           allowed_updates=['message', 'callback_query'])
                         #   drop_pending_updates=True,
     
-    await init_db()
+    # await init_db()
     
 #     # Base.prepare(engine, reflect=True)
 
@@ -117,6 +125,13 @@ async def on_startup():
 async def bot_webhook(update: dict):
     tg_update = types.Update(**update)
     await dp.feed_update(bot=bot, update=tg_update)
+
+
+if __name__ == '__main__':
+    event_loop.run_until_complete(server.serve())
+
+
+################
 
 
 # @app.get('/send_to_tg_group')
@@ -171,40 +186,76 @@ async def bot_webhook(update: dict):
     ###
 
 
+# ### LONG POOLING ###
+
+
+# # Настройка хранилища
+# # jobstores = {
+# #     'default': SQLAlchemyJobStore(url=db_url)  # Используйте SQLite или другую БД
+# # }
+
+# # scheduler = AsyncIOScheduler(jobstores=jobstores)
+
+
 # async def main():
 #     bot = Bot(TOKEN, parse_mode="HTML")
-    # w = await bot.get_my_commands()
-    # print(w)
-    # await bot.set_my_commands([
-    #     types.BotCommand(command='send',description='send mass message'),
-    # ])
-    # w = await bot.get_my_commands()
-    # print(w)
+#     # w = await bot.get_my_commands()
+#     # print(w)
+#     # await bot.set_my_commands([
+#     #     types.BotCommand(command='send',description='send mass message'),
+#     # ])
+#     # w = await bot.get_my_commands()
+#     # print(w)
 
 
-    # api_client = Client('my_account',
-    #                     api_id=API_ID,
-    #                     api_hash=API_HASH)
+#     # api_client = Client('my_account',
+#     #                     api_id=API_ID,
+#     #                     api_hash=API_HASH)
+#     async def init_db():
+#         async with engine.begin() as conn:
+#             # Создаем таблицы
+#             # await conn.run_sync(Base.metadata.drop_all)
+#             await conn.run_sync(Base.metadata.create_all)
+
+#     # await init_db()
 
 
+#     dp = Dispatcher()
+#     dp.include_router(ozon_router)
+#     dp.include_router(wb_router)
+#     dp.include_router(main_router)
 
-    # dp = Dispatcher()
-    # dp.include_router(main_router)
-    # dp.update.middleware(DbSessionMiddleware(session_pool=session))
+#     # DATABASE_URL = "postgresql+asyncpg://postgres:22222@psql_db2/postgres"
 
-    # engine = create_engine(db_url,
-    #                        echo=True)
 
-    # Base.prepare(engine, reflect=True)
+#     # jobstores = {
+#     #     'default': SQLAlchemyJobStore(engine=engine)
+#     # }
+#     DATABASE_URL = "postgresql+psycopg2://postgres:22222@psql_db2/postgres"
+
+#     scheduler = AsyncIOScheduler()
+
+#     scheduler.add_jobstore('sqlalchemy', url=DATABASE_URL)
+
+#     scheduler.start()
+
+#     # #Add session and database connection in handlers 
+#     dp.update.middleware(DbSessionMiddleware(session_pool=session,
+#                                          scheduler=scheduler))
+
+#     # engine = create_engine(db_url,
+#     #                        echo=True)
+
+#     # Base.prepare(engine, reflect=True)
     
 
-    # await bot.delete_webhook(drop_pending_updates=True)
-    # await dp.start_polling(bot)
-    # await event_loop.run_until_complete(server.serve())
-    # uvicorn.run('main:app', host='0.0.0.0', port=8001)
+#     await bot.delete_webhook(drop_pending_updates=True)
+#     await dp.start_polling(bot)
+#     # await event_loop.run_until_complete(server.serve())
+#     # uvicorn.run('main:app', host='0.0.0.0', port=8001)
 
 
 # if __name__ == '__main__':
 #     asyncio.run(main())
-if __name__ == '__main__':
-    event_loop.run_until_complete(server.serve())
+# # if __name__ == '__main__':
+# #     event_loop.run_until_complete(server.serve())
