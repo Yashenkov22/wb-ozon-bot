@@ -145,7 +145,6 @@ async def redirect_to_(callback: types.CallbackQuery,
     data = await state.get_data()
     msg = data.get('msg')
 
-
     # JobModel = Base.metadata.tables['apscheduler_jobs']
     JobModel = Base.classes.apscheduler_jobs
 
@@ -162,7 +161,7 @@ async def redirect_to_(callback: types.CallbackQuery,
     res = res.fetchall()
 
     for r in res:
-        print(r._data)
+        print(r.name, r.id)
 ###
 
 
