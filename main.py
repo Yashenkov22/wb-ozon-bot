@@ -62,8 +62,6 @@ dp.include_router(main_router)
 
 
 # #Add session and database connection in handlers 
-dp.update.middleware(DbSessionMiddleware(session_pool=session,
-                                         scheduler=scheduler))
 
 # #Initialize web server
 app = FastAPI(docs_url='/docs_send')
@@ -98,6 +96,8 @@ scheduler.add_jobstore('sqlalchemy', url=JOB_STORE_URL)
 
 scheduler.start()
 
+dp.update.middleware(DbSessionMiddleware(session_pool=session,
+                                         scheduler=scheduler))
 
 async def init_db():
     async with engine.begin() as conn:
