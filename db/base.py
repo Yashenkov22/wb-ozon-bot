@@ -64,7 +64,6 @@ class OzonProduct(Base):
     
     # Связь с пользователем
     user = relationship(User, back_populates="ozon_products")
-    wb_punkt = relationship(WbPunkt, back_populates="wb_products")
 
 
 class WbProduct(Base):
@@ -87,6 +86,7 @@ class WbProduct(Base):
     wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'))
 
     user = relationship(User, back_populates="wb_products")
+    wb_punkt = relationship(WbPunkt, back_populates="wb_products")
 
 
 # Создаем асинхронный движок и сессию
