@@ -146,7 +146,7 @@ async def redirect_to_(callback: types.CallbackQuery,
     msg = data.get('msg')
 
 
-    JobModel = Base.Base.metadata.tables['apscheduler_jobs']
+    JobModel = Base.metadata.tables['apscheduler_jobs']
 
     print(JobModel)
 ###
