@@ -153,8 +153,7 @@ async def redirect_to_(callback: types.CallbackQuery,
 ###
 
     query = (
-        select(JobModel.name,
-               JobModel.id)
+        select(JobModel.id)
     )
 
     res = await session.execute(query)
