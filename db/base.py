@@ -85,6 +85,8 @@ class WbProduct(Base):
     user_id = Column(Integer, ForeignKey('users.tg_id'))
     wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'))
 
+    user = relationship(User, back_populates="wb_products")
+
 
 # Создаем асинхронный движок и сессию
 # DATABASE_URL = "sqlite+aiosqlite:///test.db"
