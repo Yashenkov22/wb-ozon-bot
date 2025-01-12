@@ -64,6 +64,7 @@ class OzonProduct(Base):
     
     # Связь с пользователем
     user = relationship(User, back_populates="ozon_products")
+    wb_punkt = relationship(WbPunkt, back_populates="wb_products")
 
 
 class WbProduct(Base):
