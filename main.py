@@ -113,7 +113,7 @@ async def on_startup():
                         #   drop_pending_updates=True,
     scheduler.start()
     
-    # await init_db()
+    await init_db()
     
 #     # Base.prepare(engine, reflect=True)
 
