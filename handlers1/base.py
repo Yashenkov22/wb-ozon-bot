@@ -146,19 +146,21 @@ async def redirect_to_(callback: types.CallbackQuery,
     msg = data.get('msg')
 
 
-    JobModel = Base.classes.apscheduler_jobs
+    # JobModel = Base.classes.apscheduler_jobs
+
+    print(Base.__dir__())
 ###
 
-    query = (
-        select(JobModel.name,
-               JobModel.id)
-    )
+    # query = (
+    #     select(JobModel.name,
+    #            JobModel.id)
+    # )
 
-    res = await session.execute(query)
-    res = res.fetchall()
+    # res = await session.execute(query)
+    # res = res.fetchall()
 
-    for r in res:
-        print(r._data)
+    # for r in res:
+    #     print(r._data)
 ###
 
 
