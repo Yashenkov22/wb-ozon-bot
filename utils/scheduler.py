@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy import select, and_
 
-from db.base import WbProduct, WbPunkt, User, session, UserJob
+from db.base import WbProduct, WbPunkt, User, get_session, UserJob
 
 from bot22 import bot
 
@@ -16,86 +16,86 @@ async def push_check_wb_price(user_id: str,
     
     print(f'фоновая задача {user_id}')
 
-    async with session() as session:
-        session: AsyncSession
-        async with session.begin():
-            query = (
-                select(
-                    User.username,
-                    WbProduct.short_link,
-                    WbProduct.actual_price,
-                    WbProduct.basic_price,
-                    WbPunkt.zone
-                )\
-                .select_from(WbProduct)\
-                .join(WbPunkt,
-                      WbProduct.wb_punkt_id == WbPunkt.id)\
-                .join(User,
-                      WbProduct.user_id == User.tg_id)\
-                .where(
-                    and_(
-                        User.tg_id == user_id,
-                        WbProduct.id == product_id,
-                    ))
-            )
+    session: AsyncSession = get_session()
 
-            res = await session.execute(query)
+    async with session.begin():
+        query = (
+            select(
+                User.username,
+                WbProduct.short_link,
+                WbProduct.actual_price,
+                WbProduct.basic_price,
+                WbPunkt.zone
+            )\
+            .select_from(WbProduct)\
+            .join(WbPunkt,
+                    WbProduct.wb_punkt_id == WbPunkt.id)\
+            .join(User,
+                    WbProduct.user_id == User.tg_id)\
+            .where(
+                and_(
+                    User.tg_id == user_id,
+                    WbProduct.id == product_id,
+                ))
+        )
 
-            res = res.fetchall()
+        res = await session.execute(query)
 
-            if res:
-                username, short_link, actual_price, basic_price, zone = res[0]
-    # user_id = callback.from_user.id
+        res = res.fetchall()
 
-    # query = (
-    #     select(
-    #         WbProduct.short_link,
-    #         WbPunkt.zone,
-    #     )\
-    #     .select_from(WbProduct)\
-    #     .join(WbPunkt,
-    #           WbProduct.wb_punkt_id == WbPunkt.id)\
-    #     .join(User,
-    #           WbProduct.user_id == User.tg_id)\
-    #     .where(User.tg_id == user_id)
-    # )
+        if res:
+            username, short_link, actual_price, basic_price, zone = res[0]
+# user_id = callback.from_user.id
 
-    # res = await session.execute(query)
+# query = (
+#     select(
+#         WbProduct.short_link,
+#         WbPunkt.zone,
+#     )\
+#     .select_from(WbProduct)\
+#     .join(WbPunkt,
+#           WbProduct.wb_punkt_id == WbPunkt.id)\
+#     .join(User,
+#           WbProduct.user_id == User.tg_id)\
+#     .where(User.tg_id == user_id)
+# )
 
-    # res = res.fetchall()
+# res = await session.execute(query)
 
-    # if not res:
-    #     return
-    
-    # short_link, zone = res[0]
+# res = res.fetchall()
 
-    async with aiohttp.ClientSession() as aiosession:
-        _url = f"http://172.18.0.2:8080/product/{zone}/{short_link}"
-        response = await aiosession.get(url=_url)
-        res = await response.json()
+# if not res:
+#     return
 
-        d = res.get('data')
+# short_link, zone = res[0]
 
-        print(d.get('products')[0].get('sizes'))
+        async with aiohttp.ClientSession() as aiosession:
+            _url = f"http://172.18.0.2:8080/product/{zone}/{short_link}"
+            response = await aiosession.get(url=_url)
+            res = await response.json()
 
-        sizes = d.get('products')[0].get('sizes')
+            d = res.get('data')
 
-        _basic_price = _product_price = None
-        
-        for size in sizes:
-            _price = size.get('price')
-            if _price:
-                _basic_price = size.get('price').get('basic')
-                _product_price = size.get('price').get('product')
+            print(d.get('products')[0].get('sizes'))
 
-                _basic_price = str(_basic_price)[:-2]
-                _product_price = str(_product_price)[:-2]
+            sizes = d.get('products')[0].get('sizes')
 
-                print('основная:', _basic_price)
-                print('актупльная:', _product_price)
+            _basic_price = _product_price = None
+            
+            for size in sizes:
+                _price = size.get('price')
+                if _price:
+                    _basic_price = size.get('price').get('basic')
+                    _product_price = size.get('price').get('product')
 
-        await bot.send_message(chat_id=user_id,
-                               text=f'{_basic_price} and {_product_price}')
+                    _basic_price = str(_basic_price)[:-2]
+                    _product_price = str(_product_price)[:-2]
+
+                    print('основная:', _basic_price)
+                    print('актупльная:', _product_price)
+
+            await bot.send_message(chat_id=user_id,
+                                text=f'{_basic_price} and {_product_price}')
 
 
 async def test_scheduler(user_id: str):

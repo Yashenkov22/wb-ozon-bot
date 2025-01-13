@@ -119,6 +119,10 @@ engine = create_async_engine(db_url, echo=True)
 # AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 session = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
+
+async def get_session():
+    async with session() as session:
+        yield session
 # Base = automap_base()
 
 # engine = create_engine(db_url,
