@@ -116,7 +116,7 @@ async def on_startup():
                         #   drop_pending_updates=True,
     scheduler.start()
     
-    await init_db()
+    # await init_db()
     # Base.metadata.reflect(bind=engine)
     
 #     # Base.prepare(engine, reflect=True)

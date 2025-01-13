@@ -10,7 +10,8 @@ from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, DateTime, TIMESTAMP, BLOB, JSON
 
 # Определяем базовый класс для моделей
-Base = declarative_base()
+# Base = declarative_base()
+Base = automap_base()
 
 # Определяем модель
 class User(Base):
@@ -106,13 +107,12 @@ class UserJob(Base):
 # Создаем асинхронный движок и сессию
 # DATABASE_URL = "sqlite+aiosqlite:///test.db"
 
-# sync_engine = create_engine(_db_url, echo=True)
+sync_engine = create_engine(_db_url, echo=True)
 
-# Base = automap_base()
 
 
 # Base.prepare(engine, reflect=True)
-# Base.prepare(autoload_with=sync_engine)
+Base.prepare(autoload_with=sync_engine)
 # Base.metadata.reflect(bind=_engine)
 
 engine = create_async_engine(db_url, echo=True)
