@@ -279,7 +279,7 @@ async def delete_callback(callback: types.CallbackQuery,
                 .where(
                     and_(
                         UserJob.user_id == int(user_id),
-                        UserJob.product_id == product_id,
+                        UserJob.product_id == int(product_id),
                     )
                 )
             )
