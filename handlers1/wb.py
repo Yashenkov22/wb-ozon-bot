@@ -614,7 +614,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     )
 
     async with session as session:
-        res = await session.execute(query)
+        res = await session.execute(job_id_query)
 
         job_id = res.scalar_one_or_none()
 
