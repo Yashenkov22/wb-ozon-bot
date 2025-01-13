@@ -607,7 +607,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
         .where(
             and_(
                 User.tg_id == callback.from_user.id,
-                UserJob.product_marker == marker,
+                UserJob.product_marker == f"{marker}_product",
                 UserJob.product_id == product_id,
             )
         )
