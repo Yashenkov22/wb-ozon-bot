@@ -16,37 +16,36 @@ async def push_check_wb_price(user_id: str,
     
     print(f'фоновая задача {user_id}')
 
-    session_gen = get_session()
+    async for session in get_session():
+        try:
+            query = (
+                select(
+                    User.username,
+                    WbProduct.short_link,
+                    WbProduct.actual_price,
+                    WbProduct.basic_price,
+                    WbPunkt.zone
+                )\
+                .select_from(WbProduct)\
+                .join(WbPunkt,
+                        WbProduct.wb_punkt_id == WbPunkt.id)\
+                .join(User,
+                        WbProduct.user_id == User.tg_id)\
+                .where(
+                    and_(
+                        User.tg_id == user_id,
+                        WbProduct.id == product_id,
+                    ))
+            )
 
-    session: AsyncSession = anext(session_gen)
+            res = await session.execute(query)
 
-    async with session.begin():
-        query = (
-            select(
-                User.username,
-                WbProduct.short_link,
-                WbProduct.actual_price,
-                WbProduct.basic_price,
-                WbPunkt.zone
-            )\
-            .select_from(WbProduct)\
-            .join(WbPunkt,
-                    WbProduct.wb_punkt_id == WbPunkt.id)\
-            .join(User,
-                    WbProduct.user_id == User.tg_id)\
-            .where(
-                and_(
-                    User.tg_id == user_id,
-                    WbProduct.id == product_id,
-                ))
-        )
+            res = res.fetchall()
+        finally:
+            session.close()
 
-        res = await session.execute(query)
-
-        res = res.fetchall()
-
-        if res:
-            username, short_link, actual_price, basic_price, zone = res[0]
+    if res:
+        username, short_link, actual_price, basic_price, zone = res[0]
 # user_id = callback.from_user.id
 
 # query = (

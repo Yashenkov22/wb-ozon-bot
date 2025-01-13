@@ -116,8 +116,8 @@ Base.prepare(autoload_with=sync_engine)
 # Base.metadata.reflect(bind=_engine)
 
 engine = create_async_engine(db_url, echo=True)
-# AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 session = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+# AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def get_session():
