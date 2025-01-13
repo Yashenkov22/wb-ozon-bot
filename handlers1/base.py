@@ -15,7 +15,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from sqlalchemy.orm import Session, joinedload, sessionmaker
-from sqlalchemy import insert, select, update, or_
+from sqlalchemy import and_, insert, select, update, or_, delete
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,7 +35,7 @@ from states import SwiftSepaStates, ProductStates, OzonProduct
 from utils.handlers import save_data_to_storage, check_user
 from utils.scheduler import test_scheduler
 
-from db.base import OzonProduct as OzonProductModel, User, Base
+from db.base import OzonProduct as OzonProductModel, User, Base, UserJob, WbProduct
 
 
 main_router = Router()
@@ -260,6 +260,49 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
     #             session,
     #             bot,
     #             scheduler)
+
+@main_router.callback_query(F.data.startswith('delete'))
+async def delete_callback(callback: types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot,
+                        scheduler: AsyncIOScheduler):
+    callback_data = callback.data.split('_')[1:]
+    marker, user_id, product_id, job_id = callback_data
+
+    match marker:
+        case 'wb':
+            query = (
+                delete(
+                    UserJob
+                )\
+                .where(
+                    and_(
+                        UserJob.user_id == user_id,
+                        WbProduct.id == product_id,
+                    )
+                )
+            )
+            async with session.begin():
+                await session.execute(query)
+                try:
+                    await session.commit()
+                    scheduler.remove_job(job_id=job_id)
+                except Exception as ex:
+                    print(ex)
+                else:
+                    await callback.answer('Товар успешно удален',
+                                          show_alert=True)
+                    await redirect_to_(callback,
+                                    state,
+                                    session,
+                                    bot,
+                                    scheduler,
+                                    marker=marker)
+            pass
+        case 'ozon':
+            pass
+
 
 @main_router.message()
 async def any_input(message: types.Message):

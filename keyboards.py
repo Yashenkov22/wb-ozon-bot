@@ -37,7 +37,7 @@ def create_bot_start_kb(marker: Literal['wb', 'ozon']):
                                         callback_data='list_punkt'))
         _kb.row(types.InlineKeyboardButton(text='Добавить товар',
                                         callback_data='check_price'))
-        _kb.row(types.InlineKeyboardButton(text='Посмотреть товар',
+        _kb.row(types.InlineKeyboardButton(text='Посмотреть товары',
                                         callback_data='view_price'))
 
     else:
@@ -73,5 +73,17 @@ def create_done_kb(marker: Literal['wb_punkt',
 
     _kb.add(types.InlineKeyboardButton(text='Отправить',
                                        callback_data=f'done__{marker}'))
+    
+    return _kb
+
+
+
+def create_remove_kb(user_id: int,
+                     product_id: str,
+                     job_id: str):
+    _kb = InlineKeyboardBuilder()
+
+    _kb.add(types.InlineKeyboardButton(text='Удалить товар',
+                                       callback_data=f'delete_wb_{user_id}_{product_id}_{job_id}'))
     
     return _kb

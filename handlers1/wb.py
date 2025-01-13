@@ -15,7 +15,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from sqlalchemy.orm import Session, joinedload, sessionmaker
-from sqlalchemy import insert, select, update, or_
+from sqlalchemy import and_, insert, select, update, or_
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,13 +28,14 @@ from keyboards import (create_start_kb,
                        create_done_kb,
                        create_wb_start_kb,
                        add_back_btn,
-                       create_bot_start_kb)
+                       create_bot_start_kb,
+                       create_remove_kb)
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
 from utils.handlers import save_data_to_storage, check_user
 
-from db.base import WbProduct, WbPunkt, User
+from db.base import UserJob, WbProduct, WbPunkt, User
 
 
 wb_router = Router()
@@ -549,6 +550,8 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     data = await state.get_data()
     msg: types.Message = data.get('msg')
 
+    marker = data.get('action')
+
     # if not data.get('lat') or not data.get('lon'):
     #     await callback.answer(text='Сначала добавьте пункт выдачи',
     #                           show_alert=True)
@@ -561,7 +564,8 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     # _text = 'Отправьте ссылку на товар'
 
     query = (
-        select(WbProduct.link,
+        select(WbProduct.id,
+               WbProduct.link,
                WbProduct.actual_price,
                WbProduct.basic_price,
                WbProduct.user_id,
@@ -575,6 +579,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                 User.tg_id == WbPunkt.user_id)\
         .where(User.tg_id == callback.from_user.id)
     )
+
 
     async with session as session:
         res = await session.execute(query)
@@ -590,7 +595,32 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     wb_product_detail = _data[0]
 
-    link, actaul_price, basic_price, user_id, time_create, push_price, zone = wb_product_detail
+    product_id, link, actaul_price, basic_price, user_id, time_create, push_price, zone = wb_product_detail
+
+
+    job_id_query = (
+        select(
+            UserJob.job_id,
+        )\
+        .join(User,
+              UserJob.user_id == User.tg_id)
+        .where(
+            and_(
+                User.tg_id == callback.from_user.id,
+                UserJob.product_marker == marker,
+                UserJob.product_id == product_id,
+            )
+        )
+    )
+
+    async with session as session:
+        res = await session.execute(query)
+
+        job_id = res.scalar_one_or_none()
+
+    if not job_id:
+        await callback.answer('error', show_alert=True)
+        return
 
     # Преобразование времени в московскую временную зону
     time_create: datetime
@@ -599,7 +629,10 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     _text = f'Привет {user_id}\nТвой WB товар\n{link}\nЗона доставки: {zone}\nОсновная цена: {basic_price}\nАктуальная цена: {actaul_price}\nОтслеживаемая цена: {push_price}\nДата начала отслеживания: {moscow_time}'
 
-    _kb = create_or_add_cancel_btn()
+    _kb = create_remove_kb(user_id=callback.from_user.id,
+                           product_id=product_id,
+                           job_id=job_id)
+    _kb = create_or_add_cancel_btn(_kb)
 
     if msg:
         await bot.edit_message_text(text=_text,
