@@ -137,8 +137,9 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                                         trigger='cron',
                                         second=30,
                                         kwargs={'user_id': callback.from_user.id,
-                                                'product_id': wb_product_id,
-                                                'zone': zone})
+                                                'short_link': data.get('wb_product_id'),
+                                                'zone': zone,
+                                                'product_id': wb_product_id})
                         
                         _data = {
                             'user_id': callback.from_user.id,

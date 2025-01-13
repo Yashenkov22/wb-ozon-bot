@@ -12,11 +12,9 @@ from bot22 import bot
 
 
 async def push_check_wb_price(user_id: str,
-                              product_id: str,
-                              zone: str,
                               short_link: str,
-                              session: AsyncSession,
-                              bot: Bot):
+                              zone: str,
+                              product_id: str):
     print(f'фоновая задача {user_id}')
     # user_id = callback.from_user.id
 
