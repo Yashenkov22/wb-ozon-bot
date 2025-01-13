@@ -29,7 +29,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                 lon = data.get('lon')
                 del_zone = data.get('del_zone')
 
-                data = {
+                _data = {
                     'lat': float(lat),
                     'lon': float(lon),
                     'zone': del_zone,
@@ -39,7 +39,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
 
                 query = (
                     insert(WbPunkt)\
-                    .values(**data)
+                    .values(**_data)
                 )
 
                 await session.execute(query)
@@ -57,7 +57,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
 
                     # _text = 'Wb пукнт успешно добавлен'
             case 'ozon_product':
-                data = {
+                _data = {
                     'link': data.get('ozon_link'),
                     'short_link': data.get('ozon_product_id'),
                     'actual_price': data.get('ozon_actual_price'),
@@ -68,7 +68,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                 
                 query = (
                     insert(OzonProduct)\
-                    .values(**data)
+                    .values(**_data)
                 )
 
                 await session.execute(query)
@@ -97,9 +97,11 @@ async def save_data_to_storage(callback: types.CallbackQuery,
 
                     _wb_punkt_id = _wb_punkt_id.fetchall()
 
+                    print('short_link', data.get('wb_product_id'))
+
                     if _wb_punkt_id:
                         _wb_punkt_id, zone = _wb_punkt_id[0]
-                        data = {
+                        _data = {
                             'link': data.get('wb_product_link'),
                             'short_link': data.get('wb_product_id'),
                             'basic_price': data.get('wb_basic_price'),
@@ -111,7 +113,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                             'push_price': float(data.get('push_price')),
                         }
 
-                        wb_product = WbProduct(**data)
+                        wb_product = WbProduct(**_data)
 
                         session.add(wb_product)
 

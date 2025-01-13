@@ -15,6 +15,7 @@ async def push_check_wb_price(user_id: str,
                               short_link: str,
                               zone: str,
                               product_id: str):
+    
     print(f'фоновая задача {user_id}')
     # user_id = callback.from_user.id
 
