@@ -18,7 +18,7 @@ async def push_check_wb_price(user_id: str,
 
     session_gen = get_session()
 
-    session: AsyncSession = next(session_gen)
+    session: AsyncSession = anext(session_gen)
 
     async with session.begin():
         query = (
