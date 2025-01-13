@@ -272,7 +272,7 @@ async def delete_callback(callback: types.CallbackQuery,
 
     match marker:
         case 'wb':
-            query = (
+            query1 = (
                 delete(
                     UserJob
                 )\
@@ -283,13 +283,26 @@ async def delete_callback(callback: types.CallbackQuery,
                     )
                 )
             )
+            query2 = (
+                delete(
+                    WbProduct
+                )\
+                .where(
+                    and_(
+                        # WbProduct.user_id == int(user_id),
+                        WbProduct.id == int(product_id),
+                    )
+                )
+            )
             async with session.begin():
-                await session.execute(query)
+                await session.execute(query1)
+                await session.execute(query2)
                 try:
                     await session.commit()
                     scheduler.remove_job(job_id=job_id)
                 except Exception as ex:
                     print(ex)
+                    await session.rollback()
                 else:
                     await callback.answer('Товар успешно удален',
                                           show_alert=True)
