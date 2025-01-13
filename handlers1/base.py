@@ -66,11 +66,14 @@ async def start(message: types.Message | types.CallbackQuery,
 
     job_name = f'{message.from_user.id}_{_product_name}_{_product_id}'
 
-    _job = scheduler.add_job(test_scheduler,
-                             'cron',
-                             second=30,
-                             args=(message.from_user.id, ),
-                             id=job_name)
+    try:
+        _job = scheduler.add_job(test_scheduler,
+                                'cron',
+                                second=30,
+                                args=(message.from_user.id, ),
+                                id=job_name)
+    except Exception as ex:
+        print(ex)
 
     scheduler.print_jobs()
     
@@ -81,7 +84,7 @@ async def start(message: types.Message | types.CallbackQuery,
 
     _kb = create_start_kb()
     msg = await bot.send_message(text='Привет.\nЭто тестовые WB и OZON боты.',
-                                 chat_id=message.chat.id,
+                                chat_id=message.chat.id,
                                 reply_markup=_kb.as_markup())
     
     await state.update_data(msg=msg)
