@@ -60,20 +60,20 @@ async def start(message: types.Message | types.CallbackQuery,
     # print(type(scheduler))
     scheduler.print_jobs()
 
-    _product_name = 'wb'
+    # _product_name = 'wb'
 
-    _product_id = 'test_product_id'
+    # _product_id = 'test_product_id'
 
-    job_name = f'{message.from_user.id}_{_product_name}_{_product_id}'
+    # job_name = f'{message.from_user.id}_{_product_name}_{_product_id}'
 
-    try:
-        _job = scheduler.add_job(test_scheduler,
-                                'cron',
-                                second=30,
-                                args=(message.from_user.id, ),
-                                id=job_name)
-    except Exception as ex:
-        print(ex)
+    # try:
+    #     _job = scheduler.add_job(test_scheduler,
+    #                             'cron',
+    #                             second=30,
+    #                             args=(message.from_user.id, ),
+    #                             id=job_name)
+    # except Exception as ex:
+    #     print(ex)
 
     scheduler.print_jobs()
     
