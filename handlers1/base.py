@@ -299,25 +299,25 @@ async def delete_callback(callback: types.CallbackQuery,
                 await session.execute(query2)
                 try:
                     await session.commit()
-                    job = scheduler.get_job(job_id=job_id,
-                                            jobstore='sqlalchemy')
-                    print('JOB', job)
+                    # job = scheduler.get_job(job_id=job_id,
+                    #                         jobstore='sqlalchemy')
+                    # print('JOB', job)
 
                     
-                    # scheduler.remove_job(job_id=job_id,
-                    #                      jobstore='sqlalchemy')
+                    scheduler.remove_job(job_id=job_id,
+                                         jobstore='sqlalchemy')
                 except Exception as ex:
                     print(ex)
                     await session.rollback()
                 else:
                     await callback.answer('Товар успешно удален',
                                           show_alert=True)
-                    await redirect_to_(callback,
-                                    state,
-                                    session,
-                                    bot,
-                                    scheduler,
-                                    marker=marker)
+            await redirect_to_(callback,
+                            state,
+                            session,
+                            bot,
+                            scheduler,
+                            marker=marker)
             pass
         case 'ozon':
             pass
