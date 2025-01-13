@@ -89,16 +89,29 @@ class WbProduct(Base):
     wb_punkt = relationship(WbPunkt, back_populates="wb_products")
 
 
+
+class UserJob(Base):
+    __tablename__ = 'user_job'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(String)
+    user_id = Column(Integer, ForeignKey('users.tg_id'))
+    product_id = Column(Integer)
+    product_marker = Column(String)
+
+    user = relationship(User, back_populates="jobs")
+
+
 # Создаем асинхронный движок и сессию
 # DATABASE_URL = "sqlite+aiosqlite:///test.db"
 
-_engine = create_engine(_db_url, echo=True)
+# sync_engine = create_engine(_db_url, echo=True)
 
-Base = automap_base()
+# Base = automap_base()
 
 
 # Base.prepare(engine, reflect=True)
-Base.prepare(autoload_with=_engine)
+# Base.prepare(autoload_with=sync_engine)
 # Base.metadata.reflect(bind=_engine)
 
 engine = create_async_engine(db_url, echo=True)

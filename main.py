@@ -24,7 +24,9 @@ from aiogram.fsm.storage.redis import RedisStorage
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from db.base import engine, session, Base, db_url
+from sqlalchemy.ext.automap import automap_base
+
+from db.base import engine, session, Base, db_url, sync_engine
 
 from middlewares.db import DbSessionMiddleware
 
@@ -104,6 +106,7 @@ async def init_db():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
+
 # #Set webhook and create database on start
 @app.on_event('startup')
 async def on_startup():
@@ -113,7 +116,7 @@ async def on_startup():
                         #   drop_pending_updates=True,
     scheduler.start()
     
-    # await init_db()
+    await init_db()
     # Base.metadata.reflect(bind=engine)
     
 #     # Base.prepare(engine, reflect=True)

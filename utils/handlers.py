@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from db.base import User, WbProduct, WbPunkt, OzonProduct
+from db.base import User, WbProduct, WbPunkt, OzonProduct, UserJob
 
 from utils.scheduler import push_check_wb_price
 
@@ -83,53 +83,83 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                 pass
             case 'wb_product':
             # if _basic_price and _product_price:
-                query = (
-                    select(WbPunkt.id)\
-                    .join(User,
-                            WbPunkt.user_id == User.tg_id)\
-                    .where(User.tg_id == callback.from_user.id)
-                )
 
-                _wb_punkt_id = await session.execute(query)
-
-                _wb_punkt_id = _wb_punkt_id.scalar_one_or_none()
-
-                if _wb_punkt_id:
-                    data = {
-                        'link': data.get('wb_product_link'),
-                        'short_link': data.get('wb_product_id'),
-                        'basic_price': data.get('wb_basic_price'),
-                        'actual_price': data.get('wb_product_price'),
-                        'now_price': data.get('wb_product_price'),
-                        'time_create': datetime.now(),
-                        'user_id': callback.from_user.id,
-                        'wb_punkt_id': _wb_punkt_id,
-                        'push_price': float(data.get('push_price')),
-                    }
-                    
+                async with session.begin():
                     query = (
-                        insert(WbProduct)\
-                        .values(**data)
+                        select(WbPunkt.id,
+                               WbPunkt.zone)\
+                        .join(User,
+                                WbPunkt.user_id == User.tg_id)\
+                        .where(User.tg_id == callback.from_user.id)
                     )
-                    await session.execute(query)
 
-                    try:
-                        await session.commit()
-                    except Exception as ex:
-                        print(ex)
+                    _wb_punkt_id = await session.execute(query)
+
+                    _wb_punkt_id = _wb_punkt_id.fetchall()
+
+                    if _wb_punkt_id:
+                        _wb_punkt_id, zone = _wb_punkt_id[0]
+                        data = {
+                            'link': data.get('wb_product_link'),
+                            'short_link': data.get('wb_product_id'),
+                            'basic_price': data.get('wb_basic_price'),
+                            'actual_price': data.get('wb_product_price'),
+                            'now_price': data.get('wb_product_price'),
+                            'time_create': datetime.now(),
+                            'user_id': callback.from_user.id,
+                            'wb_punkt_id': _wb_punkt_id,
+                            'push_price': float(data.get('push_price')),
+                        }
+
+                        wb_product = WbProduct(**data)
+
+                        session.add(wb_product)
+
+                        await session.flush()
+
+                        wb_product_id = wb_product.id
+
+                        print('product_id', wb_product_id)
+                        
+                        # query = (
+                        #     insert(WbProduct)\
+                        #     .values(**data)
+                        # )
+                        # await session.execute(query)
+
+                        # try:
+                        #     await session.commit()
+                        # except Exception as ex:
+                        #     print(ex)
+                        # else:
+                            # scheduler.add_job()
+                        job = scheduler.add_job(push_check_wb_price,
+                                        trigger='cron',
+                                        second=30,
+                                        kwargs={'user_id': callback.from_user.id,
+                                                'product_id': wb_product_id,
+                                                'zone': zone})
+                        
+                        _data = {
+                            'user_id': callback.from_user.id,
+                            'product_id': wb_product_id,
+                            'product_marker': 'wb_product',
+                            'job_id': job.id,
+                        }
+
+                        user_job = UserJob(**_data)
+
+                        session.add(user_job)
+
+                        try:
+                            await session.commit()
+                        except Exception as ex:
+                            print(ex)
+                            _text = 'Что то пошло не так'
+                        else:
+                            _text = 'Wb товар успешно добавлен'
                     else:
-                        # scheduler.add_job()
-                        scheduler.add_job(push_check_wb_price,
-                                          trigger='cron',
-                                          hour=datetime.now().hour,
-                                          minute=datetime.now().minute + 1,
-                                          start_date=datetime.now(),
-                                          kwargs={'callback': callback,
-                                                  'session': session,
-                                                  'bot': bot})
-                    _text = 'Wb товар успешно добавлен'
-                else:
-                    _text = 'Что то пошло не так'
+                        _text = 'Что то пошло не так'
 
     return _text
 

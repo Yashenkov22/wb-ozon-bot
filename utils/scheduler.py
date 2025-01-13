@@ -11,46 +11,38 @@ from db.base import WbProduct, WbPunkt, User
 from bot22 import bot
 
 
-async def push_check_wb_price(callback: types.CallbackQuery,
+async def push_check_wb_price(user_id: str,
+                              product_id: str,
+                              zone: str,
+                              short_link: str,
                               session: AsyncSession,
                               bot: Bot):
-    print(f'фоновая задача {callback.from_user.id}')
-    user_id = callback.from_user.id
+    print(f'фоновая задача {user_id}')
+    # user_id = callback.from_user.id
 
-    query = (
-        select(
-            WbProduct.short_link,
-            WbPunkt.zone,
-        )\
-        .select_from(WbProduct)\
-        .join(WbPunkt,
-              WbProduct.wb_punkt_id == WbPunkt.id)\
-        .join(User,
-              WbProduct.user_id == User.tg_id)\
-        .where(User.tg_id == user_id)
-    )
+    # query = (
+    #     select(
+    #         WbProduct.short_link,
+    #         WbPunkt.zone,
+    #     )\
+    #     .select_from(WbProduct)\
+    #     .join(WbPunkt,
+    #           WbProduct.wb_punkt_id == WbPunkt.id)\
+    #     .join(User,
+    #           WbProduct.user_id == User.tg_id)\
+    #     .where(User.tg_id == user_id)
+    # )
 
-    res = await session.execute(query)
+    # res = await session.execute(query)
 
-    res = res.fetchall()
+    # res = res.fetchall()
 
-    if not res:
-        return
+    # if not res:
+    #     return
     
-    short_link, zone = res[0]
+    # short_link, zone = res[0]
 
     async with aiohttp.ClientSession() as aiosession:
-        # _url = f"http://172.18.0.2:8080/pickUpPoint/{lat}/{lon}"
-        # response = await aiosession.get(url=_url)
-
-        # res = await response.json()
-
-        # deliveryRegions = res.get('deliveryRegions')
-
-        # print(deliveryRegions)
-
-        # del_zone = deliveryRegions[-1]
-
         _url = f"http://172.18.0.2:8080/product/{zone}/{short_link}"
         response = await aiosession.get(url=_url)
         res = await response.json()
@@ -74,6 +66,9 @@ async def push_check_wb_price(callback: types.CallbackQuery,
 
                 print('основная:', _basic_price)
                 print('актупльная:', _product_price)
+
+        await bot.send_message(chat_id=user_id,
+                               text=f'{_basic_price} and {_product_price}')
 
 
 async def test_scheduler(user_id: str):
