@@ -16,7 +16,9 @@ async def push_check_wb_price(user_id: str,
     
     print(f'фоновая задача {user_id}')
 
-    session: AsyncSession = get_session()
+    session_gen = get_session()
+
+    session: AsyncSession = next(session_gen)
 
     async with session.begin():
         query = (
