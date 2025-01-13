@@ -138,6 +138,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                         job = scheduler.add_job(push_check_wb_price,
                                         trigger='cron',
                                         second=30,
+                                        jobstore='sqlalchemy',
                                         kwargs={'user_id': callback.from_user.id,
                                                 'product_id': wb_product_id})
                         

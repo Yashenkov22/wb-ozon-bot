@@ -94,7 +94,7 @@ JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
 
 scheduler = AsyncIOScheduler()
 
-scheduler.add_jobstore('sqlalchemy', url=JOB_STORE_URL)
+scheduler.add_jobstore('sqlalchemy', 'sqlalchemy', url=JOB_STORE_URL)
 
 
 dp.update.middleware(DbSessionMiddleware(session_pool=session,
