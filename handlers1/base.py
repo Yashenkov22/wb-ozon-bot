@@ -299,7 +299,8 @@ async def delete_callback(callback: types.CallbackQuery,
                 await session.execute(query2)
                 try:
                     await session.commit()
-                    scheduler.remove_job(job_id=job_id)
+                    scheduler.remove_job(job_id=job_id,
+                                         jobstore='sqlalchemy')
                 except Exception as ex:
                     print(ex)
                     await session.rollback()
