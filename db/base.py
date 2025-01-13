@@ -121,8 +121,8 @@ session = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=
 
 
 async def get_session():
-    async with session() as session:
-            yield session
+    async with session() as _session:
+            yield _session
 
 # Base = automap_base()
 
