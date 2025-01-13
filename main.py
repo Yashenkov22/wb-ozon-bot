@@ -26,7 +26,7 @@ from sqlalchemy.orm import sessionmaker, Session
 
 from sqlalchemy.ext.automap import automap_base
 
-from db.base import engine, session, Base, db_url, sync_engine
+from db.base import engine, session, Base, db_url
 
 from middlewares.db import DbSessionMiddleware
 
