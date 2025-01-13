@@ -26,6 +26,7 @@ class User(Base):
     ozon_products = relationship("OzonProduct", back_populates="user")
     wb_punkts = relationship("WbPunkt", back_populates="user")
     wb_products = relationship("WbProduct", back_populates="user")
+    jobs = relationship('UserJob', back_populates="user")
 
 
 class WbPunkt(Base):
