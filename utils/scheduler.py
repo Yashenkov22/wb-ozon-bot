@@ -4,19 +4,47 @@ from aiogram import types, Bot
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy import select
+from sqlalchemy import select, and_
 
-from db.base import WbProduct, WbPunkt, User
+from db.base import WbProduct, WbPunkt, User, session, UserJob
 
 from bot22 import bot
 
 
 async def push_check_wb_price(user_id: str,
-                              short_link: str,
-                              zone: str,
                               product_id: str):
     
     print(f'фоновая задача {user_id}')
+
+    async with session() as session:
+        session: AsyncSession
+        async with session.begin():
+            query = (
+                select(
+                    User.username,
+                    WbProduct.short_link,
+                    WbProduct.actual_price,
+                    WbProduct.basic_price,
+                    WbPunkt.zone
+                )\
+                .select_from(WbProduct)\
+                .join(WbPunkt,
+                      WbProduct.wb_punkt_id == WbPunkt.id)\
+                .join(User,
+                      WbProduct.user_id == User.tg_id)\
+                .where(
+                    and_(
+                        User.tg_id == user_id,
+                        WbProduct.id == product_id,
+                    ))
+            )
+
+            res = await session.execute(query)
+
+            res = res.fetchall()
+
+            if res:
+                username, short_link, actual_price, basic_price, zone = res[0]
     # user_id = callback.from_user.id
 
     # query = (
