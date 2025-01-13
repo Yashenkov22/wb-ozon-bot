@@ -42,8 +42,10 @@ async def push_check_wb_price(user_id: str,
 
             res = res.fetchall()
         finally:
-            session.close()
-
+            try:
+                await session.close()
+            except Exception:
+                pass
     if res:
         username, short_link, actual_price, basic_price, zone = res[0]
 # user_id = callback.from_user.id
