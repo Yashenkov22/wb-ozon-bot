@@ -210,7 +210,7 @@ async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
     _kb = create_done_kb(marker='ozon_product')
     _kb = create_or_add_cancel_btn(_kb)
 
-    link = data.get('ozon_product_link')
+    link = data.get('ozon_link')
     start_price = data.get('ozon_start_price')
     product_price = data.get('ozon_actual_price')
 
