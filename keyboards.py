@@ -80,10 +80,11 @@ def create_done_kb(marker: Literal['wb_punkt',
 
 def create_remove_kb(user_id: int,
                      product_id: str,
+                     marker: Literal['wb', 'ozon'],
                      job_id: str):
     _kb = InlineKeyboardBuilder()
 
     _kb.add(types.InlineKeyboardButton(text='Удалить товар',
-                                       callback_data=f'delete_wb_{user_id}_{product_id}_{job_id}'))
+                                       callback_data=f'delete_{marker}_{user_id}_{product_id}_{job_id}'))
     
     return _kb
