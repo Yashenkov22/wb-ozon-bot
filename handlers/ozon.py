@@ -241,7 +241,8 @@ async def list_product(callback: types.Message | types.CallbackQuery,
         select(
             OzonProductModel.link,
             OzonProductModel.actual_price,
-            OzonProductModel.basic_price,
+            OzonProductModel.start_price,
+            OzonProductModel.percent,
             OzonProductModel.time_create,
             OzonProductModel.user_id)\
         .join(User,
@@ -261,7 +262,7 @@ async def list_product(callback: types.Message | types.CallbackQuery,
 
     ozon_product = ozon_product[0]
 
-    link, actual_price, basic_price, time_create, _user_id = ozon_product
+    link, actual_price, start_price, percent, time_create, _user_id = ozon_product
 
     # Преобразование времени в московскую временную зону
     time_create: datetime
@@ -274,7 +275,11 @@ async def list_product(callback: types.Message | types.CallbackQuery,
 
     if ozon_product:
         _kb = create_or_add_cancel_btn()
-        await callback.message.edit_text(f'Привет {_user_id}\nТвой товар\n{link}\nОсновная цена: {basic_price}\nАктуальная цена: {actual_price}\nДата создания отслеживания: {moscow_time}',
+        waiting_price = actual_price - ((actual_price * percent) / 100)
+
+        _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\nНачальная цена: {start_price}\nАктуальная цена: {actual_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+
+        await callback.message.edit_text(text=_text,
                                          reply_markup=_kb.as_markup())
     else:
         await callback.answer('не получилось')
