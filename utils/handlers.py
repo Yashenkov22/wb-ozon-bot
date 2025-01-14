@@ -104,13 +104,12 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                         _data = {
                             'link': data.get('wb_product_link'),
                             'short_link': data.get('wb_product_id'),
-                            'basic_price': data.get('wb_basic_price'),
+                            'start_price': data.get('wb_start_price'),
                             'actual_price': data.get('wb_product_price'),
-                            'now_price': data.get('wb_product_price'),
+                            'percent': float(data.get('percent')),
                             'time_create': datetime.now(),
                             'user_id': callback.from_user.id,
                             'wb_punkt_id': _wb_punkt_id,
-                            'push_price': float(data.get('push_price')),
                         }
 
                         wb_product = WbProduct(**_data)

@@ -4,7 +4,7 @@ from aiogram import types, Bot
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, update
 
 from db.base import WbProduct, WbPunkt, User, get_session, UserJob
 
@@ -23,7 +23,8 @@ async def push_check_wb_price(user_id: str,
                     User.username,
                     WbProduct.short_link,
                     WbProduct.actual_price,
-                    WbProduct.basic_price,
+                    WbProduct.start_price,
+                    WbProduct.percent,
                     WbPunkt.zone
                 )\
                 .select_from(WbProduct)\
@@ -47,7 +48,7 @@ async def push_check_wb_price(user_id: str,
             except Exception:
                 pass
     if res:
-        username, short_link, actual_price, basic_price, zone = res[0]
+        username, short_link, actual_price, start_price, percent, zone = res[0]
 # user_id = callback.from_user.id
 
 # query = (
@@ -97,8 +98,37 @@ async def push_check_wb_price(user_id: str,
                     print('основная:', _basic_price)
                     print('актупльная:', _product_price)
 
+            _product_price = float(_product_price)
+            
+            check_price = _product_price == actual_price
+
+            if check_price:
+                _text = 'цена не изменилась'
+            else:
+                _waiting_price = actual_price - ((actual_price * percent) / 100)
+
+                query = (
+                    update(
+                        WbProduct
+                    )\
+                    .values(actual_price=_product_price)\
+                    .where(WbProduct.id == product_id)
+                )
+                async for session in get_session():
+                    try:
+                        await session.execute(query)
+                        await session.commit()
+                    except Exception as ex:
+                        await session.rollback()
+                        print(ex)
+                # if _waiting_price == actual_price:
+                _text = f'Цена изменилась\nОбновленная цена товара: {_product_price}'
+
+                if _waiting_price >= _product_price:
+                    _text = f'Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price}'
             await bot.send_message(chat_id=user_id,
-                                text=f'{_basic_price} and {_product_price}')
+                                    text=_text)
+
 
 
 async def test_scheduler(user_id: str):

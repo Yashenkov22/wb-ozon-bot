@@ -14,7 +14,7 @@ class FeedbackFormStates(StatesGroup):
 
 class ProductStates(StatesGroup):
     _id = State()
-    push_price = State()
+    percent = State()
 
 
 

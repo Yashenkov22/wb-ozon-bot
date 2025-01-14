@@ -41,48 +41,6 @@ from db.base import UserJob, WbProduct, WbPunkt, User
 wb_router = Router()
 
 
-# @wb_router.callback_query(F.data == 'add_punkt')
-# async def add_punkt(callback: types.Message | types.CallbackQuery,
-#                     state: FSMContext,
-#                     session: AsyncSession,
-#                     bot: Bot):
-#     await state.set_state(SwiftSepaStates.coords)
-#     data = await state.get_data()
-
-#     query = (
-#         select(
-#             WbPunkt.id
-#         )\
-#         .join(User,
-#               WbPunkt.user_id == User.tg_id)\
-#         .where(User.tg_id == callback.from_user.id)
-#     )
-
-#     res = await session.execute(query)
-
-#     _wb_punkt = res.scalar_one_or_none()
-
-#     if _wb_punkt:
-#         await callback.answer(text='Пункт выдачи уже добален',
-#                               show_alert=True)
-        
-#         return
-
-#     msg: types.Message = data.get('msg')
-#     _text = 'Введите координаты пункта доставки в формате: latitude, longitude\nПример: 59.915643, 30.402345'
-
-#     _kb = create_or_add_cancel_btn()
-
-#     if msg:
-#         await bot.edit_message_text(text=_text,
-#                                     chat_id=msg.chat.id,
-#                                     message_id=msg.message_id,
-#                                     reply_markup=_kb.as_markup())
-#     else:
-#         await callback.message.answer(text=_text,
-#                              reply_markup=_kb.as_markup())
-
-
 @wb_router.callback_query(F.data == 'add_punkt')
 async def add_punkt(callback: types.Message | types.CallbackQuery,
                     state: FSMContext,
@@ -158,31 +116,6 @@ async def add_punkt(callback: types.Message | types.CallbackQuery,
     await callback.message.edit_text(text=_text,
                                         reply_markup=_kb.as_markup())
 
-    # if msg:
-    #     await bot.edit_message_text(text=_text,
-    #                                 chat_id=msg.chat.id,
-    #                                 message_id=msg.message_id,
-    #                                 reply_markup=_kb.as_markup())
-    # else:
-    #     await message.answer(text=_text,
-    #                          reply_markup=_kb.as_markup())
-        
-    # await message.delete()
-
-    # msg: types.Message = data.get('msg')
-    # _text = 'Введите координаты пункта доставки в формате: latitude, longitude\nПример: 59.915643, 30.402345'
-
-    # _kb = create_or_add_cancel_btn()
-
-    # if msg:
-    #     await bot.edit_message_text(text=_text,
-    #                                 chat_id=msg.chat.id,
-    #                                 message_id=msg.message_id,
-    #                                 reply_markup=_kb.as_markup())
-    # else:
-    #     await callback.message.answer(text=_text,
-    #                          reply_markup=_kb.as_markup())
-
 
 @wb_router.message(SwiftSepaStates.coords)
 async def proccess_lat(message: types.Message | types.CallbackQuery,
@@ -243,7 +176,6 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
                     bot: Bot):
     data = await state.get_data()
 
-    # _list_punkt = data.get('list_punkt')
     query = (
         select(
             WbPunkt.lat,
@@ -275,11 +207,6 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
 
         _text = f'Ваш пункт выдачи\nКоординаты: {lat}, {lon}\nПользователь: {_user}\nВремя добавления пункта выдачи: {moscow_time}'
 
-    # if _list_punkt:
-    #     _text = ''
-    #     for _id, punkt in enumerate(_list_punkt, start=1):
-    #         _sub_text = f'{_id}. Широта: {punkt[0]}, Долгота: {punkt[-1]}'
-    #         _text += _sub_text + '\n'
     else:
         _text = 'Нет добавленных пунктов'
 
@@ -297,7 +224,7 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
                             reply_markup=_kb.as_markup())        
 
 
-@wb_router.callback_query(F.data == 'check_price')
+@wb_router.callback_query(F.data == 'add_wb_product')
 async def add_wb_product(callback: types.Message | types.CallbackQuery,
                         state: FSMContext,
                         session: AsyncSession,
@@ -320,14 +247,6 @@ async def add_wb_product(callback: types.Message | types.CallbackQuery,
             await callback.answer(text='Не получилось найти пункт выдачи',
                                 show_alert=True)
             return
-
-        # if not data.get('lat') or not data.get('lon'):
-        #     await callback.answer(text='Сначала добавьте пункт выдачи',
-        #                           show_alert=True)
-        #     # await start(callback,
-        #     #             state,
-        #     #             bot)
-        #     return
 
         query = (
             select(
@@ -375,11 +294,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     wb_product_id = wb_product_link[_idx_prefix + len(_prefix):].split('/')[0]
 
-    # await state.update_data(wb_product_link=wb_product_link)
-    # await state.update_data(wb_product_id=wb_product_id)
     data = await state.get_data()
-
-    # lat, lon = data.get('list_punkt')[0]
 
     msg: types.Message = data.get('msg')
 
@@ -398,23 +313,16 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         await message.answer('Не получилось найти пункт выдачи')
         return
 
-    # print('beginning')
-
     async with aiohttp.ClientSession() as aiosession:
-        # _url = f"http://172.18.0.2:8080/pickUpPoint/{lat}/{lon}"
-        # response = await aiosession.get(url=_url)
-
-        # res = await response.json()
-
-        # deliveryRegions = res.get('deliveryRegions')
-
-        # print(deliveryRegions)
-
-        # del_zone = deliveryRegions[-1]
-
         _url = f"http://172.18.0.2:8080/product/{del_zone}/{wb_product_id}"
         response = await aiosession.get(url=_url)
-        res = await response.json()
+
+        try:
+            res = await response.json()
+        except Exception as ex:
+            print('API RESPONSE ERROR', ex)
+            await message.answer('ошибка при запросе к апи\n/start')
+            return
 
         d = res.get('data')
 
@@ -438,61 +346,19 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
                 await state.update_data(wb_product_link=wb_product_link)
                 await state.update_data(wb_product_id=wb_product_id)
-                await state.update_data(wb_basic_price=float(_basic_price))
+                await state.update_data(wb_start_price=float(_product_price))
                 await state.update_data(wb_product_price=float(_product_price))
-                # await state.update_data(wb_del_zone=del_zone)
 
+                await state.set_state(ProductStates.percent)
 
-        # sizes = d.get('products')[0].get('sizes')[0]
+                example_percent = 10
+                example_different = (_product_price * example_percent) / 100
+                example_price = _product_price - example_percent
 
-        # basic_price = sizes.get('price').get('basic')
-
-        # product_price = sizes.get('price').get('product')
-
-        # print(price)
-        # if _basic_price and _product_price:
-        #     query = (
-        #         select(WbPunkt.id)\
-        #         .join(User,
-        #               WbPunkt.user_id == User.id)\
-        #         .where(User.id == message.from_user.id)
-        #     )
-
-        #     _wb_punkt_id = await session.execute(query)
-
-        #     _wb_punkt_id = _wb_punkt_id.scalar_one_or_none()
-
-        #     if _wb_punkt_id:
-        #         data = {
-        #             'link': wb_product_link,
-        #             'short_link': wb_product_id,
-        #             'basic_price': _basic_price,
-        #             'actual_price': _product_price,
-        #             'time_create': datetime.now(),
-        #             'user_id': message.from_user.id,
-        #             'wb_punkt_id': _wb_punkt_id,
-        #         }
-                
-        #         query = (
-        #             insert(WbProduct)\
-        #             .values(**data)
-        #         )
-        #         await session.execute(query)
-
-        #         try:
-        #             await session.commit()
-        #         except Exception as ex:
-        #             print(ex)
-                await state.set_state(ProductStates.push_price)
-                _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}\nВведите сумму, если цена продукта станет ниже или равной этой сумме - мы Вас уведомим'
+                _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}\nВведите <b>процент как число</b>.\nКогда цена товара снизится <b>на этот процент или ниже</b>, мы сообщим Вам.\nПример:\n Процент - {example_percent}\nОжидаемая(или ниже) цена товара: {_product_price} - {example_different} = {example_price}'
             else:
                 _text = 'Не удалось найти цену товара'
-        # for key in d.get('products')[0].get('sizes'):
-        #     print(key)
-        
-        # print(res)
 
-    # _kb = create_done_kb(marker='wb_product')
     _kb = create_or_add_cancel_btn()
 
     if msg:
@@ -508,7 +374,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
 
 
-@wb_router.message(ProductStates.push_price)
+@wb_router.message(ProductStates.percent)
 async def proccess_push_price(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
                             session: AsyncSession,
@@ -517,18 +383,18 @@ async def proccess_push_price(message: types.Message | types.CallbackQuery,
 
     msg = data.get('msg')
     
-    push_price = message.text
+    percent = message.text.strip()
 
-    await state.update_data(push_price=push_price)
+    await state.update_data(percent=percent)
 
     _kb = create_done_kb(marker='wb_product')
     _kb = create_or_add_cancel_btn(_kb)
 
     link = data.get('wb_product_link')
-    basic_price = data.get('wb_basic_price')
+    start_price = data.get('wb_start_price')
     product_price = data.get('wb_product_price')
 
-    _text = f'Ваш товар: {link}\nОсновная цена: {basic_price}\nАктуальная цена: {product_price}\nожидаемая цена: {push_price}'
+    _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nпроцент: {percent}'
 
     if msg:
         await bot.edit_message_text(text=_text,
@@ -552,25 +418,14 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     marker = data.get('action')
 
-    # if not data.get('lat') or not data.get('lon'):
-    #     await callback.answer(text='Сначала добавьте пункт выдачи',
-    #                           show_alert=True)
-    #     # await start(callback,
-    #     #             state,
-    #     #             bot)
-    #     return
-
-    # await state.set_state(ProductStates._id)
-    # _text = 'Отправьте ссылку на товар'
-
     query = (
         select(WbProduct.id,
                WbProduct.link,
                WbProduct.actual_price,
-               WbProduct.basic_price,
+               WbProduct.start_price,
                WbProduct.user_id,
                WbProduct.time_create,
-               WbProduct.push_price,
+               WbProduct.percent,
                WbPunkt.zone)\
         .select_from(WbProduct)\
         .join(User,
@@ -595,7 +450,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     wb_product_detail = _data[0]
 
-    product_id, link, actaul_price, basic_price, user_id, time_create, push_price, zone = wb_product_detail
+    product_id, link, actaul_price, start_price, user_id, time_create, percent, zone = wb_product_detail
 
 
     job_id_query = (
@@ -627,7 +482,9 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     moscow_tz = pytz.timezone('Europe/Moscow')
     moscow_time = time_create.astimezone(moscow_tz)
 
-    _text = f'Привет {user_id}\nТвой WB товар\n{link}\nЗона доставки: {zone}\nОсновная цена: {basic_price}\nАктуальная цена: {actaul_price}\nОтслеживаемая цена: {push_price}\nДата начала отслеживания: {moscow_time}'
+    waiting_price = actaul_price - ((actaul_price * percent) / 100)
+
+    _text = f'Привет {user_id}\nТвой WB товар\n{link}\nЗона доставки: {zone}\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
 
     _kb = create_remove_kb(user_id=callback.from_user.id,
                            product_id=product_id,
@@ -642,34 +499,3 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     else:
         await callback.message.answer(text=_text,
                              reply_markup=_kb.as_markup())
-
-# @wb_router.callback_query(F.data.startswith('done'))
-# async def add_punkt_callback_done(callback: types.Message | types.CallbackQuery,
-#                                     state: FSMContext,
-#                                     session: AsyncSession,
-#                                     bot: Bot,
-#                                     scheduler: AsyncIOScheduler):
-#     data = await state.get_data()
-
-#     action = data.get('action')
-#     callback_data = callback.data.split('__')[-1]
-
-#     _text = await save_data_to_storage(callback,
-#                                         state,
-#                                         callback_data)
-    
-#     await callback.answer(text=_text,
-#                           show_alert=True)
-    
-#     await redirect_to_(callback,
-#                        state,
-#                        bot,
-#                        marker=action)
-    
-    # await callback.answer(text='Пункт выдачи добавлен.',
-    #                       show_alert=True)
-    # await start(callback,
-    #             state,
-    #             session,
-    #             bot,
-    #             scheduler)
