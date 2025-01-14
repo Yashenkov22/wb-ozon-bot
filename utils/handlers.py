@@ -10,7 +10,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from db.base import User, WbProduct, WbPunkt, OzonProduct, UserJob
 
-from utils.scheduler import push_check_wb_price
+from utils.scheduler import push_check_ozon_price, push_check_wb_price
 
 
 async def save_data_to_storage(callback: types.CallbackQuery,
@@ -61,17 +61,43 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                     'link': data.get('ozon_link'),
                     'short_link': data.get('ozon_product_id'),
                     'actual_price': data.get('ozon_actual_price'),
-                    'basic_price': data.get('ozon_basic_price'),
+                    'start_price': data.get('ozon_start_price'),
+                    'percent': data.get('percent'),
                     'time_create': datetime.now(),
                     'user_id': callback.from_user.id,
                 }
                 
-                query = (
-                    insert(OzonProduct)\
-                    .values(**_data)
-                )
+                # query = (
+                #     insert(OzonProduct)\
+                #     .values(**_data)
+                # )
 
-                await session.execute(query)
+                # await session.execute(query)
+                ozon_product = OzonProduct(**_data)
+
+                session.add(ozon_product)
+
+                await session.flush()
+
+                ozon_product_id = ozon_product.id
+
+                job = scheduler.add_job(push_check_ozon_price,
+                                trigger='cron',
+                                second=30,
+                                jobstore='sqlalchemy',
+                                kwargs={'user_id': callback.from_user.id,
+                                        'product_id': ozon_product_id})
+                
+                _data = {
+                    'user_id': callback.from_user.id,
+                    'product_id': ozon_product_id,
+                    'product_marker': 'ozon_product',
+                    'job_id': job.id,
+                }
+
+                user_job = UserJob(**_data)
+
+                session.add(user_job)
 
                 try:
                     await session.commit()

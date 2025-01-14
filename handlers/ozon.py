@@ -158,7 +158,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
                 print(_d)
 
-                await state.update_data(ozon_basic_price=_d.get('price', 0))
+                await state.update_data(ozon_start_price=_d.get('price', 0))
                 await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
 
                 price_text = '|'.join(str(v) for v in _d.items())

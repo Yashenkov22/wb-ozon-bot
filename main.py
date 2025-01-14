@@ -39,9 +39,9 @@ from config import (TOKEN,
                     REDIS_PASSWORD)
 # from handlers import main_router
 
-from handlers1.base import main_router
-from handlers1.ozon import ozon_router
-from handlers1.wb import wb_router
+from handlers.base import main_router
+from handlers.ozon import ozon_router
+from handlers.wb import wb_router
 
 from bot22 import bot
 
