@@ -113,7 +113,7 @@ sync_engine = create_engine(_db_url, echo=True)
 
 
 # Base.prepare(engine, reflect=True)
-Base.prepare(autoload_with=sync_engine)
+# Base.prepare(autoload_with=sync_engine)
 # Base.metadata.reflect(bind=sync_engine)
 
 engine = create_async_engine(db_url, echo=True)
