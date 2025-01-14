@@ -93,7 +93,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     msg: types.Message = data.get('msg')
 
-    _kb = create_done_kb(marker='ozon_product')
+    # _kb = create_done_kb(marker='ozon_product')
 
     _kb = create_or_add_cancel_btn(_kb)
 
@@ -158,16 +158,25 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
                 print(_d)
 
-                await state.update_data(ozon_start_price=_d.get('price', 0))
+                await state.update_data(ozon_start_price=_d.get('cardPrice', 0))
                 await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
 
                 price_text = '|'.join(str(v) for v in _d.items())
             else:
                 _text = 'Возникли проблемы'
+        
+        _product_price = _d.get('cardPrice')
+        example_percent = 10
+        example_different = (_product_price * example_percent) / 100
+        example_price = _product_price - example_different
 
-        _text = f'Ваш продукт\n{message.text}\nЦена продукта: {price_text}'
+        _text = f'Основная цена товара: {_product_price}\nАктуальная цена товара: {_product_price}\nВведите <b>процент как число</b>.\nКогда цена товара снизится <b>на этот процент или ниже</b>, мы сообщим Вам.\n\nПример:\n   Процент: {example_percent}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_different} = {example_price}'
+
+        # _text = f'Ваш продукт\n{message.text}\nЦена продукта: {price_text}'
 
         await state.update_data(ozon_product=message.text)
+
+        await state.set_state(OzonProduct.percent)
 
         if msg:
             await bot.edit_message_text(text=_text,
@@ -184,6 +193,42 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         print(ex)
         pass
         
+
+@ozon_router.message(ProductStates.percent)
+async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot):
+    data = await state.get_data()
+
+    msg = data.get('msg')
+    
+    percent = message.text.strip()
+
+    await state.update_data(percent=percent)
+
+    _kb = create_done_kb(marker='ozon_product')
+    _kb = create_or_add_cancel_btn(_kb)
+
+    link = data.get('ozon_product_link')
+    start_price = data.get('ozon_start_price')
+    product_price = data.get('ozon_product_price')
+
+    waiting_price = float(product_price) - ((float(product_price) * int(percent) / 100))
+
+    _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nпроцент: {percent}\nОжидаемая цена: {waiting_price}'
+
+    if msg:
+        await bot.edit_message_text(text=_text,
+                                    chat_id=msg.chat.id,
+                                    message_id=msg.message_id,
+                                    reply_markup=_kb.as_markup())
+    else:
+        await message.answer(text=_text,
+                             reply_markup=_kb.as_markup())
+
+    await message.delete()
+
 
 @ozon_router.callback_query(F.data == 'list_product')
 async def list_product(callback: types.Message | types.CallbackQuery,
