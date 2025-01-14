@@ -15,7 +15,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from sqlalchemy.orm import Session, joinedload, sessionmaker
-from sqlalchemy import insert, select, update, or_
+from sqlalchemy import and_, insert, select, update, or_
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,7 +23,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config import BEARER_TOKEN, FEEDBACK_REASON_PREFIX
 
-from keyboards import (create_start_kb,
+from keyboards import (create_remove_kb, create_start_kb,
                        create_or_add_cancel_btn,
                        create_done_kb,
                        create_wb_start_kb,
@@ -33,7 +33,7 @@ from keyboards import (create_start_kb,
 from states import SwiftSepaStates, ProductStates, OzonProduct
 from utils.handlers import save_data_to_storage, check_user
 
-from db.base import OzonProduct as OzonProductModel, User
+from db.base import OzonProduct as OzonProductModel, User, UserJob
 # from .base import start
 
 
@@ -235,10 +235,14 @@ async def list_product(callback: types.Message | types.CallbackQuery,
                         state: FSMContext,
                         session: AsyncSession,
                         bot: Bot):
+    data = await state.get_data()
+
+    marker = data.get('action')
     user_id = callback.from_user.id
 
     query = (
         select(
+            OzonProductModel.id,
             OzonProductModel.link,
             OzonProductModel.actual_price,
             OzonProductModel.start_price,
@@ -262,18 +266,45 @@ async def list_product(callback: types.Message | types.CallbackQuery,
 
     ozon_product = ozon_product[0]
 
-    link, actual_price, start_price, percent, time_create, _user_id = ozon_product
+    _id, link, actual_price, start_price, percent, time_create, _user_id = ozon_product
 
     # Преобразование времени в московскую временную зону
     time_create: datetime
     moscow_tz = pytz.timezone('Europe/Moscow')
     moscow_time = time_create.astimezone(moscow_tz)
 
+    job_id_query = (
+        select(
+            UserJob.job_id,
+        )\
+        .join(User,
+              UserJob.user_id == User.tg_id)
+        .where(
+            and_(
+                User.tg_id == callback.from_user.id,
+                UserJob.product_marker == f"{marker}_product",
+                UserJob.product_id == _id,
+            )
+        )
+    )
+
+    async with session as session:
+        res = await session.execute(job_id_query)
+
+        job_id = res.scalar_one_or_none()
+
+    if not job_id:
+        await callback.answer('error', show_alert=True)
+        return
+
     # ozon_product = ozon_product[0]
 
     # print('ozon product', ozon_product.user_id, ozon_product.user, ozon_product.link)
 
     if ozon_product:
+        _kb = create_remove_kb(user_id=callback.from_user.id,
+                            product_id=_id,
+                            job_id=job_id)
         _kb = create_or_add_cancel_btn()
         waiting_price = actual_price - ((actual_price * percent) / 100)
 
