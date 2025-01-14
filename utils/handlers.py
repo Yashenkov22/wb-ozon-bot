@@ -62,7 +62,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                     'short_link': data.get('ozon_product_id'),
                     'actual_price': data.get('ozon_actual_price'),
                     'start_price': data.get('ozon_start_price'),
-                    'percent': data.get('percent'),
+                    'percent': int(data.get('percent')),
                     'time_create': datetime.now(),
                     'user_id': callback.from_user.id,
                 }
