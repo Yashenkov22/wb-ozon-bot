@@ -357,7 +357,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                 example_different = (_product_price * example_percent) / 100
                 example_price = _product_price - example_different
 
-                _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}\nВведите <b>процент как число</b>.\nКогда цена товара снизится <b>на этот процент или ниже</b>, мы сообщим Вам.\nПример:\n   Процент: {example_percent}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_different} = {example_price}'
+                _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}\nВведите <b>процент как число</b>.\nКогда цена товара снизится <b>на этот процент или ниже</b>, мы сообщим Вам.\n\nПример:\n   Процент: {example_percent}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_different} = {example_price}'
             else:
                 _text = 'Не удалось найти цену товара'
 
