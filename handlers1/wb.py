@@ -344,6 +344,8 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                 print('основная:', _basic_price)
                 print('актупльная:', _product_price)
 
+                _product_price = float(_product_price)
+
                 await state.update_data(wb_product_link=wb_product_link)
                 await state.update_data(wb_product_id=wb_product_id)
                 await state.update_data(wb_start_price=float(_product_price))
