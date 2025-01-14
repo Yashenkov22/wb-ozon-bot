@@ -320,7 +320,52 @@ async def delete_callback(callback: types.CallbackQuery,
                             marker=marker)
             pass
         case 'ozon':
-            pass
+            query1 = (
+                delete(
+                    UserJob
+                )\
+                .where(
+                    and_(
+                        UserJob.user_id == int(user_id),
+                        UserJob.product_id == int(product_id),
+                    )
+                )
+            )
+            query2 = (
+                delete(
+                    OzonProductModel
+                )\
+                .where(
+                    and_(
+                        # WbProduct.user_id == int(user_id),
+                        OzonProductModel.id == int(product_id),
+                    )
+                )
+            )
+            async with session.begin():
+                await session.execute(query1)
+                await session.execute(query2)
+                try:
+                    await session.commit()
+                    # job = scheduler.get_job(job_id=job_id,
+                    #                         jobstore='sqlalchemy')
+                    # print('JOB', job)
+
+                    
+                    scheduler.remove_job(job_id=job_id,
+                                         jobstore='sqlalchemy')
+                except Exception as ex:
+                    print(ex)
+                    await session.rollback()
+                else:
+                    await callback.answer('Товар успешно удален',
+                                          show_alert=True)
+            await redirect_to_(callback,
+                            state,
+                            session,
+                            bot,
+                            scheduler,
+                            marker=marker)
 
 
 @main_router.message()
