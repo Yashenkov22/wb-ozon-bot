@@ -304,6 +304,7 @@ async def list_product(callback: types.Message | types.CallbackQuery,
     if ozon_product:
         _kb = create_remove_kb(user_id=callback.from_user.id,
                             product_id=_id,
+                            marker='ozon',
                             job_id=job_id)
         _kb = create_or_add_cancel_btn(_kb)
         waiting_price = actual_price - ((actual_price * percent) / 100)

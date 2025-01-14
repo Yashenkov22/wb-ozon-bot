@@ -492,6 +492,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     _kb = create_remove_kb(user_id=callback.from_user.id,
                            product_id=product_id,
+                           marker='wb',
                            job_id=job_id)
     _kb = create_or_add_cancel_btn(_kb)
 
