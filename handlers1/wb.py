@@ -488,7 +488,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     waiting_price = actaul_price - ((actaul_price * percent) / 100)
 
-    _text = f'Привет {user_id}\nТвой WB товар\n{link}\nЗона доставки: {zone}\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+    _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\nЗона доставки: {zone}\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
 
     _kb = create_remove_kb(user_id=callback.from_user.id,
                            product_id=product_id,
