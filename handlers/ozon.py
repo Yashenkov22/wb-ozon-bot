@@ -194,7 +194,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         pass
         
 
-@ozon_router.message(ProductStates.percent)
+@ozon_router.message(OzonProduct.percent)
 async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
                             session: AsyncSession,
