@@ -396,7 +396,9 @@ async def proccess_push_price(message: types.Message | types.CallbackQuery,
     start_price = data.get('wb_start_price')
     product_price = data.get('wb_product_price')
 
-    _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nпроцент: {percent}'
+    waiting_price = float(product_price) - ((float(product_price) * int(percent) / 100))
+
+    _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nпроцент: {percent}\nОжидаемая цена: {waiting_price}'
 
     if msg:
         await bot.edit_message_text(text=_text,
