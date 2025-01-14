@@ -10,8 +10,8 @@ from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, DateTime, TIMESTAMP, BLOB, JSON
 
 # Определяем базовый класс для моделей
-# Base = declarative_base()
-Base = automap_base()
+Base = declarative_base()
+# Base = automap_base()
 
 # Определяем модель
 class User(Base):
