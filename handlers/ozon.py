@@ -212,7 +212,7 @@ async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
 
     link = data.get('ozon_product_link')
     start_price = data.get('ozon_start_price')
-    product_price = data.get('ozon_product_price')
+    product_price = data.get('ozon_actual_price')
 
     waiting_price = float(product_price) - ((float(product_price) * int(percent) / 100))
 
