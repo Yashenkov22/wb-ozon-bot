@@ -305,7 +305,7 @@ async def list_product(callback: types.Message | types.CallbackQuery,
         _kb = create_remove_kb(user_id=callback.from_user.id,
                             product_id=_id,
                             job_id=job_id)
-        _kb = create_or_add_cancel_btn()
+        _kb = create_or_add_cancel_btn(_kb)
         waiting_price = actual_price - ((actual_price * percent) / 100)
 
         _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\nНачальная цена: {start_price}\nАктуальная цена: {actual_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
