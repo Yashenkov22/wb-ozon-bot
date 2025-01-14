@@ -95,7 +95,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     # _kb = create_done_kb(marker='ozon_product')
 
-    _kb = create_or_add_cancel_btn(_kb)
+    _kb = create_or_add_cancel_btn()
 
     ozon_link = message.text
 
