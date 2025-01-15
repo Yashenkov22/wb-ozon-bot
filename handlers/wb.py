@@ -462,7 +462,9 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     marker = data.get('action')
 
     subquery = (
-        select(UserJob.job_id, UserJob.user_id)
+        select(UserJob.job_id,
+               UserJob.user_id,
+               UserJob.product_id)
         .where(UserJob.user_id == callback.from_user.id)
     ).subquery()
 
@@ -481,7 +483,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
         .join(UserJob,
               UserJob.user_id == User.tg_id)\
         .outerjoin(subquery,
-                   subquery.c.user_id == WbProduct.user_id)\
+                   subquery.c.product_id == WbProduct.id)\
         .where(User.tg_id == callback.from_user.id)
     )
 
