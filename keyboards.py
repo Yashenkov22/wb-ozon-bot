@@ -108,8 +108,8 @@ def create_photo_keyboard(kb_init: str):
             product_kb.add(types.InlineKeyboardButton(text='Предыдущая',
                                                     callback_data='product_prev'))
 
-    product_kb.row(types.InlineKeyboardButton(text='Назад',
-                                            callback_data='cancel'))
+    # product_kb.row(types.InlineKeyboardButton(text='Назад',
+    #                                         callback_data='cancel'))
     return product_kb
 
 
