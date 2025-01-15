@@ -145,6 +145,16 @@ async def redirect_to_(callback: types.CallbackQuery,
     if not marker:
         marker = callback.data.split('_')[-1]
 
+        if marker == 'cancel':
+            await start(callback,
+                        state,
+                        session,
+                        bot,
+                        scheduler)
+            
+            await callback.message.delete()
+            return
+
     await state.update_data(action=marker)
 
     data = await state.get_data()
@@ -209,7 +219,7 @@ async def callback_cancel(callback: types.Message | types.CallbackQuery,
     
 
 @main_router.callback_query(F.data == 'to_main')
-async def callback_cancel(callback: types.Message | types.CallbackQuery,
+async def callback_to_main(callback: types.Message | types.CallbackQuery,
                             state: FSMContext,
                             session: AsyncSession,
                             bot: Bot,
