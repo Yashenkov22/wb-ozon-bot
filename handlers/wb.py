@@ -33,7 +33,7 @@ from keyboards import (create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import save_data_to_storage, check_user
+from utils.handlers import save_data_to_storage, check_user, clear_state_and_redirect_to_start
 
 from db.base import UserJob, WbProduct, WbPunkt, User
 
@@ -287,6 +287,12 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                     session: AsyncSession,
                     bot: Bot):
     wb_product_link = message.text
+
+    if wb_product_link == '/start':
+        await clear_state_and_redirect_to_start(message,
+                                                state,
+                                                bot)
+        return
 
     _prefix = 'catalog/'
 

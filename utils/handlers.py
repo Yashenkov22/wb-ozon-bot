@@ -2,6 +2,7 @@ from datetime import datetime
 
 from aiogram import types, Bot
 from aiogram.fsm.context import FSMContext
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from sqlalchemy import update, select, and_, or_, insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +12,22 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from db.base import User, WbProduct, WbPunkt, OzonProduct, UserJob
 
 from utils.scheduler import push_check_ozon_price, push_check_wb_price
+
+from keyboards import add_back_btn
+
+
+async def clear_state_and_redirect_to_start(message: types.Message | types.CallbackQuery,
+                                            state: FSMContext,
+                                            bot: Bot):
+    await state.clear()
+
+    _kb = add_back_btn(InlineKeyboardBuilder())
+
+    _text = 'Что пошло не так\nВернитесь в главное меню и попробуйте еще раз'
+
+    await bot.send_message(chat_id=message.from_user.id,
+                           text=_text,
+                           reply_markup=_kb.as_markup())
 
 
 async def save_data_to_storage(callback: types.CallbackQuery,
@@ -207,13 +224,13 @@ async def add_user(message: types.Message,
         )\
         .values(**data)
     )
-    async with session as session:
+    async with session as _session:
         try:
-            await session.execute(query)
-            await session.commit()
+            await _session.execute(query)
+            await _session.commit()
         except Exception as ex:
             print(ex)
-            await session.rollback()
+            await _session.rollback()
         else:
             print('user added')
             return True
@@ -221,21 +238,21 @@ async def add_user(message: types.Message,
 
 async def check_user(message: types.Message,
                      session: AsyncSession):
-    async with session as session:
+    async with session as _session:
         query = (
             select(User)\
             .where(User.tg_id == message.from_user.id)
         )
-        async with session as session:
-            res = await session.execute(query)
+        # async with session as session:
+        res = await _session.execute(query)
 
-            res = res.scalar_one_or_none()
+        res = res.scalar_one_or_none()
 
-        if res:
-            return True
-        else:
-            return await add_user(message,
-                                    session)
+    if res:
+        return True
+    else:
+        return await add_user(message,
+                                session)
 
 
 # async def try_add_file_ids_to_db(message: types.Message,

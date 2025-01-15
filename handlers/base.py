@@ -52,6 +52,8 @@ async def start(message: types.Message | types.CallbackQuery,
                 bot: Bot,
                 scheduler: AsyncIOScheduler):
     
+    await state.clear()
+    
     await check_user(message,
                      session)
     
