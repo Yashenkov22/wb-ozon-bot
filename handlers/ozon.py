@@ -31,7 +31,7 @@ from keyboards import (create_remove_kb, create_start_kb,
                        create_bot_start_kb)
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
-from utils.handlers import save_data_to_storage, check_user
+from utils.handlers import clear_state_and_redirect_to_start, save_data_to_storage, check_user
 
 from db.base import OzonProduct as OzonProductModel, User, UserJob
 # from .base import start
@@ -88,7 +88,15 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                         state: FSMContext,
                         session: AsyncSession,
                         bot: Bot):
-    print(22)
+    ozon_link = message.text
+    
+    if ozon_link == '/start':
+        await clear_state_and_redirect_to_start(message,
+                                                state,
+                                                bot)
+        await message.delete()
+        return
+
     data = await state.get_data()
 
     msg: types.Message = data.get('msg')
@@ -97,7 +105,6 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     _kb = create_or_add_cancel_btn()
 
-    ozon_link = message.text
 
     await state.update_data(ozon_link=ozon_link)
 
@@ -199,11 +206,19 @@ async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
                             session: AsyncSession,
                             bot: Bot):
+    percent = message.text.strip()
+
+    if percent == '/start':
+        await clear_state_and_redirect_to_start(message,
+                                                state,
+                                                bot)
+        await message.delete()
+        return
+    
     data = await state.get_data()
 
     msg = data.get('msg')
     
-    percent = message.text.strip()
 
     await state.update_data(percent=percent)
 

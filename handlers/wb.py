@@ -292,6 +292,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         await clear_state_and_redirect_to_start(message,
                                                 state,
                                                 bot)
+        await message.delete()
         return
 
     _prefix = 'catalog/'
@@ -387,11 +388,19 @@ async def proccess_push_price(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
                             session: AsyncSession,
                             bot: Bot):
+    percent = message.text.strip()
+
+    if percent == '/start':
+        await clear_state_and_redirect_to_start(message,
+                                                state,
+                                                bot)
+        await message.delete()
+        return
+    
     data = await state.get_data()
 
     msg = data.get('msg')
     
-    percent = message.text.strip()
 
     await state.update_data(percent=percent)
 
