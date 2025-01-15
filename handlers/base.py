@@ -51,6 +51,7 @@ async def start(message: types.Message | types.CallbackQuery,
                 session: AsyncSession,
                 bot: Bot,
                 scheduler: AsyncIOScheduler):
+    _message = message
     
     await state.clear()
     
@@ -82,7 +83,7 @@ async def start(message: types.Message | types.CallbackQuery,
     await state.update_data(action=None)
 
     if isinstance(message, types.CallbackQuery):
-        _message = message.message
+        message = message.message
 
     _kb = create_start_kb()
     msg = await bot.send_message(text='Привет.\nЭто тестовые WB и OZON боты.',
@@ -91,10 +92,10 @@ async def start(message: types.Message | types.CallbackQuery,
     
     await state.update_data(msg=msg)
     try:
-        await _message.delete()
+        await message.delete()
         
-        if isinstance(message, types.CallbackQuery):
-            await message.answer()
+        if isinstance(_message, types.CallbackQuery):
+            await _message.answer()
 
     except Exception as ex:
         print(ex)
