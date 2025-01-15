@@ -266,6 +266,8 @@ async def show_item(callback: types.CallbackQuery,
                     state: FSMContext):
     data = await state.get_data()
 
+    marker = data.get('action')
+
     msg: types.Message = data.get('msg')
     product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id, photo_kb = item_constructor(data)
 
@@ -277,7 +279,7 @@ async def show_item(callback: types.CallbackQuery,
 
     waiting_price = actaul_price - ((actaul_price * percent) / 100)
 
-    _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+    _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
 
     _kb = add_cancel_btn_to_photo_keyboard(photo_kb)
 
@@ -304,23 +306,28 @@ async def show_item(callback: types.CallbackQuery,
         
 
 def item_constructor(data: dict[str, Any]):
-    product_idx = data['_idx_product']
-    wb_product_list = data['wb_product_list']
-    print('wb_product list', wb_product_list, 'idx', product_idx)
+    marker = data.get('action')
+
+    product_idx = data.get(f'{marker}_product_idx')
+    product_list = data.get(f'{marker}_product_list')
+
+    # product_idx = data['_idx_product']
+    # wb_product_list = data['wb_product_list']
+    print(f'{marker}_product list', product_list, 'idx', product_idx)
     kb_init: str
     
-    if len(wb_product_list) == 1:
+    if len(product_list) == 1:
         kb_init = 'one'
     else:
         if product_idx == 0:
             kb_init = 'start'
-        elif product_idx < len(wb_product_list)-1:
+        elif product_idx < len(product_list)-1:
             kb_init = 'mid'
         else:
             kb_init = 'end'
 
     photo_kb = create_photo_keyboard(kb_init)
-    _product = wb_product_list[product_idx]
+    _product = product_list[product_idx]
     # name = data['name']
     # price = data['price']
     product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id = _product

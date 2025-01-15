@@ -32,7 +32,7 @@ from keyboards import (create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import save_data_to_storage, check_user
+from utils.handlers import save_data_to_storage, check_user, show_item
 from utils.scheduler import test_scheduler
 
 from db.base import OzonProduct as OzonProductModel, User, Base, UserJob, WbProduct
@@ -82,16 +82,20 @@ async def start(message: types.Message | types.CallbackQuery,
     await state.update_data(action=None)
 
     if isinstance(message, types.CallbackQuery):
-        message = message.message
+        _message = message.message
 
     _kb = create_start_kb()
     msg = await bot.send_message(text='Привет.\nЭто тестовые WB и OZON боты.',
-                                chat_id=message.chat.id,
+                                chat_id=_message.chat.id,
                                 reply_markup=_kb.as_markup())
     
     await state.update_data(msg=msg)
     try:
-        await message.delete()
+        await _message.delete()
+        
+        if isinstance(message, types.CallbackQuery):
+            await message.answer()
+
     except Exception as ex:
         print(ex)
 
@@ -107,7 +111,7 @@ async def test_db_ozon(message: types.Message,
         select(
             OzonProductModel.link,
             OzonProductModel.actual_price,
-            OzonProductModel.basic_price,
+            OzonProductModel.start_price,
             OzonProductModel.time_create,
             OzonProductModel.user_id)\
         .join(User,
@@ -380,6 +384,24 @@ async def delete_callback(callback: types.CallbackQuery,
                             bot,
                             scheduler,
                             marker=marker)
+            
+
+@main_router.callback_query(F.data.startswith('product'))
+async def init_current_item(callback: types.CallbackQuery,
+                            state: FSMContext):
+    action = callback.data.split('_')[-1]
+    
+    data = await state.get_data()
+    marker = data.get('action')
+
+    product_idx = data['_idx_product']
+    print('idx from callback',product_idx)
+    match action:
+        case 'next':
+            await state.update_data(_idx_product=product_idx+1)
+        case 'prev':
+            await state.update_data(_idx_product=product_idx-1)
+    await show_item(callback, state)
             
 
 # @main_router.callback_query(F.data.startswith('product'))

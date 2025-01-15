@@ -502,7 +502,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
         return
 
 #
-    await state.update_data(_idx_product=0,
+    await state.update_data(wb_product_idx=0,
                             wb_product_list=_data)
     
     await show_item(callback,
@@ -563,16 +563,16 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                              reply_markup=_kb.as_markup())
         
 
-@wb_router.callback_query(F.data.startswith('product'))
-async def init_current_item(callback: types.CallbackQuery,
-                            state: FSMContext):
-    action = callback.data.split('_')[-1]
-    data = await state.get_data()
-    product_idx = data['_idx_product']
-    print('idx from callback',product_idx)
-    match action:
-        case 'next':
-            await state.update_data(_idx_product=product_idx+1)
-        case 'prev':
-            await state.update_data(_idx_product=product_idx-1)
-    await show_item(callback, state)
+# @wb_router.callback_query(F.data.startswith('product'))
+# async def init_current_item(callback: types.CallbackQuery,
+#                             state: FSMContext):
+#     action = callback.data.split('_')[-1]
+#     data = await state.get_data()
+#     product_idx = data['_idx_product']
+#     print('idx from callback',product_idx)
+#     match action:
+#         case 'next':
+#             await state.update_data(_idx_product=product_idx+1)
+#         case 'prev':
+#             await state.update_data(_idx_product=product_idx-1)
+#     await show_item(callback, state)

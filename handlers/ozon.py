@@ -31,7 +31,7 @@ from keyboards import (create_remove_kb, create_start_kb,
                        create_bot_start_kb)
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
-from utils.handlers import clear_state_and_redirect_to_start, save_data_to_storage, check_user
+from utils.handlers import clear_state_and_redirect_to_start, save_data_to_storage, check_user, show_item
 
 from db.base import OzonProduct as OzonProductModel, User, UserJob
 # from .base import start
@@ -255,6 +255,55 @@ async def list_product(callback: types.Message | types.CallbackQuery,
     marker = data.get('action')
     user_id = callback.from_user.id
 
+    subquery = (
+        select(UserJob.job_id,
+               UserJob.user_id,
+               UserJob.product_id)
+        .where(UserJob.user_id == callback.from_user.id)
+    ).subquery()
+
+    query = (
+        select(
+            OzonProductModel.id,
+            OzonProductModel.link,
+            OzonProductModel.actual_price,
+            OzonProductModel.start_price,
+            OzonProductModel.percent,
+            OzonProductModel.time_create,
+            OzonProductModel.user_id,
+            subquery.c.job_id)\
+        .select_from(OzonProductModel)\
+        .join(User,
+              OzonProductModel.user_id == User.tg_id)\
+        .join(UserJob,
+              UserJob.user_id == User.tg_id)\
+        .outerjoin(subquery,
+                   subquery.c.product_id == OzonProductModel.id)\
+        .where(User.tg_id == callback.from_user.id)\
+        .distinct(OzonProductModel.id)
+    )
+
+    async with session as _session:
+        res = await _session.execute(query)
+
+        _data = res.fetchall()
+
+    print('ozon products22',_data)
+
+    if not _data:
+        await callback.answer(text='Сначала добавьте товар',
+                              show_alert=True)
+        return
+
+#
+    await state.update_data(ozon_idx_product=0,
+                            ozon_product_list=_data)
+    
+    await show_item(callback,
+                    state)
+    return
+
+#
     query = (
         select(
             OzonProductModel.id,
