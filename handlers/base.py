@@ -151,8 +151,10 @@ async def redirect_to_(callback: types.CallbackQuery,
                         session,
                         bot,
                         scheduler)
-            
-            await callback.message.delete()
+            try:
+                await callback.message.delete()
+            except Exception:
+                pass
             return
 
     await state.update_data(action=marker)
