@@ -285,7 +285,7 @@ async def show_item(callback: types.CallbackQuery,
 
     _kb = create_remove_kb(user_id=callback.from_user.id,
                            product_id=product_id,
-                           marker='wb',
+                           marker=marker,
                            job_id=job_id,
                            _kb=_kb)
     # _kb = create_or_add_cancel_btn(_kb)
