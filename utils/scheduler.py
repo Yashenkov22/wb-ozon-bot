@@ -59,7 +59,7 @@ async def push_check_wb_price(user_id: str,
 
             d = res.get('data')
 
-            print(d.get('products')[0].get('sizes'))
+            # print(d.get('products')[0].get('sizes'))
 
             sizes = d.get('products')[0].get('sizes')
 
@@ -159,7 +159,7 @@ async def push_check_ozon_price(user_id: str,
             # print(res)
 
             w = re.findall(r'\"cardPrice.*currency?', res)
-            print(w)
+            # print(w)
 
             if w:
                 w = w[0].split(',')[:3]
