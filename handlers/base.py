@@ -395,13 +395,14 @@ async def init_current_item(callback: types.CallbackQuery,
     data = await state.get_data()
     marker = data.get('action')
 
-    product_idx = data['_idx_product']
+    product_idx = data.get(f'{marker}_product_idx')
     print('idx from callback',product_idx)
     match action:
         case 'next':
-            await state.update_data(_idx_product=product_idx+1)
+            # await state.update_data(_idx_product=product_idx+1)
+            await state.update_data(data={f'{marker}_product_idx': product_idx+1})
         case 'prev':
-            await state.update_data(_idx_product=product_idx-1)
+            await state.update_data(data={f'{marker}_product_idx': product_idx-1})
     await show_item(callback, state)
             
 
