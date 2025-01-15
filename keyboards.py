@@ -111,3 +111,9 @@ def create_photo_keyboard(kb_init: str):
     product_kb.row(types.InlineKeyboardButton(text='Назад',
                                             callback_data='cancel'))
     return product_kb
+
+
+def add_cancel_btn_to_photo_keyboard(_kb: InlineKeyboardBuilder):
+    _kb.row(types.InlineKeyboardButton(text='Назад',
+                                        callback_data='cancel'))
+    return _kb

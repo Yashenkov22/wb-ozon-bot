@@ -16,8 +16,11 @@ from db.base import User, WbProduct, WbPunkt, OzonProduct, UserJob
 
 from utils.scheduler import push_check_ozon_price, push_check_wb_price
 
-from keyboards import add_back_btn, create_or_add_cancel_btn, create_photo_keyboard, create_remove_kb
-
+from keyboards import (add_back_btn,
+                       create_or_add_cancel_btn,
+                       create_photo_keyboard,
+                       create_remove_kb,
+                       add_cancel_btn_to_photo_keyboard)
 
 async def clear_state_and_redirect_to_start(message: types.Message | types.CallbackQuery,
                                             state: FSMContext,
@@ -276,11 +279,13 @@ async def show_item(callback: types.CallbackQuery,
 
     _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
 
+    _kb = add_cancel_btn_to_photo_keyboard(photo_kb)
+
     _kb = create_remove_kb(user_id=callback.from_user.id,
                            product_id=product_id,
                            marker='wb',
                            job_id=job_id,
-                           _kb=photo_kb)
+                           _kb=_kb)
     # _kb = create_or_add_cancel_btn(_kb)
 
     if msg:
