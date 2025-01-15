@@ -380,6 +380,16 @@ async def delete_callback(callback: types.CallbackQuery,
                             bot,
                             scheduler,
                             marker=marker)
+            
+
+# @main_router.callback_query(F.data.startswith('product'))
+# async def redirect_to_(callback: types.CallbackQuery,
+#                         state: FSMContext,
+#                         session: AsyncSession,
+#                         bot: Bot,
+#                         scheduler: AsyncIOScheduler,
+#                         marker: str = None):
+#     callback_data = callback.data.split('_')[-1]
 
 
 @main_router.message()

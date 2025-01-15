@@ -33,7 +33,7 @@ from keyboards import (create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import save_data_to_storage, check_user, clear_state_and_redirect_to_start
+from utils.handlers import save_data_to_storage, check_user, clear_state_and_redirect_to_start, show_item
 
 from db.base import UserJob, WbProduct, WbPunkt, User
 
@@ -469,10 +469,12 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                WbProduct.user_id,
                WbProduct.time_create,
                WbProduct.percent,
-               WbPunkt.zone)\
+               UserJob.job_id)\
         .select_from(WbProduct)\
         .join(User,
               WbProduct.user_id == User.tg_id)\
+        .join(UserJob,
+              UserJob.user_id == User.tg_id)\
         .join(WbPunkt,
                 User.tg_id == WbPunkt.user_id)\
         .where(User.tg_id == callback.from_user.id)
@@ -491,34 +493,42 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                               show_alert=True)
         return
 
+#
+    await state.update_data(_idx_product=0,
+                            wb_product_list=_data)
+    
+    await show_item(callback,
+                    state)
+    return
+#
     wb_product_detail = _data[0]
 
-    product_id, link, actaul_price, start_price, user_id, time_create, percent, zone = wb_product_detail
+    product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id = wb_product_detail
 
 
-    job_id_query = (
-        select(
-            UserJob.job_id,
-        )\
-        .join(User,
-              UserJob.user_id == User.tg_id)
-        .where(
-            and_(
-                User.tg_id == callback.from_user.id,
-                UserJob.product_marker == f"{marker}_product",
-                UserJob.product_id == product_id,
-            )
-        )
-    )
+    # job_id_query = (
+    #     select(
+    #         UserJob.job_id,
+    #     )\
+    #     .join(User,
+    #           UserJob.user_id == User.tg_id)
+    #     .where(
+    #         and_(
+    #             User.tg_id == callback.from_user.id,
+    #             UserJob.product_marker == f"{marker}_product",
+    #             UserJob.product_id == product_id,
+    #         )
+    #     )
+    # )
 
-    async with session as session:
-        res = await session.execute(job_id_query)
+    # async with session as session:
+    #     res = await session.execute(job_id_query)
 
-        job_id = res.scalar_one_or_none()
+    #     job_id = res.scalar_one_or_none()
 
-    if not job_id:
-        await callback.answer('error', show_alert=True)
-        return
+    # if not job_id:
+    #     await callback.answer('error', show_alert=True)
+    #     return
 
     # Преобразование времени в московскую временную зону
     time_create: datetime
@@ -527,13 +537,13 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     waiting_price = actaul_price - ((actaul_price * percent) / 100)
 
-    _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\nЗона доставки: {zone}\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+    _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
 
-    _kb = create_remove_kb(user_id=callback.from_user.id,
-                           product_id=product_id,
-                           marker='wb',
-                           job_id=job_id)
-    _kb = create_or_add_cancel_btn(_kb)
+    # _kb = create_remove_kb(user_id=callback.from_user.id,
+    #                        product_id=product_id,
+    #                        marker='wb',
+    #                        job_id=job_id)
+    # _kb = create_or_add_cancel_btn(_kb)
 
     if msg:
         await bot.edit_message_text(text=_text,
@@ -543,3 +553,17 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     else:
         await callback.message.answer(text=_text,
                              reply_markup=_kb.as_markup())
+        
+
+@wb_router.callback_query(F.data.startswith('product'))
+async def init_current_item(callback: types.CallbackQuery,
+                            state: FSMContext):
+    action = callback.data.split('_')[-1]
+    data = await state.get_data()
+    product_idx = data['_idx_product']
+    match action:
+        case 'next':
+            await state.update_data(_idx_product=product_idx+1)
+        case 'prev':
+            await state.update_data(_idx_product=product_idx-1)
+    await show_item(callback, state)

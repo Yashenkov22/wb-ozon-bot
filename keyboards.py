@@ -81,10 +81,33 @@ def create_done_kb(marker: Literal['wb_punkt',
 def create_remove_kb(user_id: int,
                      product_id: str,
                      marker: Literal['wb', 'ozon'],
-                     job_id: str):
-    _kb = InlineKeyboardBuilder()
+                     job_id: str,
+                     _kb: InlineKeyboardBuilder = None):
+    if not _kb:
+        _kb = InlineKeyboardBuilder()
 
     _kb.add(types.InlineKeyboardButton(text='Удалить товар',
                                        callback_data=f'delete_{marker}_{user_id}_{product_id}_{job_id}'))
     
     return _kb
+
+
+
+def create_photo_keyboard(kb_init: str):
+    product_kb = InlineKeyboardBuilder()
+    match kb_init:
+        case 'start':
+            product_kb.add(types.InlineKeyboardButton(text='Следующая',
+                                                    callback_data='product_next'))
+        case 'mid':
+            product_kb.add(types.InlineKeyboardButton(text='Предыдущая',
+                                                    callback_data='product_prev'))
+            product_kb.add(types.InlineKeyboardButton(text='Следующая',
+                                                    callback_data='product_next'))
+        case 'end':
+            product_kb.add(types.InlineKeyboardButton(text='Предыдущая',
+                                                    callback_data='product_prev'))
+
+    product_kb.row(types.InlineKeyboardButton(text='Назад',
+                                            callback_data='cancel'))
+    return product_kb
