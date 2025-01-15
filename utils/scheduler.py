@@ -105,8 +105,9 @@ async def push_check_wb_price(user_id: str,
 
                 if _waiting_price >= _product_price:
                     _text = f'Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price}'
-            await bot.send_message(chat_id=user_id,
-                                    text=_text)
+                
+                await bot.send_message(chat_id=user_id,
+                                        text=_text)
             
 
 async def push_check_ozon_price(user_id: str,
@@ -212,8 +213,9 @@ async def push_check_ozon_price(user_id: str,
 
                 if _waiting_price >= _product_price:
                     _text = f'Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price}'
-            await bot.send_message(chat_id=user_id,
-                                    text=_text)
+                
+                await bot.send_message(chat_id=user_id,
+                                        text=_text)
 
 
 
