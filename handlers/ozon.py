@@ -296,7 +296,7 @@ async def list_product(callback: types.Message | types.CallbackQuery,
         return
 
 #
-    await state.update_data(ozon_idx_product=0,
+    await state.update_data(ozon_product_idx=0,
                             ozon_product_list=_data)
     
     await show_item(callback,
