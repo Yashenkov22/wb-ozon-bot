@@ -87,7 +87,7 @@ async def start(message: types.Message | types.CallbackQuery,
 
     _kb = create_start_kb()
     msg = await bot.send_message(text='Привет.\nЭто тестовые WB и OZON боты.',
-                                chat_id=_message.chat.id,
+                                chat_id=_message.from_user.id,
                                 reply_markup=_kb.as_markup())
     
     await state.update_data(msg=msg)
