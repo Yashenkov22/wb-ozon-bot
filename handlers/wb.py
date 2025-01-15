@@ -484,7 +484,8 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
               UserJob.user_id == User.tg_id)\
         .outerjoin(subquery,
                    subquery.c.product_id == WbProduct.id)\
-        .where(User.tg_id == callback.from_user.id)
+        .where(User.tg_id == callback.from_user.id)\
+        .distinct(WbProduct.id)
     )
 
 
