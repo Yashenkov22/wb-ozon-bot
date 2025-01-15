@@ -561,6 +561,7 @@ async def init_current_item(callback: types.CallbackQuery,
     action = callback.data.split('_')[-1]
     data = await state.get_data()
     product_idx = data['_idx_product']
+    print('idx from callback',product_idx)
     match action:
         case 'next':
             await state.update_data(_idx_product=product_idx+1)

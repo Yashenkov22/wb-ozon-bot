@@ -86,7 +86,7 @@ def create_remove_kb(user_id: int,
     if not _kb:
         _kb = InlineKeyboardBuilder()
 
-    _kb.add(types.InlineKeyboardButton(text='Удалить товар',
+    _kb.row(types.InlineKeyboardButton(text='Удалить товар',
                                        callback_data=f'delete_{marker}_{user_id}_{product_id}_{job_id}'))
     
     return _kb

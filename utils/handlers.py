@@ -301,6 +301,7 @@ async def show_item(callback: types.CallbackQuery,
 def item_constructor(data: dict[str, Any]):
     product_idx = data['_idx_product']
     wb_product_list = data['wb_product_list']
+    print('wb_product list', wb_product_list, 'idx', product_idx)
     kb_init: str
     
     if len(wb_product_list) == 1:
