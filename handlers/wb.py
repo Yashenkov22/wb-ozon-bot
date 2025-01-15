@@ -461,6 +461,11 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
     marker = data.get('action')
 
+    subquery = (
+        select(UserJob.job_id, UserJob.user_id)
+        .where(UserJob.user_id == callback.from_user.id)
+    ).subquery()
+
     query = (
         select(WbProduct.id,
                WbProduct.link,
@@ -469,20 +474,20 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                WbProduct.user_id,
                WbProduct.time_create,
                WbProduct.percent,
-               UserJob.job_id)\
+               subquery.c.job_id)\
         .select_from(WbProduct)\
         .join(User,
               WbProduct.user_id == User.tg_id)\
         .join(UserJob,
               UserJob.user_id == User.tg_id)\
-        .join(WbPunkt,
-                User.tg_id == WbPunkt.user_id)\
+        .outerjoin(subquery,
+                   subquery.c.user_id == WbProduct.user_id)\
         .where(User.tg_id == callback.from_user.id)
     )
 
 
-    async with session as session:
-        res = await session.execute(query)
+    async with session as _session:
+        res = await _session.execute(query)
 
         _data = res.fetchall()
 
