@@ -342,6 +342,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         _kb = create_or_add_cancel_btn()
         await msg.edit_text(text='Продукт уже добален',
                             reply_markup=_kb.as_markup())
+        await message.delete()
         return
 
     async with aiohttp.ClientSession() as aiosession:

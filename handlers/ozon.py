@@ -45,23 +45,23 @@ async def add_product(callback: types.Message | types.CallbackQuery,
                     state: FSMContext,
                     session: AsyncSession,
                     bot: Bot):
-    query = (
-        select(
-            OzonProductModel.id
-        )\
-        .join(User,
-              OzonProductModel.user_id == User.tg_id)\
-        .where(User.tg_id == callback.from_user.id)
-    )
-    async with session as session:
-        res = await session.execute(query)
+    # query = (
+    #     select(
+    #         OzonProductModel.id
+    #     )\
+    #     .join(User,
+    #           OzonProductModel.user_id == User.tg_id)\
+    #     .where(User.tg_id == callback.from_user.id)
+    # )
+    # async with session as session:
+    #     res = await session.execute(query)
 
-        check_product_by_user = res.scalar_one_or_none()
+    #     check_product_by_user = res.scalar_one_or_none()
 
-    if check_product_by_user:
-        await callback.answer(text='Продукт уже добален',
-                              show_alert=True)
-        return
+    # if check_product_by_user:
+    #     await callback.answer(text='Продукт уже добален',
+    #                           show_alert=True)
+    #     return
 
     await state.set_state(OzonProduct.product)
     data = await state.get_data()
@@ -88,7 +88,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                         state: FSMContext,
                         session: AsyncSession,
                         bot: Bot):
-    ozon_link = message.text
+    ozon_link = message.text.strip()
     
     if ozon_link == '/start':
         await clear_state_and_redirect_to_start(message,
@@ -100,6 +100,31 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
     data = await state.get_data()
 
     msg: types.Message = data.get('msg')
+
+    query = (
+        select(
+            OzonProductModel.id
+        )\
+        .join(User,
+            OzonProductModel.user_id == User.tg_id)\
+        .where(
+            and_(
+                User.tg_id == message.from_user.id,
+                OzonProductModel.link == ozon_link,
+            )
+        )
+    )
+    async with session as session:
+        res = await session.execute(query)
+
+        check_product_by_user = res.scalar_one_or_none()
+
+    if check_product_by_user:
+        _kb = create_or_add_cancel_btn()
+        await msg.edit_text(text='Продукт уже добален',
+                            reply_markup=_kb.as_markup())
+        await message.delete()
+        return
 
     # _kb = create_done_kb(marker='ozon_product')
 
