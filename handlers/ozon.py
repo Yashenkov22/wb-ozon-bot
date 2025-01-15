@@ -293,9 +293,9 @@ async def list_product(callback: types.Message | types.CallbackQuery,
             OzonProductModel.link,
             OzonProductModel.actual_price,
             OzonProductModel.start_price,
-            OzonProductModel.percent,
-            OzonProductModel.time_create,
             OzonProductModel.user_id,
+            OzonProductModel.time_create,
+            OzonProductModel.percent,
             subquery.c.job_id)\
         .select_from(OzonProductModel)\
         .join(User,
