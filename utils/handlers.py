@@ -281,11 +281,11 @@ async def show_item(callback: types.CallbackQuery,
                            marker='wb',
                            job_id=job_id,
                            _kb=photo_kb)
-    _kb = create_or_add_cancel_btn(_kb)
+    # _kb = create_or_add_cancel_btn(_kb)
 
     if msg:
         await msg.edit_text(text=_text,
-                            reply_markup=photo_kb.as_markup())
+                            reply_markup=_kb.as_markup())
 
     # await callback.message.answer_photo(photo,
     #                                     caption=f'Товар: {name}\nЦена: {price}',
