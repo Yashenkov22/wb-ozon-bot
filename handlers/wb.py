@@ -363,6 +363,8 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         sizes = d.get('products')[0].get('sizes')
 
+        _product_name = d.get('products')[0].get('name')
+
         _basic_price = _product_price = None
         
         for size in sizes:
@@ -383,6 +385,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                 await state.update_data(wb_product_id=wb_product_id)
                 await state.update_data(wb_start_price=float(_product_price))
                 await state.update_data(wb_product_price=float(_product_price))
+                await state.update_data(wb_product_name=_product_name)
 
                 await state.set_state(ProductStates.percent)
 

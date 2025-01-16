@@ -52,12 +52,17 @@ class WbPunkt(Base):
 class OzonProduct(Base):
     __tablename__ = 'ozon_products'
     
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer,
+                primary_key=True,
+                index=True)
     link = Column(String)
     short_link = Column(String)
     start_price = Column(Float)
     actual_price = Column(Float)
     percent = Column(Integer)
+    name = Column(String,
+                  nullable=True,
+                  default=None)
     # expected_price = Column(Float)
     # username = Column(String, nullable=True)
     # first_name = Column(String, nullable=True)
@@ -72,12 +77,17 @@ class OzonProduct(Base):
 class WbProduct(Base):
     __tablename__ = 'wb_products'
     
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer,
+                primary_key=True,
+                index=True)
     link = Column(String)
     short_link = Column(String)
     start_price = Column(Float)
     actual_price = Column(Float)
     percent = Column(Integer)
+    name = Column(String,
+                  nullable=True,
+                  default=None)
     # now_price = Column(Float)
     # del_zone = Column(Integer)
     # expected_price = Column(Float)
