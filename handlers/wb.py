@@ -351,6 +351,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         try:
             res = await response.json()
+            print(res)
         except Exception as ex:
             print('API RESPONSE ERROR', ex)
             await message.answer('ошибка при запросе к апи\n/start')
