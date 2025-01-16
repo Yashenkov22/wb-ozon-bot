@@ -166,6 +166,10 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
             w = re.findall(r'\"cardPrice.*currency?', res)
             print(w)
 
+            _alt = re.findall(r'\"alt\":\".*,?')
+
+            print(_alt)
+
             if w:
                 w = w[0].split(',')[:3]
 
