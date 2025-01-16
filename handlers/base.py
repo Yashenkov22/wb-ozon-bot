@@ -448,7 +448,12 @@ async def view_product(callback: types.CallbackQuery,
                     UserJob.user_id == User.tg_id)\
                 .outerjoin(subquery,
                         subquery.c.product_id == WbProduct.id)\
-                .where(User.tg_id == callback.from_user.id)\
+                .where(
+                    and_(
+                        User.tg_id == callback.from_user.id,
+                        WbProduct.id == product_id,
+                        )
+                    )\
                 .distinct(WbProduct.id)
             )
 
@@ -488,7 +493,12 @@ async def view_product(callback: types.CallbackQuery,
                     UserJob.user_id == User.tg_id)\
                 .outerjoin(subquery,
                         subquery.c.product_id == OzonProductModel.id)\
-                .where(User.tg_id == callback.from_user.id)\
+                .where(
+                    and_(
+                        User.tg_id == callback.from_user.id,
+                        OzonProductModel.id == product_id,
+                        )
+                    )\
                 .distinct(OzonProductModel.id)
             )
 
