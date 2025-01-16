@@ -18,7 +18,7 @@ from utils.scheduler import push_check_ozon_price, push_check_wb_price
 
 from keyboards import (add_back_btn,
                        create_or_add_cancel_btn,
-                       create_photo_keyboard,
+                       create_photo_keyboard, create_product_list_kb,
                        create_remove_kb,
                        add_cancel_btn_to_photo_keyboard)
 
@@ -345,3 +345,33 @@ def item_constructor(data: dict[str, Any]):
         job_id,
         photo_kb,
     )
+
+
+
+async def show_item_list(callback: types.CallbackQuery,
+                         state: FSMContext,
+                         bot: Bot):
+    data = await state.get_data()
+
+    marker = data.get('action')
+
+    msg: types.Message = data.get('msg')
+
+    # product_idx = data.get(f'{marker}_product_idx')
+    product_list = data.get(f'{marker}_product_list')
+
+    _kb = create_product_list_kb(callback.from_user.id,
+                                 product_list,
+                                 marker)
+    _kb = create_or_add_cancel_btn(_kb)
+    
+    _text = f'Ваши {marker} товары'
+    
+    if msg:
+        await msg.edit_text(text=_text,
+                            reply_markup=_kb.as_markup())
+    else:
+        await bot.send_message(chat_id=callback.from_user.id,
+                               text=_text,
+                               reply_markup=_kb.as_markup())
+    

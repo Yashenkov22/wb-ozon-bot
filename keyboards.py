@@ -117,3 +117,19 @@ def add_cancel_btn_to_photo_keyboard(_kb: InlineKeyboardBuilder):
     _kb.row(types.InlineKeyboardButton(text='Назад',
                                         callback_data='cancel'))
     return _kb
+
+
+
+def create_product_list_kb(user_id: int,
+                           product_list: list,
+                           marker: Literal['wb', 'ozon']):
+    _kb = InlineKeyboardBuilder()
+
+    for product in product_list:
+        product_id, link, actaul_price, start_price, user_id, time_create, name, percent, job_id = product
+        _callback_data = f'product-view_{user_id}_{marker}_{product_id}'
+
+        _kb.row(types.InlineKeyboardButton(text=name,
+                                           callback_data=_callback_data))
+    
+    return _kb

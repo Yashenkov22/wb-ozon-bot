@@ -33,7 +33,7 @@ from keyboards import (create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import save_data_to_storage, check_user, clear_state_and_redirect_to_start, show_item
+from utils.handlers import save_data_to_storage, check_user, clear_state_and_redirect_to_start, show_item, show_item_list
 
 from db.base import UserJob, WbProduct, WbPunkt, User
 
@@ -480,6 +480,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                WbProduct.start_price,
                WbProduct.user_id,
                WbProduct.time_create,
+               WbProduct.name,
                WbProduct.percent,
                subquery.c.job_id)\
         .select_from(WbProduct)\
@@ -510,8 +511,12 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     await state.update_data(wb_product_idx=0,
                             wb_product_list=_data)
     
-    await show_item(callback,
-                    state)
+    # await show_item(callback,
+    #                 state)
+    
+    await show_item_list(callback,
+                         state,
+                         bot)
     return
 #
     wb_product_detail = _data[0]

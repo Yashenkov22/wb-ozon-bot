@@ -26,6 +26,7 @@ async def push_check_wb_price(user_id: str,
                     WbProduct.short_link,
                     WbProduct.actual_price,
                     WbProduct.start_price,
+                    WbProduct.name,
                     WbProduct.percent,
                     WbPunkt.zone
                 )\
@@ -50,7 +51,9 @@ async def push_check_wb_price(user_id: str,
             except Exception:
                 pass
     if res:
-        username, short_link, actual_price, start_price, percent, zone = res[0]
+        username, short_link, actual_price, start_price, name, percent, zone = res[0]
+
+        name = name if name is not None else 'Отсутствует'
 
         async with aiohttp.ClientSession() as aiosession:
             _url = f"http://172.18.0.2:8080/product/{zone}/{short_link}"
@@ -101,10 +104,10 @@ async def push_check_wb_price(user_id: str,
                         await session.rollback()
                         print(ex)
                 # if _waiting_price == actual_price:
-                _text = f'Цена изменилась\nОбновленная цена товара: {_product_price}'
+                _text = f'WB товар\nНазвание: {name}\nЦена изменилась\nОбновленная цена товара: {_product_price}'
 
                 if _waiting_price >= _product_price:
-                    _text = f'Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price}'
+                    _text = f'WB товар\nНазвание: {name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price}'
                 
                 await bot.send_message(chat_id=user_id,
                                         text=_text)
@@ -123,6 +126,7 @@ async def push_check_ozon_price(user_id: str,
                     OzonProduct.short_link,
                     OzonProduct.actual_price,
                     OzonProduct.start_price,
+                    OzonProduct.name,
                     OzonProduct.percent,
                 )\
                 .select_from(OzonProduct)\
@@ -144,7 +148,9 @@ async def push_check_ozon_price(user_id: str,
             except Exception:
                 pass
     if res:
-        username, short_link, actual_price, start_price, percent = res[0]
+        username, short_link, actual_price, start_price, name, percent = res[0]
+
+        name = name if name is not None else 'Отсутствует'
 
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
