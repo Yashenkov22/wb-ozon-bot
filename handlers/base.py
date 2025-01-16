@@ -498,6 +498,7 @@ async def view_product(callback: types.CallbackQuery,
                 _data = res.fetchall()
 
             if _data:
+                len(_data)
                 _product = _data[0]
                 product_id, link, actaul_price, start_price, user_id, time_create, name, percent, job_id = _product
 
