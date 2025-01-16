@@ -451,7 +451,7 @@ async def view_product(callback: types.CallbackQuery,
                 .where(
                     and_(
                         User.tg_id == callback.from_user.id,
-                        WbProduct.id == product_id,
+                        WbProduct.id == int(product_id),
                         )
                     )\
                 .distinct(WbProduct.id)
@@ -496,7 +496,7 @@ async def view_product(callback: types.CallbackQuery,
                 .where(
                     and_(
                         User.tg_id == callback.from_user.id,
-                        OzonProductModel.id == product_id,
+                        OzonProductModel.id == int(product_id),
                         )
                     )\
                 .distinct(OzonProductModel.id)
