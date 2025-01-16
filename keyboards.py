@@ -53,7 +53,7 @@ def create_or_add_cancel_btn(_kb: InlineKeyboardBuilder = None):
     if _kb is None:
         _kb = InlineKeyboardBuilder()
 
-    _kb.add(types.InlineKeyboardButton(text='Отменить',
+    _kb.row(types.InlineKeyboardButton(text='Отменить',
                                        callback_data='cancel'))
     
     return _kb
