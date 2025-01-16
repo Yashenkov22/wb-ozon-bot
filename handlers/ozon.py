@@ -167,8 +167,17 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
             print(w)
 
             _alt = re.findall(r'\"alt.*,?', res)
+            _product_name = None
+            
+            if _alt:
+                _product_name = _alt[0].split('//')[0]
+                _prefix = '"alt\":\"'
+                
+                if _product_name.startswith(_prefix):
+                    _product_name = _product_name[len(_prefix):]
 
-            print('NAME   ',_alt[0].split('//')[0])
+            print(_product_name)
+            # print('NAME   ',_alt[0].split('//')[0])
 
             if w:
                 w = w[0].split(',')[:3]
