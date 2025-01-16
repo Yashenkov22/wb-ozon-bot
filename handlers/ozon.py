@@ -178,6 +178,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                 _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
 
             print(_product_name)
+
+            await state.update_data(ozon_product_name=_product_name)
             # print('NAME   ',_alt[0].split('//')[0])
 
             if w:
