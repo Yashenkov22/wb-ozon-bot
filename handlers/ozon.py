@@ -311,6 +311,7 @@ async def list_product(callback: types.Message | types.CallbackQuery,
             OzonProductModel.start_price,
             OzonProductModel.user_id,
             OzonProductModel.time_create,
+            OzonProductModel.name,
             OzonProductModel.percent,
             subquery.c.job_id)\
         .select_from(OzonProductModel)\
