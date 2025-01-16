@@ -168,7 +168,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
             _alt = re.findall(r'\"alt.*,?', res)
 
-            print(_alt[0].split('//'))
+            print('NAME   ',_alt[0].split('//')[0])
 
             if w:
                 w = w[0].split(',')[:3]
