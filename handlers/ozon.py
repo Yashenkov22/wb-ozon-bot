@@ -168,13 +168,14 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
             _alt = re.findall(r'\"alt.*,?', res)
             _product_name = None
+            _product_name_limit = 21
             
             if _alt:
                 _product_name = _alt[0].split('//')[0]
                 _prefix = f'\"alt\":\"'
                 
                 # if _product_name.startswith(_prefix):
-                _product_name = _product_name[len(_prefix)+1:]
+                _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
 
             print(_product_name)
             # print('NAME   ',_alt[0].split('//')[0])
