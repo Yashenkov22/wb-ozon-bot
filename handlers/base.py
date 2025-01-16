@@ -407,7 +407,7 @@ async def init_current_item(callback: types.CallbackQuery,
             
 
 @main_router.callback_query(F.data.startswith('view-product'))
-async def redirect_to_(callback: types.CallbackQuery,
+async def view_product(callback: types.CallbackQuery,
                         state: FSMContext,
                         session: AsyncSession,
                         bot: Bot,
@@ -459,7 +459,7 @@ async def redirect_to_(callback: types.CallbackQuery,
             
             if _data:
                 _product = _data[0]
-                product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id = _product
+                product_id, link, actaul_price, start_price, user_id, time_create, name, percent, job_id = _product
 
         case 'ozon':
             # pass
@@ -478,6 +478,7 @@ async def redirect_to_(callback: types.CallbackQuery,
                     OzonProductModel.start_price,
                     OzonProductModel.user_id,
                     OzonProductModel.time_create,
+                    OzonProductModel.name,
                     OzonProductModel.percent,
                     subquery.c.job_id)\
                 .select_from(OzonProductModel)\
@@ -498,7 +499,7 @@ async def redirect_to_(callback: types.CallbackQuery,
 
             if _data:
                 _product = _data[0]
-                product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id = _product
+                product_id, link, actaul_price, start_price, user_id, time_create, name, percent, job_id = _product
 
 
     time_create: datetime
