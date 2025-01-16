@@ -127,7 +127,7 @@ def create_product_list_kb(user_id: int,
 
     for product in product_list:
         product_id, link, actaul_price, start_price, user_id, time_create, name, percent, job_id = product
-        _callback_data = f'product-view_{user_id}_{marker}_{product_id}'
+        _callback_data = f'view-product_{user_id}_{marker}_{product_id}'
 
         _kb.row(types.InlineKeyboardButton(text=name,
                                            callback_data=_callback_data))

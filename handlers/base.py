@@ -23,7 +23,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config import BEARER_TOKEN, FEEDBACK_REASON_PREFIX
 
-from keyboards import (create_start_kb,
+from keyboards import (create_remove_kb, create_start_kb,
                        create_or_add_cancel_btn,
                        create_done_kb,
                        create_wb_start_kb,
@@ -406,14 +406,122 @@ async def init_current_item(callback: types.CallbackQuery,
     await show_item(callback, state)
             
 
-# @main_router.callback_query(F.data.startswith('product'))
-# async def redirect_to_(callback: types.CallbackQuery,
-#                         state: FSMContext,
-#                         session: AsyncSession,
-#                         bot: Bot,
-#                         scheduler: AsyncIOScheduler,
-#                         marker: str = None):
-#     callback_data = callback.data.split('_')[-1]
+@main_router.callback_query(F.data.startswith('view-product'))
+async def redirect_to_(callback: types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot,
+                        scheduler: AsyncIOScheduler,
+                        marker: str = None):
+    data = await state.get_data()
+
+    msg: types.Message = data.get('msg')
+
+    callback_data = callback.data.split('_')[1:]
+
+    user_id, marker, product_id = callback_data
+
+    match marker:
+        case 'wb':
+            # pass
+            subquery = (
+                select(UserJob.job_id,
+                    UserJob.user_id,
+                    UserJob.product_id)
+                .where(UserJob.user_id == callback.from_user.id)
+            ).subquery()
+
+            query = (
+                select(WbProduct.id,
+                    WbProduct.link,
+                    WbProduct.actual_price,
+                    WbProduct.start_price,
+                    WbProduct.user_id,
+                    WbProduct.time_create,
+                    WbProduct.name,
+                    WbProduct.percent,
+                    subquery.c.job_id)\
+                .select_from(WbProduct)\
+                .join(User,
+                    WbProduct.user_id == User.tg_id)\
+                .join(UserJob,
+                    UserJob.user_id == User.tg_id)\
+                .outerjoin(subquery,
+                        subquery.c.product_id == WbProduct.id)\
+                .where(User.tg_id == callback.from_user.id)\
+                .distinct(WbProduct.id)
+            )
+
+            async with session as _session:
+                res = await _session.execute(query)
+
+                _data = res.fetchall()
+            
+            if _data:
+                _product = _data[0]
+                product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id = _product
+
+        case 'ozon':
+            # pass
+            subquery = (
+                select(UserJob.job_id,
+                    UserJob.user_id,
+                    UserJob.product_id)
+                .where(UserJob.user_id == callback.from_user.id)
+            ).subquery()
+
+            query = (
+                select(
+                    OzonProductModel.id,
+                    OzonProductModel.link,
+                    OzonProductModel.actual_price,
+                    OzonProductModel.start_price,
+                    OzonProductModel.user_id,
+                    OzonProductModel.time_create,
+                    OzonProductModel.percent,
+                    subquery.c.job_id)\
+                .select_from(OzonProductModel)\
+                .join(User,
+                    OzonProductModel.user_id == User.tg_id)\
+                .join(UserJob,
+                    UserJob.user_id == User.tg_id)\
+                .outerjoin(subquery,
+                        subquery.c.product_id == OzonProductModel.id)\
+                .where(User.tg_id == callback.from_user.id)\
+                .distinct(OzonProductModel.id)
+            )
+
+            async with session as _session:
+                res = await _session.execute(query)
+
+                _data = res.fetchall()
+
+            if _data:
+                _product = _data[0]
+                product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id = _product
+
+
+    time_create: datetime
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    moscow_time = time_create.astimezone(moscow_tz)
+
+    waiting_price = actaul_price - ((actaul_price * percent) / 100)
+
+    _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+
+    # _kb = add_cancel_btn_to_photo_keyboard(photo_kb)
+
+    _kb = create_remove_kb(user_id=callback.from_user.id,
+                        product_id=product_id,
+                        marker=marker,
+                        job_id=job_id,
+                        _kb=_kb)
+    _kb = create_or_add_cancel_btn(_kb)
+
+    if msg:
+        await msg.edit_text(text=_text,
+                            reply_markup=_kb.as_markup())
+# _callback_data = f'view-product_{user_id}_{marker}_{product_id}'
 
 
 @main_router.message()
