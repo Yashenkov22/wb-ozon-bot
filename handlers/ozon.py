@@ -171,7 +171,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
             
             if _alt:
                 _product_name = _alt[0].split('//')[0]
-                _prefix = '\"alt\":\"'
+                _prefix = r'\"alt\":\"'
                 
                 if _product_name.startswith(_prefix):
                     _product_name = _product_name[len(_prefix):]
