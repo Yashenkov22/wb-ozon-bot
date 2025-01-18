@@ -54,7 +54,7 @@ async def validate_link(message: types.Message,
                         state: FSMContext,
                         session: AsyncSession):
     _idx = message.text.find('https')
-    
+
     if _idx > 0:
         link = message.text[_idx:]
     else:
@@ -65,7 +65,7 @@ async def validate_link(message: types.Message,
             update(
                 User
             )\
-            .values(lact_action_time=datetime.now(),
+            .values(last_action_time=datetime.now(),
                     last_action='ozon')\
             .where(User.tg_id == message.from_user.id)
         )
