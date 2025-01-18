@@ -32,7 +32,7 @@ from keyboards import (create_remove_kb, create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import save_data_to_storage, check_user, show_item
+from utils.handlers import check_user_last_message_time, save_data_to_storage, check_user, show_item, validate_link
 from utils.scheduler import test_scheduler
 
 from db.base import OzonProduct as OzonProductModel, User, Base, UserJob, WbProduct
@@ -542,7 +542,17 @@ async def view_product(callback: types.CallbackQuery,
 
 
 @main_router.message()
-async def any_input(message: types.Message):
-    if message.from_user.id == int(DEV_ID):   
+async def any_input(message: types.Message,
+                    state: FSMContext,
+                    session: AsyncSession,
+                    bot: Bot,
+                    scheduler: AsyncIOScheduler):
+    w = await check_user_last_message_time(message.from_user.id,
+                                            session)
+    print(w)
+    await validate_link(message,
+                        state,
+                        session)
+    if message.from_user.id == int(DEV_ID):
         print(message.text, message.__dict__)
     await message.answer(text=message.text)

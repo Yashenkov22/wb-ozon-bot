@@ -1,5 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
+
+from asyncio import sleep
 
 import pytz
 
@@ -23,10 +25,202 @@ from keyboards import (add_back_btn,
                        add_cancel_btn_to_photo_keyboard)
 
 
-async def validate_link(link: str):
+async def check_user_last_message_time(user_id: int,
+                                       session: AsyncSession):
+    query = (
+        select(
+            User
+        )\
+        .where(User.tg_id == user_id)
+    )
+
+    res = await session.execute(query)
+
+    user = res.scalar_one_or_none()
+
+    if user:
+        _now = datetime.now()
+        _time_delta = _now - timedelta(seconds=2)
+
+        if user.last_action_time >= _time_delta:
+            return 'percent'
+        else:
+            await sleep(1)
+            return 'link'
+        
+
+async def validate_link(message: types.Message,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        link: str):
     if link.startswith('https://ozon'):
+        query = (
+            update(
+                User
+            )\
+            .values(lact_action_time=datetime.now(),
+                    last_action='ozon')\
+            .where(User.tg_id == message.from_user.id)
+        )
+
+        await session.execute(query)
+        await session.commit()
         pass
+        # ozon_link = message.text.strip()
+
+        # query = (
+        #     select(
+        #         OzonProduct.id
+        #     )\
+        #     .join(User,
+        #         OzonProduct.user_id == User.tg_id)\
+        #     .where(
+        #         and_(
+        #             User.tg_id == message.from_user.id,
+        #             OzonProduct.link == ozon_link,
+        #         )
+        #     )
+        # )
+        # async with session as session:
+        #     res = await session.execute(query)
+
+        #     check_product_by_user = res.scalar_one_or_none()
+
+        # if check_product_by_user:
+        #     # _kb = create_or_add_cancel_btn()
+        #     # # await msg.edit_text(text='Продукт уже добален',
+        #     # #                     reply_markup=_kb.as_markup())
+        #     # await message.delete()
+        #     return
+
+
+        # # _kb = create_done_kb(marker='ozon_product')
+
+        # # _kb = create_or_add_cancel_btn()
+
+
+        # # await state.update_data(ozon_link=ozon_link)
+
+        # if ozon_link.startswith('https://ozon.ru/t/'):
+        #     _idx = ozon_link.find('/t/')
+        #     print(_idx)
+        #     _prefix = '/t/'
+        #     ozon_short_link = 'croppedLink|' + ozon_link[_idx+len(_prefix):]
+        #     print(ozon_short_link)
+        # else:
+        #     _prefix = 'product/'
+
+        #     _idx = ozon_link.rfind('product/')
+
+        #     ozon_short_link = ozon_link[(_idx + len(_prefix)):]
+
+        # await state.update_data(ozon_short_link=ozon_short_link)
+
+        # print('do request')
+
+        # try:
+        #     async with aiohttp.ClientSession() as aiosession:
+        #         # _url = f"http://5.61.53.235:1441/product/{message.text}"
+        #         _url = f"http://172.18.0.4:8080/product/{ozon_short_link}"
+
+        #         response = await aiosession.get(url=_url)
+
+        #         print(response.status)
+
+        #         res = await response.text()
+
+        #         # print(res)
+
+        #         w = re.findall(r'\"cardPrice.*currency?', res)
+        #         print(w)
+
+        #         _alt = re.findall(r'\"alt.*,?', res)
+        #         _product_name = None
+        #         _product_name_limit = 21
+                
+        #         if _alt:
+        #             _product_name = _alt[0].split('//')[0]
+        #             _prefix = f'\"alt\":\"'
+                    
+        #             # if _product_name.startswith(_prefix):
+        #             # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
+        #             _product_name = _product_name[len(_prefix)+2:]
+
+        #         print(_product_name)
+
+        #         await state.update_data(ozon_product_name=_product_name)
+        #         # print('NAME   ',_alt[0].split('//')[0])
+
+        #         if w:
+        #             w = w[0].split(',')[:3]
+
+        #             _d = {
+        #                 'price': None,
+        #                 'originalPrice': None,
+        #                 'cardPrice': None,
+        #             }
+
+        #             for k in _d:
+        #                 if not all(v for v in _d.values()):
+        #                     for q in w:
+        #                         if q.find(k) != -1:
+        #                             name, price = q.split(':')
+        #                             price = price.replace('\\', '').replace('"', '')
+        #                             price = float(''.join(price.split()[:-1]))
+        #                             print(price)
+        #                             _d[k] = price
+        #                             break
+        #                 else:
+        #                     break
+
+        #             print(_d)
+
+        #             await state.update_data(ozon_start_price=_d.get('cardPrice', 0))
+        #             await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
+
+        #             price_text = '|'.join(str(v) for v in _d.items())
+        #         else:
+        #             _text = 'Возникли проблемы'
+            
+        #     _product_price = _d.get('cardPrice')
+        #     example_percent = 10
+        #     example_different = (_product_price * example_percent) / 100
+        #     example_price = _product_price - example_different
+
+        #     _text = f'Основная цена товара: {_product_price}\nАктуальная цена товара: {_product_price}\nВведите <b>процент как число</b>.\nКогда цена товара снизится <b>на этот процент или ниже</b>, мы сообщим Вам.\n\nПример:\n   Процент: {example_percent}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_different} = {example_price}'
+
+        #     # _text = f'Ваш продукт\n{message.text}\nЦена продукта: {price_text}'
+
+        #     await state.update_data(ozon_product=message.text)  # ?
+
+        #     await state.set_state(OzonProduct.percent)
+
+        #     if msg:
+        #         await bot.edit_message_text(text=_text,
+        #                                     chat_id=message.chat.id,
+        #                                     message_id=msg.message_id,
+        #                                     reply_markup=_kb.as_markup())
+        #     else:
+        #         await bot.send_message(chat_id=message.chat.id,
+        #                             text=_text,
+        #                             reply_markup=_kb.as_markup())
+                
+        #     await message.delete()
+        # except Exception as ex:
+        #     print(ex)
+        #     pass
     elif link.startswith('https://www.wildberries'):
+        query = (
+            update(
+                User
+            )\
+            .values(lact_action_time=datetime.now(),
+                    last_action='wb')\
+            .where(User.tg_id == message.from_user.id)
+        )
+
+        await session.execute(query)
+        await session.commit()
         pass
     else:
         pass

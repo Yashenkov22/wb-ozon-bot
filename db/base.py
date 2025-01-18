@@ -23,6 +23,8 @@ class User(Base):
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
+    last_action = Column(String, nullable=True, default=None)
+    last_action_time = Column(TIMESTAMP(timezone=True), nullable=True, default=None)
 
     ozon_products = relationship("OzonProduct", back_populates="user")
     wb_punkts = relationship("WbPunkt", back_populates="user")
