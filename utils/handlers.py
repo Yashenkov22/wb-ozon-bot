@@ -52,8 +52,14 @@ async def check_user_last_message_time(user_id: int,
 
 async def validate_link(message: types.Message,
                         state: FSMContext,
-                        session: AsyncSession,
-                        link: str):
+                        session: AsyncSession):
+    _idx = message.text.find('https')
+    
+    if _idx > 0:
+        link = message.text[_idx:]
+    else:
+        return
+    
     if link.startswith('https://ozon'):
         query = (
             update(
