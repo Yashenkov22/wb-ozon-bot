@@ -132,6 +132,7 @@ async def on_startup():
 @app.post(WEBHOOK_PATH)
 async def bot_webhook(update: dict):
     tg_update = types.Update(**update)
+    print('TG UPDATE', tg_update, tg_update.__dict__)
     await dp.feed_update(bot=bot, update=tg_update)
 
 
