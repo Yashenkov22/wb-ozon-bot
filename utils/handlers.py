@@ -44,10 +44,10 @@ async def check_user_last_message_time(user_id: int,
         moscow_time = _now.astimezone(moscow_tz)
         _time_delta = moscow_time - timedelta(seconds=2)
 
-        print(moscow_time , user.last_action_time)
+        print(moscow_time , user.last_action_time.astimezone(moscow_tz))
 
         if user.last_action_time is not None \
-            and user.last_action_time >= _time_delta:
+            and user.last_action_time.astimezone(moscow_tz) >= _time_delta:
             return 'percent'
         else:
             await sleep(1)
