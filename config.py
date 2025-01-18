@@ -7,6 +7,8 @@ from sqlalchemy.engine import URL
 
 load_dotenv()
 
+DEV_ID = os.environ.get('DEV_ID')
+
 TOKEN = os.environ.get('TOKEN')
 WEBAPP_URL_ONE = os.environ.get('WEBAPP_URL_ONE')
 WEBAPP_URL_TWO = os.environ.get('WEBAPP_URL_TWO')

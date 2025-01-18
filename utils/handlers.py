@@ -22,6 +22,17 @@ from keyboards import (add_back_btn,
                        create_remove_kb,
                        add_cancel_btn_to_photo_keyboard)
 
+
+async def validate_link(link: str):
+    if link.startswith('https://ozon'):
+        pass
+    elif link.startswith('https://www.wildberries'):
+        pass
+    else:
+        pass
+
+
+
 async def clear_state_and_redirect_to_start(message: types.Message | types.CallbackQuery,
                                             state: FSMContext,
                                             bot: Bot):
@@ -82,7 +93,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
             case 'ozon_product':
                 _data = {
                     'link': data.get('ozon_link'),
-                    'short_link': data.get('ozon_product_id'),
+                    'short_link': data.get('ozon_short_link'),
                     'actual_price': data.get('ozon_actual_price'),
                     'start_price': data.get('ozon_start_price'),
                     'percent': int(data.get('percent')),

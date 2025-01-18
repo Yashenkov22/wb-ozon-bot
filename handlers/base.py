@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from config import BEARER_TOKEN, FEEDBACK_REASON_PREFIX
+from config import BEARER_TOKEN, FEEDBACK_REASON_PREFIX, DEV_ID
 
 from keyboards import (create_remove_kb, create_start_kb,
                        create_or_add_cancel_btn,
@@ -146,6 +146,12 @@ async def redirect_to_(callback: types.CallbackQuery,
                         scheduler: AsyncIOScheduler,
                         marker: str = None):
     scheduler.print_jobs()
+
+    # UPDATE SCHEDULER TASK
+    # if callback.from_user.id == DEV_ID:   
+    #     _jobs = scheduler.get_jobs()
+    #     for _job in _jobs:
+    #         pass
 
     if not marker:
         marker = callback.data.split('_')[-1]
@@ -537,4 +543,6 @@ async def view_product(callback: types.CallbackQuery,
 
 @main_router.message()
 async def any_input(message: types.Message):
+    if message.from_user.id == DEV_ID:   
+        print(message.text, message.__dict__)
     await message.answer(text=message.text)

@@ -137,23 +137,23 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         _idx = ozon_link.find('/t/')
         print(_idx)
         _prefix = '/t/'
-        ozon_product_id = 'croppedLink|' + ozon_link[_idx+len(_prefix):]
-        print(ozon_product_id)
+        ozon_short_link = 'croppedLink|' + ozon_link[_idx+len(_prefix):]
+        print(ozon_short_link)
     else:
         _prefix = 'product/'
 
         _idx = ozon_link.rfind('product/')
 
-        ozon_product_id = ozon_link[(_idx + len(_prefix)):]
+        ozon_short_link = ozon_link[(_idx + len(_prefix)):]
 
-    await state.update_data(ozon_product_id=ozon_product_id)
+    await state.update_data(ozon_short_link=ozon_short_link)
 
     print('do request')
 
     try:
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
-            _url = f"http://172.18.0.4:8080/product/{ozon_product_id}"
+            _url = f"http://172.18.0.4:8080/product/{ozon_short_link}"
 
             response = await aiosession.get(url=_url)
 
@@ -175,7 +175,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                 _prefix = f'\"alt\":\"'
                 
                 # if _product_name.startswith(_prefix):
-                _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
+                # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
+                _product_name = _product_name[len(_prefix)+2:]
 
             print(_product_name)
 
@@ -222,7 +223,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
         # _text = f'Ваш продукт\n{message.text}\nЦена продукта: {price_text}'
 
-        await state.update_data(ozon_product=message.text)
+        await state.update_data(ozon_product=message.text)  # ?
 
         await state.set_state(OzonProduct.percent)
 
@@ -258,7 +259,7 @@ async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
     
     data = await state.get_data()
 
-    msg = data.get('msg')
+    msg: types.Message = data.get('msg')
     
 
     await state.update_data(percent=percent)
