@@ -42,7 +42,8 @@ async def check_user_last_message_time(user_id: int,
         _now = datetime.now()
         _time_delta = _now - timedelta(seconds=2)
 
-        if user.last_action_time >= _time_delta:
+        if user.last_action_time is not None \
+            and user.last_action_time >= _time_delta:
             return 'percent'
         else:
             await sleep(1)
