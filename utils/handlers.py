@@ -50,7 +50,7 @@ async def check_user_last_message_time(user_id: int,
             and user.last_action_time.astimezone(moscow_tz) >= _time_delta:
             return 'percent'
         else:
-            await sleep(1)
+            # await sleep(1)
             return 'link'
         
 
