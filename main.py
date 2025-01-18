@@ -116,7 +116,7 @@ async def on_startup():
                           allowed_updates=['message', 'callback_query'])
     scheduler.start()
     
-    # await init_db()
+    await init_db()
     # Base.metadata.reflect(bind=engine)
     
 #     # Base.prepare(engine, reflect=True)
