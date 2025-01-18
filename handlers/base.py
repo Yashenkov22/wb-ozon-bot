@@ -543,6 +543,6 @@ async def view_product(callback: types.CallbackQuery,
 
 @main_router.message()
 async def any_input(message: types.Message):
-    if message.from_user.id == DEV_ID:   
+    if message.from_user.id == int(DEV_ID):   
         print(message.text, message.__dict__)
     await message.answer(text=message.text)
