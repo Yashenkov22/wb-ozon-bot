@@ -42,7 +42,7 @@ async def check_user_last_message_time(user_id: int,
         moscow_tz = pytz.timezone('Europe/Moscow')
         _now = datetime.now()
         moscow_time = _now.astimezone(moscow_tz)
-        _time_delta = moscow_time - timedelta(seconds=2)
+        _time_delta = moscow_time - timedelta(seconds=20)
 
         print(moscow_time , user.last_action_time.astimezone(moscow_tz))
 
