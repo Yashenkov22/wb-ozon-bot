@@ -547,12 +547,12 @@ async def any_input(message: types.Message,
                     session: AsyncSession,
                     bot: Bot,
                     scheduler: AsyncIOScheduler):
-    w = await check_user_last_message_time(message.from_user.id,
-                                            session)
-    print(w)
-    await validate_link(message,
-                        state,
-                        session)
+    # w = await check_user_last_message_time(message.from_user.id,
+    #                                         session)
+    # print(w)
+    # await validate_link(message,
+    #                     state,
+    #                     session)
     if message.from_user.id == int(DEV_ID):
-        print(message.text, message.__dict__)
+        print(message.text, datetime.now())
     await message.answer(text=message.text)
