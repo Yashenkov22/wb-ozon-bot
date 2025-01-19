@@ -41,6 +41,13 @@ async def check_user_last_message_time(user_id: int,
             # try:    
                 # await pipe.watch(key)
                 user_data: bytes = await pipe.get(key)
+
+                # user_data: bytes = await pipe.get(key)
+                # Выполняем все команды в pipeline
+                results = await pipe.execute()
+
+                # Извлекаем результат из выполненного pipeline
+                print(results)
                 print(user_data)
 
                 user_data = json.loads(user_data)
