@@ -562,7 +562,7 @@ async def any_input(message: types.Message,
                                         message.text,
                                         state)
     # print(w)
-    await validate_link(message,
-                        state,
-                        session)
+    # await validate_link(message,
+    #                     state,
+    #                     session)
     await message.answer(text=message.text)

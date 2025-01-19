@@ -49,8 +49,12 @@ async def check_user_last_message_time(user_id: int,
                     print(user_data)
 
                     time_delta = now_time - timedelta(seconds=3)
+                    
+                    moscow_tz = pytz.timezone('Europe/Moscow')
+                    # _now = datetime.now()
+                    # moscow_time = _now.astimezone(moscow_tz)
 
-                    if time_delta >= datetime.fromtimestamp(last_action_time):
+                    if time_delta >= datetime.fromtimestamp(last_action_time).astimezone(moscow_tz):
                         # first message
                         user_data['last_action_time'] = now_time.timestamp()
 
