@@ -50,7 +50,7 @@ async def check_user_last_message_time(user_id: int,
                 print(results)
                 print(user_data)
 
-                user_data: dict = json.loads(results)
+                user_data: dict = json.loads(results[0])
 
                 if last_action_time := user_data.get('last_action_time'):
                     print(user_data)
