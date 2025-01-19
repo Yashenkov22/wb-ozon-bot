@@ -1,3 +1,5 @@
+import json
+
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -37,7 +39,9 @@ async def check_user_last_message_time(user_id: int,
         async with redis_client.pipeline() as pipe:
             try:    
                 await pipe.watch(key)
-                user_data: dict = await pipe.get(key)
+                user_data: bytes = await pipe.get(key)
+
+                user_data = json.loads(user_data)
 
                 if last_action_time := user_data.get('last_action_time'):
                     print(user_data)
