@@ -39,7 +39,7 @@ async def check_user_last_message_time(user_id: int,
         async with redis_client.pipeline() as pipe:
         # pipe = redis_client.pipeline()
             # try:    
-                await pipe.watch(key)
+                # await pipe.watch(key)
                 user_data: bytes = await pipe.get(key)
                 print(user_data)
 
