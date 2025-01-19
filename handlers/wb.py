@@ -515,7 +515,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
 #
     await state.update_data(wb_product_idx=0,
-                            wb_product_list=_data)
+                            wb_product_list=json.loads(_data))
     
     # await show_item(callback,
     #                 state)
