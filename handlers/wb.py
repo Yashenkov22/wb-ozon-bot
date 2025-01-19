@@ -510,7 +510,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
             product_id, link, actual, start, user_id, _date, name, percent, job_id = _d
             moscow_tz = pytz.timezone('Europe/Moscow')
             
-            date = datetime.fromtimestamp(_date).astimezone(moscow_tz)
+            date = _date.astimezone(moscow_tz).timestamp()
             _new_data.append((product_id, link, actual, start, user_id, date, name, percent, job_id))
                     # _now = datetime.now()
                     # moscow_time = _now.astimezone(moscow_tz)
