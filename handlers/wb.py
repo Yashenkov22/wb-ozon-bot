@@ -504,9 +504,20 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     async with session as _session:
         res = await _session.execute(query)
 
-        _data = list(res.fetchall())
-    print(type(_data))
-    print('wb products22',(_data))
+        _data = res.fetchall()
+        _new_data = []
+        for _d in _data:
+            product_id, link, actual, start, user_id, _date, name, percent, job_id = _d
+            moscow_tz = pytz.timezone('Europe/Moscow')
+            
+            date = datetime.fromtimestamp(date).astimezone(moscow_tz)
+            _new_data.append((product_id, link, actual, start, user_id, _date, name, percent, job_id))
+                    # _now = datetime.now()
+                    # moscow_time = _now.astimezone(moscow_tz)
+
+                    # if time_delta >= datetime.fromtimestamp(last_action_time).astimezone(moscow_tz):
+    print(type(_new_data))
+    print('wb products22',(_new_data))
 
     if not _data:
         await callback.answer(text='Сначала добавьте товар',
@@ -515,7 +526,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
 #
     await state.update_data(wb_product_idx=0,
-                            wb_product_list=_data)
+                            wb_product_list=_new_data)
     
     # await show_item(callback,
     #                 state)
