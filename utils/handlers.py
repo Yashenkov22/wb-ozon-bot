@@ -24,34 +24,88 @@ from keyboards import (add_back_btn,
                        create_remove_kb,
                        add_cancel_btn_to_photo_keyboard)
 
+from utils.storage import redis_client
+
 
 async def check_user_last_message_time(user_id: int,
-                                       session: AsyncSession):
-    query = (
-        select(
-            User
-        )\
-        .where(User.tg_id == user_id)
-    )
+                                       now_time: datetime,
+                                       message_text: str,
+                                       state: FSMContext):
+    
+    # key = f'user:{user_id}'
+        key = f'fsm:{user_id}:{user_id}:data'
+        async with redis_client.pipeline() as pipe:
+            try:    
+                await pipe.watch(key)
+                user_data: dict = await pipe.get(key)
 
-    res = await session.execute(query)
+                if last_action_time := user_data.get('last_action_time'):
+                    print(user_data)
 
-    user = res.scalar_one_or_none()
+                    time_delta = now_time - timedelta(seconds=3)
 
-    if user:
-        moscow_tz = pytz.timezone('Europe/Moscow')
-        _now = datetime.now()
-        moscow_time = _now.astimezone(moscow_tz)
-        _time_delta = moscow_time - timedelta(seconds=20)
+                    if time_delta >= last_action_time:
+                        # first message
+                        user_data['last_action_time'] = now_time
 
-        print(moscow_time , user.last_action_time.astimezone(moscow_tz))
+                        if message_text.isdigit():
+                            user_data['percent'] = message_text
+                        else:
+                            user_data['link'] = message_text
+                        
+                        # await pipe.multi()
+                        # await pipe.set(key, user_data)
 
-        if user.last_action_time is not None \
-            and user.last_action_time.astimezone(moscow_tz) >= _time_delta:
-            return 'percent'
-        else:
-            # await sleep(1)
-            return 'link'
+                        # await pipe.execute()
+                        # await pipe.set(f'{key}:name', name)
+                        pass
+                    else:
+                        # second message
+                        if message_text.isdigit():
+                            print(user_data)
+                        else:
+                            print(user_data)
+                            
+                        user_data['last_action_time'] = now_time
+                        pass
+                else:
+                    # first message
+                    user_data['last_action_time'] = now_time
+
+                await pipe.multi()
+                await pipe.set(key, user_data)
+
+                await pipe.execute()
+
+            finally:
+                # Сбросим pipeline
+                pipe.reset()
+    
+    # query = (
+    #     select(
+    #         User
+    #     )\
+    #     .where(User.tg_id == user_id)
+    # )
+
+    # res = await session.execute(query)
+
+    # user = res.scalar_one_or_none()
+
+    # if user:
+    #     moscow_tz = pytz.timezone('Europe/Moscow')
+    #     _now = datetime.now()
+    #     moscow_time = _now.astimezone(moscow_tz)
+    #     _time_delta = moscow_time - timedelta(seconds=20)
+
+    #     print(moscow_time , user.last_action_time.astimezone(moscow_tz))
+
+    #     if user.last_action_time is not None \
+    #         and user.last_action_time.astimezone(moscow_tz) >= _time_delta:
+    #         return 'percent'
+    #     else:
+    #         # await sleep(1)
+    #         return 'link'
         
 
 async def validate_link(message: types.Message,

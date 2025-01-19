@@ -1,14 +1,14 @@
 import asyncio
 
-import redis
+# import redis
 
 import uvicorn
 
-import redis.asyncio
-import redis.asyncio.client
+# import redis.asyncio
+# import redis.asyncio.client
 from uvicorn import Config, Server
 
-from aiogram.fsm.storage.redis import RedisStorage
+# from aiogram.fsm.storage.redis import RedisStorage
 
 from pyrogram import Client
 
@@ -32,6 +32,8 @@ from db.base import engine, session, Base, db_url
 
 from middlewares.db import DbSessionMiddleware
 
+from utils.storage import redis_client, storage
+
 from config import (TOKEN,
                     db_url,
                     PUBLIC_URL,
@@ -49,9 +51,9 @@ from bot22 import bot
 
 
 #Initialize Redis storage
-redis_client = redis.asyncio.client.Redis(host=REDIS_HOST,
-                                          password=REDIS_PASSWORD)
-storage = RedisStorage(redis=redis_client)
+# redis_client = redis.asyncio.client.Redis(host=REDIS_HOST,
+#                                           password=REDIS_PASSWORD)
+# storage = RedisStorage(redis=redis_client)
 
 ### WEBHOOK ###
 
