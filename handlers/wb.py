@@ -504,9 +504,9 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     async with session as _session:
         res = await _session.execute(query)
 
-        _data = res.fetchall()
+        _data = list(res.fetchall())
 
-    print('wb products22',_data)
+    print('wb products22',(_data))
 
     if not _data:
         await callback.answer(text='Сначала добавьте товар',
