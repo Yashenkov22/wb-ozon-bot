@@ -334,6 +334,15 @@ async def list_product(callback: types.Message | types.CallbackQuery,
 
         _data = res.fetchall()
 
+        _new_data = []
+        for _d in _data:
+            product_id, link, actual, start, user_id, _date, name, percent, job_id = _d
+            moscow_tz = pytz.timezone('Europe/Moscow')
+            
+            date = _date.astimezone(moscow_tz).timestamp()
+            _new_data.append((product_id, link, actual, start, user_id, date, name, percent, job_id))
+
+
     print('ozon products22',_data)
 
     if not _data:
@@ -343,7 +352,7 @@ async def list_product(callback: types.Message | types.CallbackQuery,
 
 #
     await state.update_data(ozon_product_idx=0,
-                            ozon_product_list=_data)
+                            ozon_product_list=_new_data)
     
     # await show_item(callback,
     #                 state)
