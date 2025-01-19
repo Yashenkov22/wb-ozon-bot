@@ -76,16 +76,18 @@ async def check_user_last_message_time(user_id: int,
                     pass
             else:
                 # first message
+                print(user_data)
                 user_data['last_action_time'] = now_time
 
             # await pipe.multi()
+            user_data = json.dumps(user_data)
             await pipe.set(key, user_data)
 
             await pipe.execute()
 
         finally:
             # Сбросим pipeline
-            pipe.close()
+            await pipe.close()
     
     # query = (
     #     select(
