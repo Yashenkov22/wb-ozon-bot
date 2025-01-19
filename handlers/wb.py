@@ -126,7 +126,7 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
     # await state.set_state(SwiftSepaStates.lon)
     data = await state.get_data()
 
-    msg: types.Message = data.get('msg')
+    msg: tuple = data.get('msg')
     # _text = 'Введите долготу пункта доставки'
 
     _kb = create_done_kb(marker='wb_punkt')
@@ -159,8 +159,8 @@ async def proccess_lat(message: types.Message | types.CallbackQuery,
 
     if msg:
         await bot.edit_message_text(text=_text,
-                                    chat_id=msg.chat.id,
-                                    message_id=msg.message_id,
+                                    chat_id=msg[0],
+                                    message_id=msg[-1],
                                     reply_markup=_kb.as_markup())
     else:
         await message.answer(text=_text,
@@ -210,14 +210,14 @@ async def list_punkt(callback: types.Message | types.CallbackQuery,
     else:
         _text = 'Нет добавленных пунктов'
 
-    msg: types.Message = data.get('msg')
+    msg: tuple = data.get('msg')
 
     _kb = create_or_add_cancel_btn()
 
     if msg:
         await bot.edit_message_text(text=_text,
-                                    chat_id=msg.chat.id,
-                                    message_id=msg.message_id,
+                                    chat_id=msg[0],
+                                    message_id=msg[-1],
                                     reply_markup=_kb.as_markup())
     else:
         await callback.message.answer(text=_text,
@@ -230,7 +230,7 @@ async def add_wb_product(callback: types.Message | types.CallbackQuery,
                         session: AsyncSession,
                         bot: Bot):
     data = await state.get_data()
-    msg: types.Message = data.get('msg')
+    msg: tuple = data.get('msg')
 
     query = (
         select(WbPunkt.zone)\
@@ -273,8 +273,8 @@ async def add_wb_product(callback: types.Message | types.CallbackQuery,
 
     if msg:
         await bot.edit_message_text(text=_text,
-                                    chat_id=msg.chat.id,
-                                    message_id=msg.message_id,
+                                    chat_id=msg[0],
+                                    message_id=msg[-1],
                                     reply_markup=_kb.as_markup())
     else:
         await callback.message.answer(text=_text,
@@ -303,7 +303,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     data = await state.get_data()
 
-    msg: types.Message = data.get('msg')
+    msg: tuple = data.get('msg')
 
     query = (
         select(WbPunkt.zone)\
@@ -340,8 +340,10 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     if check_product_by_user:
         _kb = create_or_add_cancel_btn()
-        await msg.edit_text(text='Продукт уже добален',
-                            reply_markup=_kb.as_markup())
+        await bot.edit_message_text(chat_id=msg[0],
+                                    message_id=msg[-1],
+                                    text='Продукт уже добален',
+                                    reply_markup=_kb.as_markup())
         await message.delete()
         return
 
@@ -381,11 +383,15 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
                 _product_price = float(_product_price)
 
-                await state.update_data(wb_product_link=wb_product_link)
-                await state.update_data(wb_product_id=wb_product_id)
-                await state.update_data(wb_start_price=float(_product_price))
-                await state.update_data(wb_product_price=float(_product_price))
-                await state.update_data(wb_product_name=_product_name)
+                await state.update_data(wb_product_link=wb_product_link,
+                                        wb_product_id=wb_product_id,
+                                        wb_start_price=float(_product_price),
+                                        wb_product_price=float(_product_price),
+                                        wb_product_name=_product_name)
+                # await state.update_data(wb_product_id=wb_product_id)
+                # await state.update_data(wb_start_price=float(_product_price))
+                # await state.update_data(wb_product_price=float(_product_price))
+                # await state.update_data(wb_product_name=_product_name)
 
                 await state.set_state(ProductStates.percent)
 
@@ -401,8 +407,8 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     if msg:
         await bot.edit_message_text(text=_text,
-                                    chat_id=msg.chat.id,
-                                    message_id=msg.message_id,
+                                    chat_id=msg[0],
+                                    message_id=msg[-1],
                                     reply_markup=_kb.as_markup())
     else:
         await message.answer(text=_text,
@@ -446,8 +452,8 @@ async def proccess_push_price(message: types.Message | types.CallbackQuery,
 
     if msg:
         await bot.edit_message_text(text=_text,
-                                    chat_id=msg.chat.id,
-                                    message_id=msg.message_id,
+                                    chat_id=msg[0],
+                                    message_id=msg[-1],
                                     reply_markup=_kb.as_markup())
     else:
         await message.answer(text=_text,
@@ -462,7 +468,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                         session: AsyncSession,
                         bot: Bot):
     data = await state.get_data()
-    msg: types.Message = data.get('msg')
+    msg: tuple = data.get('msg')
 
     marker = data.get('action')
 

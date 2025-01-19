@@ -90,7 +90,7 @@ async def start(message: types.Message | types.CallbackQuery,
                                 chat_id=_message.from_user.id,
                                 reply_markup=_kb.as_markup())
     
-    await state.update_data(msg=msg)
+    await state.update_data(msg=(msg.chat.id, msg.message_id))
     try:
         await message.delete()
         
@@ -202,7 +202,7 @@ async def redirect_to_(callback: types.CallbackQuery,
     if msg:
         await bot.edit_message_text(text=_text,
                                     chat_id=callback.message.chat.id,
-                                    message_id=msg.message_id,
+                                    message_id=msg[-1],
                                     reply_markup=_kb.as_markup())
     else:
         await bot.send_message(chat_id=callback.message.chat.id,
@@ -421,7 +421,7 @@ async def view_product(callback: types.CallbackQuery,
                         marker: str = None):
     data = await state.get_data()
 
-    msg: types.Message = data.get('msg')
+    msg: tuple = data.get('msg')
 
     callback_data = callback.data.split('_')[1:]
 
@@ -536,8 +536,10 @@ async def view_product(callback: types.CallbackQuery,
     _kb = create_or_add_cancel_btn(_kb)
 
     if msg:
-        await msg.edit_text(text=_text,
-                            reply_markup=_kb.as_markup())
+        await bot.edit_message_text(chat_id=msg[0],
+                                    message_id=msg[-1],
+                                    text=_text,
+                                    reply_markup=_kb.as_markup())
 # _callback_data = f'view-product_{user_id}_{marker}_{product_id}'
 
 

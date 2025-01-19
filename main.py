@@ -8,6 +8,8 @@ import redis.asyncio
 import redis.asyncio.client
 from uvicorn import Config, Server
 
+from aiogram.fsm.storage.redis import RedisStorage
+
 from pyrogram import Client
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -46,6 +48,11 @@ from handlers.wb import wb_router
 from bot22 import bot
 
 
+#Initialize Redis storage
+redis_client = redis.asyncio.client.Redis(host=REDIS_HOST,
+                                          password=REDIS_PASSWORD)
+storage = RedisStorage(redis=redis_client)
+
 ### WEBHOOK ###
 
 #TG BOT
@@ -57,7 +64,7 @@ from bot22 import bot
 # #                     api_hash=API_HASH)
 # #####
 
-dp = Dispatcher()
+dp = Dispatcher(storage=storage)
 dp.include_router(ozon_router)
 dp.include_router(wb_router)
 dp.include_router(main_router)
@@ -132,7 +139,7 @@ async def on_startup():
 @app.post(WEBHOOK_PATH)
 async def bot_webhook(update: dict):
     tg_update = types.Update(**update)
-    print('TG UPDATE', tg_update, tg_update.__dict__)
+    # print('TG UPDATE', tg_update, tg_update.__dict__)
     await dp.feed_update(bot=bot, update=tg_update)
 
 

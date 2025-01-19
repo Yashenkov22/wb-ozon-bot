@@ -31,6 +31,25 @@ services:
       options:
           max-size: "20m"
 
+  redis_tg_bot_db:
+    image: redis:alpine
+    restart: on-failure
+    networks:
+      - bot_network
+    cpus: '0.5'
+    # ports:
+    #   - 6379:6379
+    env_file:
+      - ./.env
+    command: redis-server --requirepass ${redis_password} --save "10" "1" --appendonly no
+    # sh -c "echo 1 > /proc/sys/vm/overcommit_memory && redis-server --save 900 1 --loglevel warning"
+    volumes:
+      - redis_tg_bot_data:/data
+    logging:
+      driver: "json-file"
+      options:
+          max-size: "20m"
+
   psql_db:
     image: postgres:14
     # restart: always

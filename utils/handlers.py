@@ -571,7 +571,7 @@ async def show_item_list(callback: types.CallbackQuery,
 
     marker = data.get('action')
 
-    msg: types.Message = data.get('msg')
+    msg: tuple = data.get('msg')
 
     # product_idx = data.get(f'{marker}_product_idx')
     product_list = data.get(f'{marker}_product_list')
@@ -584,8 +584,10 @@ async def show_item_list(callback: types.CallbackQuery,
     _text = f'Ваши {marker} товары'
     
     if msg:
-        await msg.edit_text(text=_text,
-                            reply_markup=_kb.as_markup())
+        await bot.edit_message_text(chat_id=msg[0],
+                                    message_id=msg[-1],
+                                    text=_text,
+                                    reply_markup=_kb.as_markup())
     else:
         await bot.send_message(chat_id=callback.from_user.id,
                                text=_text,

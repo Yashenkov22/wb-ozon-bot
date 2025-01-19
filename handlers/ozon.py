@@ -66,15 +66,15 @@ async def add_product(callback: types.Message | types.CallbackQuery,
     await state.set_state(OzonProduct.product)
     data = await state.get_data()
 
-    msg: types.Message = data.get('msg')
+    msg: tuple = data.get('msg')
     _text = 'Отправьте ссылку на товар'
 
     _kb = create_or_add_cancel_btn()
 
     if msg:
         await bot.edit_message_text(text=_text,
-                                    chat_id=msg.chat.id,
-                                    message_id=msg.message_id,
+                                    chat_id=msg[0],
+                                    message_id=msg[-1],
                                     reply_markup=_kb.as_markup())
     else:
         await callback.message.answer(text=_text,
@@ -99,7 +99,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     data = await state.get_data()
 
-    msg: types.Message = data.get('msg')
+    msg: tuple = data.get('msg')
 
     query = (
         select(
@@ -121,8 +121,10 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     if check_product_by_user:
         _kb = create_or_add_cancel_btn()
-        await msg.edit_text(text='Продукт уже добален',
-                            reply_markup=_kb.as_markup())
+        await bot.edit_message_text(chat_id=msg[0],
+                                    message_id=msg[-1],
+                                    text='Продукт уже добален',
+                                    reply_markup=_kb.as_markup())
         await message.delete()
         return
 
@@ -131,7 +133,6 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
     _kb = create_or_add_cancel_btn()
 
 
-    await state.update_data(ozon_link=ozon_link)
 
     if ozon_link.startswith('https://ozon.ru/t/'):
         _idx = ozon_link.find('/t/')
@@ -146,7 +147,9 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
         ozon_short_link = ozon_link[(_idx + len(_prefix)):]
 
-    await state.update_data(ozon_short_link=ozon_short_link)
+    await state.update_data(ozon_link=ozon_link,
+                            ozon_short_link=ozon_short_link)
+    # await state.update_data(ozon_short_link=ozon_short_link)
 
     print('do request')
 
@@ -230,7 +233,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         if msg:
             await bot.edit_message_text(text=_text,
                                         chat_id=message.chat.id,
-                                        message_id=msg.message_id,
+                                        message_id=msg[-1],
                                         reply_markup=_kb.as_markup())
         else:
             await bot.send_message(chat_id=message.chat.id,
@@ -259,7 +262,7 @@ async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
     
     data = await state.get_data()
 
-    msg: types.Message = data.get('msg')
+    msg: tuple = data.get('msg')
     
 
     await state.update_data(percent=percent)
@@ -277,8 +280,8 @@ async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
 
     if msg:
         await bot.edit_message_text(text=_text,
-                                    chat_id=msg.chat.id,
-                                    message_id=msg.message_id,
+                                    chat_id=msg[0],
+                                    message_id=msg[-1],
                                     reply_markup=_kb.as_markup())
     else:
         await message.answer(text=_text,
