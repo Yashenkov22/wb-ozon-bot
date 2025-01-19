@@ -505,7 +505,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
         res = await _session.execute(query)
 
         _data = list(res.fetchall())
-
+    print(type(_data))
     print('wb products22',(_data))
 
     if not _data:
@@ -515,7 +515,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
 
 #
     await state.update_data(wb_product_idx=0,
-                            wb_product_list=json.loads(_data))
+                            wb_product_list=_data)
     
     # await show_item(callback,
     #                 state)
