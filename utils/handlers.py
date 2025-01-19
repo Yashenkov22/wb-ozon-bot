@@ -36,58 +36,58 @@ async def check_user_last_message_time(user_id: int,
     
     # key = f'user:{user_id}'
         key = f'fsm:{user_id}:{user_id}:data'
-        # async with redis_client.pipeline() as pipe:
-        pipe = redis_client.pipeline()
-        try:    
-            await pipe.watch(key)
-            user_data: bytes = await pipe.get(key)
-            print(user_data)
-
-            user_data = json.loads(user_data)
-
-            if last_action_time := user_data.get('last_action_time'):
+        async with redis_client.pipeline() as pipe:
+        # pipe = redis_client.pipeline()
+            # try:    
+                await pipe.watch(key)
+                user_data: bytes = await pipe.get(key)
                 print(user_data)
 
-                time_delta = now_time - timedelta(seconds=3)
+                user_data = json.loads(user_data)
 
-                if time_delta >= last_action_time:
-                    # first message
-                    user_data['last_action_time'] = now_time
+                if last_action_time := user_data.get('last_action_time'):
+                    print(user_data)
 
-                    if message_text.isdigit():
-                        user_data['percent'] = message_text
-                    else:
-                        user_data['link'] = message_text
-                    
-                    # await pipe.multi()
-                    # await pipe.set(key, user_data)
+                    time_delta = datetime.fromtimestamp(now_time) - timedelta(seconds=3)
 
-                    # await pipe.execute()
-                    # await pipe.set(f'{key}:name', name)
-                    pass
-                else:
-                    # second message
-                    if message_text.isdigit():
-                        print(user_data)
-                    else:
-                        print(user_data)
+                    if time_delta >= last_action_time:
+                        # first message
+                        user_data['last_action_time'] = now_time.timestamp()
+
+                        if message_text.isdigit():
+                            user_data['percent'] = message_text
+                        else:
+                            user_data['link'] = message_text
                         
-                    user_data['last_action_time'] = now_time
-                    pass
-            else:
-                # first message
-                print(user_data)
-                user_data['last_action_time'] = now_time
+                        # await pipe.multi()
+                        # await pipe.set(key, user_data)
 
-            # await pipe.multi()
-            user_data = json.dumps(user_data)
-            await pipe.set(key, user_data)
+                        # await pipe.execute()
+                        # await pipe.set(f'{key}:name', name)
+                        pass
+                    else:
+                        # second message
+                        if message_text.isdigit():
+                            print(user_data)
+                        else:
+                            print(user_data)
+                            
+                        user_data['last_action_time'] = now_time.timestamp()
+                        pass
+                else:
+                    # first message
+                    print(user_data)
+                    user_data['last_action_time'] = now_time.timestamp()
 
-            await pipe.execute()
+                # await pipe.multi()
+                user_data = json.dumps(user_data)
+                await pipe.set(key, user_data)
 
-        finally:
-            # Сбросим pipeline
-            await pipe.close()
+                await pipe.execute()
+
+            # finally:
+            #     # Сбросим pipeline
+            #     await pipe.close()
     
     # query = (
     #     select(
