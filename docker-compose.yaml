@@ -96,3 +96,4 @@ networks:
 
 volumes:
   postgres-data:
+  redis_tg_bot_data:
