@@ -48,9 +48,9 @@ async def check_user_last_message_time(user_id: int,
                 if last_action_time := user_data.get('last_action_time'):
                     print(user_data)
 
-                    time_delta = datetime.fromtimestamp(now_time) - timedelta(seconds=3)
+                    time_delta = now_time - timedelta(seconds=3)
 
-                    if time_delta >= last_action_time:
+                    if time_delta >= datetime.fromtimestamp(last_action_time):
                         # first message
                         user_data['last_action_time'] = now_time.timestamp()
 
