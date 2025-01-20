@@ -556,15 +556,15 @@ async def any_input(message: types.Message,
     _now = datetime.now()
     moscow_time = _now.astimezone(moscow_tz)
 
-    data = await state.get_data()
+    # data = await state.get_data()
 
-    q = data.get('_time')
+    # q = data.get('_time')
 
-    if q:
-        if moscow_time > datetime.fromtimestamp(q).astimezone(moscow_tz) - timedelta(seconds=3):
-            print('FIRST')
-        else:
-            print('SECOND')
+    # if q:
+    #     if moscow_time > datetime.fromtimestamp(q).astimezone(moscow_tz) - timedelta(seconds=3):
+    #         print('FIRST')
+    #     else:
+    #         print('SECOND')
 
     await state.update_data(_time=moscow_time.timestamp())
 
