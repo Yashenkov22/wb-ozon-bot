@@ -33,15 +33,15 @@ async def check_user_last_message_time(user_id: int,
                                        now_time: datetime,
                                        message_text: str,
                                        state: FSMContext):
-    _message_text = message_text.strip().split()
+        _message_text = message_text.strip().split()
 
-    _name = link = None
+        _name = link = None
 
-    if len(_message_text) > 1:
-        *_name, link = _message_text
-        _name = ' '.join(_name)
-    else:
-        pass
+        if len(_message_text) > 1:
+            *_name, link = _message_text
+            _name = ' '.join(_name)
+        else:
+            pass
 
     # key = f'user:{user_id}'
         key = f'fsm:{user_id}:{user_id}:data'
