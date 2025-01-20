@@ -33,7 +33,16 @@ async def check_user_last_message_time(user_id: int,
                                        now_time: datetime,
                                        message_text: str,
                                        state: FSMContext):
-    
+    _message_text = message_text.strip().split()
+
+    _name = link = None
+
+    if len(_message_text) > 1:
+        *_name, link = _message_text
+        _name = ' '.join(_name)
+    else:
+        pass
+
     # key = f'user:{user_id}'
         key = f'fsm:{user_id}:{user_id}:data'
         async with redis_client.pipeline(transaction=True) as pipe:
@@ -69,7 +78,8 @@ async def check_user_last_message_time(user_id: int,
                         if message_text.isdigit():
                             user_data['percent'] = message_text
                         else:
-                            user_data['link'] = message_text
+                            user_data['link'] = link
+                            user_data['name'] = _name
                         
                         # await pipe.multi()
                         # await pipe.set(key, user_data)
@@ -84,6 +94,10 @@ async def check_user_last_message_time(user_id: int,
                             print(user_data)
                         else:
                             print(user_data)
+                        # if message_text.isdigit():
+                        #     user_data['percent'] = message_text
+                        # else:
+                        #     user_data['link'] = link
                             
                         user_data['last_action_time'] = now_time.timestamp()
                         pass

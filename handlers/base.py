@@ -553,6 +553,14 @@ async def any_input(message: types.Message,
     _now = datetime.now()
     moscow_time = _now.astimezone(moscow_tz)
 
+    # _message_text = message.text.strip().split()
+
+    # if len(_message_text) > 1:
+    #     *_name, link = _message_text
+    #     _name = ' '.join(_name)
+    # else:
+
+
     # _time_delta = moscow_time - timedelta(seconds=20)
     if message.from_user.id == int(DEV_ID):
         print(message.text, moscow_time)
