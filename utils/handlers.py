@@ -98,7 +98,7 @@ async def check_user_last_message_time(user_id: int,
                         
                         # write last_action_time to redis
                         # user_data['last_action_time'] = now_time.timestamp()
-                        await state.update_data(state_dict)
+                        # await state.update_data(state_dict)
 
                         # sub_user_data = json.dumps(user_data)
                         # await pipe.set(key, sub_user_data)
@@ -139,7 +139,7 @@ async def check_user_last_message_time(user_id: int,
                             # get percent from storage and save product with percent
                             
                         # user_data['last_action_time'] = now_time.timestamp()
-                        await state.update_data(state_dict)
+                        # await state.update_data(state_dict)
                         pass
                 else:
                     # first message
@@ -150,7 +150,7 @@ async def check_user_last_message_time(user_id: int,
                     
                     # write last_action_time to redis
                     # user_data['last_action_time'] = now_time.timestamp()
-                    await state.update_data(state_dict)
+                    # await state.update_data(state_dict)
                     # sub_user_data = json.dumps(user_data)
                     # await pipe.set(key, sub_user_data)
                     # await pipe.execute()
@@ -168,6 +168,7 @@ async def check_user_last_message_time(user_id: int,
                         # save product without percent
                         pass
 
+                await state.update_data(state_dict)
                 # user_data = json.dumps(user_data)
                 # await pipe.set(key, user_data)
 
@@ -282,7 +283,7 @@ async def save_product(user_data: dict,
                 # print(res)
 
                 w = re.findall(r'\"cardPrice.*currency?', res)
-                print(w)
+                # print(w)
 
                 _alt = re.findall(r'\"alt.*,?', res)
                 _product_name = None
