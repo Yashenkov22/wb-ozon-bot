@@ -522,10 +522,13 @@ async def view_product(callback: types.CallbackQuery,
     time_create: datetime
     moscow_tz = pytz.timezone('Europe/Moscow')
     moscow_time = time_create.astimezone(moscow_tz)
+    
+    if percent:
+        waiting_price = actaul_price - ((actaul_price * percent) / 100)
 
-    waiting_price = actaul_price - ((actaul_price * percent) / 100)
-
-    _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+        _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+    else:
+        _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\n\nДата начала отслеживания: {moscow_time}'
 
     # _kb = add_cancel_btn_to_photo_keyboard(photo_kb)
 

@@ -114,7 +114,7 @@ async def check_user_last_message_time(user_id: int,
                 else:
                     # first message
                     user_data['percent'] = None
-                    
+
                     print(f'first message {message_text}')
                     print(user_data)
                     user_data['last_action_time'] = now_time.timestamp()
@@ -168,7 +168,7 @@ async def save_product(user_data: dict,
                        scheduler: AsyncIOScheduler,
                        percent: str = None):
     msg = user_data.get('msg')
-    name = user_data.get('name')
+    _name = user_data.get('name')
     link: str = user_data.get('link')
     # percent: int = user_data.get('percent')
 
@@ -256,7 +256,7 @@ async def save_product(user_data: dict,
                         'actual_price': _d.get('cardPrice'),
                         'start_price': _d.get('cardPrice'),
                         # 'percent': int(data.get('percent')),
-                        'name': name,
+                        'name': _name,
                         'time_create': datetime.now(),
                         'user_id': msg[0],
                     }
