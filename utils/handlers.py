@@ -95,6 +95,10 @@ async def check_user_last_message_time(user_id: int,
                         print(f'second message {message_text}')
                         if message_text.isdigit():
                             print(user_data)
+                            _percent = message_text
+                            await add_procent_to_product(user_data,
+                                                         session,
+                                                         _percent)
                             # add percent to product
                         else:
                             print(user_data)
@@ -162,6 +166,44 @@ async def check_user_last_message_time(user_id: int,
     #     else:
     #         # await sleep(1)
     #         return 'link'
+
+async def add_procent_to_product(user_data: dict,
+                                 session: AsyncSession,
+                                 percent: str):
+    msg = user_data.get('msg')
+    link: str = user_data.get('link')
+
+    if msg and link:
+        if link.find('ozon') > 0:
+            query = (
+                update(
+                    OzonProduct
+                )\
+                .where(
+                    and_(
+                        OzonProduct.user_id == msg[0],
+                        OzonProduct.link == link,
+                    )
+                )
+            )
+
+            await session.execute(query)
+
+            try:
+                print('percent updated')
+                await session.commit()
+            except Exception as ex:
+                print(ex)
+                print('update percent failed')
+                await session.rollback()
+            #add to ozon
+        elif link.find('wildberries') > 0:
+            pass
+        else:
+            # error
+            pass
+    
+
         
 async def save_product(user_data: dict,
                        session: AsyncSession,
