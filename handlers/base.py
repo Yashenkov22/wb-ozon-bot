@@ -560,10 +560,11 @@ async def any_input(message: types.Message,
 
     q = data.get('_time')
 
-    if moscow_time > datetime.fromtimestamp(q) - timedelta(seconds=3):
-        print('FIRST')
-    else:
-        print('SECOND')
+    if q:
+        if moscow_time > datetime.fromtimestamp(q) - timedelta(seconds=3):
+            print('FIRST')
+        else:
+            print('SECOND')
 
     await state.update_data(_time=moscow_time.timestamp())
 
