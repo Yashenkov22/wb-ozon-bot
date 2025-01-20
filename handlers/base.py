@@ -6,7 +6,7 @@ import aiohttp
 
 import pytz
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from aiogram import Router, types, Bot, F
 from aiogram.types import BufferedInputFile, URLInputFile
@@ -555,6 +555,17 @@ async def any_input(message: types.Message,
     moscow_tz = pytz.timezone('Europe/Moscow')
     _now = datetime.now()
     moscow_time = _now.astimezone(moscow_tz)
+
+    data = await state.get_data()
+
+    q = data.get('_time')
+
+    if moscow_time > datetime.fromtimestamp(q) - timedelta(seconds=3):
+        print('FIRST')
+    else:
+        print('SECOND')
+
+    await state.update_data(_time=moscow_time.timestamp())
 
     # _time_delta = moscow_time - timedelta(seconds=20)
     if message.from_user.id == int(DEV_ID):
