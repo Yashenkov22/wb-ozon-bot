@@ -555,7 +555,7 @@ async def any_input(message: types.Message,
 
     # _time_delta = moscow_time - timedelta(seconds=20)
     if message.from_user.id == int(DEV_ID):
-        print(message.text, datetime.now())
+        print(message.text, moscow_time)
     
     await check_user_last_message_time(message.from_user.id,
                                         moscow_time,

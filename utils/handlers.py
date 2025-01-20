@@ -63,6 +63,7 @@ async def check_user_last_message_time(user_id: int,
 
                     if time_delta >= datetime.fromtimestamp(last_action_time).astimezone(moscow_tz):
                         # first message
+                        print(f'first message {message_text}')
                         user_data['last_action_time'] = now_time.timestamp()
 
                         if message_text.isdigit():
@@ -78,6 +79,7 @@ async def check_user_last_message_time(user_id: int,
                         pass
                     else:
                         # second message
+                        print(f'second message {message_text}')
                         if message_text.isdigit():
                             print(user_data)
                         else:
@@ -87,6 +89,7 @@ async def check_user_last_message_time(user_id: int,
                         pass
                 else:
                     # first message
+                    print(f'first message {message_text}')
                     print(user_data)
                     user_data['last_action_time'] = now_time.timestamp()
 
