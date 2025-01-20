@@ -80,7 +80,7 @@ async def check_user_last_message_time(user_id: int,
                 # user_data['percent'] = None
                 # #
 
-                time_delta = now_time - timedelta(seconds=5)
+                time_delta = now_time - timedelta(seconds=10)
                 
                 moscow_tz = pytz.timezone('Europe/Moscow')
                 

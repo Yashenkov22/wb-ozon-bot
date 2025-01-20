@@ -218,10 +218,12 @@ async def push_check_ozon_price(user_id: str,
                         await session.rollback()
                         print(ex)
                 # if _waiting_price == actual_price:
+                
                 _text = f'Ozon товар\n{name}\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
-
-                if _waiting_price <= _product_price:
-                    _text = f'Ozon товар\n{name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                
+                if _waiting_price:
+                    if _waiting_price <= _product_price:
+                        _text = f'Ozon товар\n{name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
                 
                 await bot.send_message(chat_id=user_id,
                                         text=_text)
