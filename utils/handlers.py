@@ -384,6 +384,8 @@ async def save_product(user_data: dict,
                         await session.rollback()
                         _text = 'Ozon товар не был добавлен'
                         print(_text)
+                else:
+                    print('PRICE PARSE ERROR', user_data)
 
         except Exception as ex:
             print(ex)

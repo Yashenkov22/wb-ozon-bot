@@ -579,4 +579,4 @@ async def any_input(message: types.Message,
                                         state,
                                         scheduler)
 
-    await message.answer(text=message.text)
+    # await message.answer(text=message.text)

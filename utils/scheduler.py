@@ -123,6 +123,7 @@ async def push_check_ozon_price(user_id: str,
             query = (
                 select(
                     User.username,
+                    OzonProduct.link,
                     OzonProduct.short_link,
                     OzonProduct.actual_price,
                     OzonProduct.start_price,
@@ -148,9 +149,9 @@ async def push_check_ozon_price(user_id: str,
             except Exception:
                 pass
     if res:
-        username, short_link, actual_price, start_price, name, percent = res[0]
+        username, link, short_link, actual_price, start_price, name, percent = res[0]
 
-        name = name if name is not None else 'Отсутствует'
+        _name = name if name is not None else 'Отсутствует'
 
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
@@ -191,42 +192,43 @@ async def push_check_ozon_price(user_id: str,
 
                 print(_d)
 
-            _product_price = float(_d.get('cardPrice'))
-            
-            check_price = _product_price == actual_price
+                _product_price = float(_d.get('cardPrice'))
+                
+                check_price = _product_price == actual_price
 
-            if check_price:
-                _text = 'цена не изменилась'
-                return
-            else:
-                _waiting_price = None
-                if percent:
-                    _waiting_price = start_price - ((start_price * percent) / 100)
+                if check_price:
+                    _text = 'цена не изменилась'
+                    return
+                else:
+                    _waiting_price = None
+                    if percent:
+                        _waiting_price = start_price - ((start_price * percent) / 100)
 
-                query = (
-                    update(
-                        OzonProduct
-                    )\
-                    .values(actual_price=_product_price)\
-                    .where(OzonProduct.id == product_id)
-                )
-                async for session in get_session():
-                    try:
-                        await session.execute(query)
-                        await session.commit()
-                    except Exception as ex:
-                        await session.rollback()
-                        print(ex)
-                # if _waiting_price == actual_price:
-                
-                _text = f'Ozon товар\n{name}\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
-                
-                if _waiting_price:
-                    if _waiting_price <= _product_price:
-                        _text = f'Ozon товар\n{name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
-                
-                await bot.send_message(chat_id=user_id,
-                                        text=_text)
+                    query = (
+                        update(
+                            OzonProduct
+                        )\
+                        .values(actual_price=_product_price)\
+                        .where(OzonProduct.id == product_id)
+                    )
+                    async for session in get_session():
+                        try:
+                            await session.execute(query)
+                            await session.commit()
+                        except Exception as ex:
+                            await session.rollback()
+                            print(ex)
+                    # if _waiting_price == actual_price:
+                    
+                    _text = f'Ozon товар\n{_name}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                    
+                    if _waiting_price:
+                        if _waiting_price >= _product_price:
+                            _text = f'Ozon товар\n{_name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
+            # else:
+            #     _text = 'Не получилось'
+            # await bot.send_message(chat_id=user_id,
+            #                         text=_text)
 
 
 
