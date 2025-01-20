@@ -592,3 +592,4 @@ async def any_input(message: types.Message,
                                         scheduler)
 
     # await message.answer(text=message.text)
+    await message.delete()
