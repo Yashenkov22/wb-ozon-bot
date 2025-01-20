@@ -72,8 +72,6 @@ async def check_user_last_message_time(user_id: int,
                     moscow_tz = pytz.timezone('Europe/Moscow')
                     _last_action_time = datetime.fromtimestamp(last_action_time).astimezone(moscow_tz)
 
-                    print('ACTUAL TIME', now_time)
-                    print('LAST TIME FROM REDIS', _last_action_time)
 
                     # #
                     # user_data['percent'] = None
@@ -82,6 +80,10 @@ async def check_user_last_message_time(user_id: int,
                     time_delta = now_time - timedelta(seconds=3)
                     
                     moscow_tz = pytz.timezone('Europe/Moscow')
+                    
+                    print('ACTUAL TIME', now_time)
+                    print('LAST TIME FROM REDIS', _last_action_time)
+                    print('TIMEDELTA', time_delta)
 
                     if time_delta >= datetime.fromtimestamp(last_action_time).astimezone(moscow_tz):
                         # first message
