@@ -79,7 +79,12 @@ async def check_user_last_message_time(user_id: int,
                         #
 
                         print(f'first message {message_text}')
+                        
+                        # write last_action_time to redis
                         user_data['last_action_time'] = now_time.timestamp()
+                        user_data = json.dumps(user_data)
+                        await pipe.set(key, user_data)
+                        await pipe.execute()
 
                         if message_text.isdigit():
                             user_data['percent'] = message_text
@@ -121,7 +126,12 @@ async def check_user_last_message_time(user_id: int,
 
                     print(f'first message {message_text}')
                     print(user_data)
+                    
+                    # write last_action_time to redis
                     user_data['last_action_time'] = now_time.timestamp()
+                    user_data = json.dumps(user_data)
+                    await pipe.set(key, user_data)
+                    await pipe.execute()
 
                     if message_text.isdigit():
                         user_data['percent'] = message_text
