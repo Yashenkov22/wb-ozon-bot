@@ -227,8 +227,8 @@ async def push_check_ozon_price(user_id: str,
                             _text = f'Ozon товар\n{_name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
             # else:
             #     _text = 'Не получилось'
-            # await bot.send_message(chat_id=user_id,
-            #                         text=_text)
+            await bot.send_message(chat_id=user_id,
+                                    text=_text)
 
 
 
