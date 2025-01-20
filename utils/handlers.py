@@ -56,6 +56,8 @@ async def check_user_last_message_time(user_id: int,
         # key = f'fsm:{user_id}:{user_id}:data'
         # async with redis_client.pipeline(transaction=True) as pipe:
         async with lock:
+                
+                state_dict = {}
 
                 # user_data: bytes = await pipe.get(key)
                 user_data = await state.get_data()
@@ -88,24 +90,26 @@ async def check_user_last_message_time(user_id: int,
                     if time_delta >= datetime.fromtimestamp(last_action_time).astimezone(moscow_tz):
                         # first message
                         #
-                        user_data['percent'] = None
+                        state_dict['percent'] = None
+                        state_dict['last_action_time'] = now_time.timestamp()
                         #
 
                         print(f'first message {message_text}')
                         
                         # write last_action_time to redis
                         # user_data['last_action_time'] = now_time.timestamp()
-                        await state.update_data(last_action_time=now_time.timestamp())
+                        await state.update_data(state_dict)
 
                         # sub_user_data = json.dumps(user_data)
                         # await pipe.set(key, sub_user_data)
                         # await pipe.execute()
 
                         if message_text.isdigit():
-                            user_data['percent'] = message_text
+                            state_dict['percent'] = message_text
                         else:
-                            user_data['link'] = link
-                            user_data['name'] = _name
+                            state_dict['link'] = link
+                            state_dict['name'] = _name
+                            user_data.update(state_dict)
                             await save_product(user_data,
                                                session,
                                                scheduler)
@@ -122,10 +126,11 @@ async def check_user_last_message_time(user_id: int,
                             # add percent to product
                         else:
                             print(user_data)
-                            user_data['link'] = link
-                            user_data['name'] = _name
+                            state_dict['link'] = link
+                            state_dict['name'] = _name
 
                             percent = user_data.get('percent')
+                            user_data.update(state_dict)
 
                             await save_product(user_data,
                                                session,
@@ -134,28 +139,29 @@ async def check_user_last_message_time(user_id: int,
                             # get percent from storage and save product with percent
                             
                         # user_data['last_action_time'] = now_time.timestamp()
-                        await state.update_data(last_action_time=now_time.timestamp())
+                        await state.update_data(state_dict)
                         pass
                 else:
                     # first message
-                    user_data['percent'] = None
+                    state_dict['percent'] = None
 
                     print(f'first message {message_text}')
                     print(user_data)
                     
                     # write last_action_time to redis
                     # user_data['last_action_time'] = now_time.timestamp()
-                    await state.update_data(last_action_time=now_time.timestamp())
+                    await state.update_data(state_dict)
                     # sub_user_data = json.dumps(user_data)
                     # await pipe.set(key, sub_user_data)
                     # await pipe.execute()
 
                     if message_text.isdigit():
-                        user_data['percent'] = message_text
+                        state_dict['percent'] = message_text
                         pass
                     else:
-                        user_data['link'] = link
-                        user_data['name'] = _name
+                        state_dict['link'] = link
+                        state_dict['name'] = _name
+                        user_data.update(state_dict)
                         await save_product(user_data,
                                             session,
                                             scheduler)
