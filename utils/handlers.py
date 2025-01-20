@@ -149,7 +149,7 @@ async def check_user_last_message_time(user_id: int,
                     print(user_data)
                     
                     # write last_action_time to redis
-                    # user_data['last_action_time'] = now_time.timestamp()
+                    state_dict['last_action_time'] = now_time.timestamp()
                     # await state.update_data(state_dict)
                     # sub_user_data = json.dumps(user_data)
                     # await pipe.set(key, sub_user_data)
@@ -169,6 +169,7 @@ async def check_user_last_message_time(user_id: int,
                         pass
 
                 await state.update_data(state_dict)
+                print('state on end', await state.get_data())
                 # user_data = json.dumps(user_data)
                 # await pipe.set(key, user_data)
 
