@@ -1,4 +1,7 @@
 import json
+import re
+
+import aiohttp
 
 from datetime import datetime, timedelta
 from typing import Any
@@ -29,10 +32,13 @@ from keyboards import (add_back_btn,
 from utils.storage import redis_client
 
 
+
+
 async def check_user_last_message_time(user_id: int,
                                        now_time: datetime,
                                        message_text: str,
-                                       state: FSMContext):
+                                       session: AsyncSession,
+                                       scheduler: AsyncIOScheduler):
         _message_text = message_text.strip().split()
 
         _name = link = None
@@ -43,18 +49,12 @@ async def check_user_last_message_time(user_id: int,
         else:
             pass
 
-    # key = f'user:{user_id}'
         key = f'fsm:{user_id}:{user_id}:data'
         async with redis_client.pipeline(transaction=True) as pipe:
-        # pipe = redis_client.pipeline()
-            # try:    
-                # await pipe.watch(key)
-                user_data: bytes = await pipe.get(key)
 
-                # user_data: bytes = await pipe.get(key)
+                user_data: bytes = await pipe.get(key)
                 # Выполняем все команды в pipeline
                 results = await pipe.execute()
-
                 # Извлекаем результат из выполненного pipeline
                 print(results)
                 print(user_data)
@@ -64,14 +64,20 @@ async def check_user_last_message_time(user_id: int,
                 if last_action_time := user_data.get('last_action_time'):
                     print(user_data)
 
+                    # #
+                    # user_data['percent'] = None
+                    # #
+
                     time_delta = now_time - timedelta(seconds=3)
                     
                     moscow_tz = pytz.timezone('Europe/Moscow')
-                    # _now = datetime.now()
-                    # moscow_time = _now.astimezone(moscow_tz)
 
                     if time_delta >= datetime.fromtimestamp(last_action_time).astimezone(moscow_tz):
                         # first message
+                        #
+                        user_data['percent'] = None
+                        #
+
                         print(f'first message {message_text}')
                         user_data['last_action_time'] = now_time.timestamp()
 
@@ -80,42 +86,56 @@ async def check_user_last_message_time(user_id: int,
                         else:
                             user_data['link'] = link
                             user_data['name'] = _name
-                        
-                        # await pipe.multi()
-                        # await pipe.set(key, user_data)
-
-                        # await pipe.execute()
-                        # await pipe.set(f'{key}:name', name)
-                        pass
+                            await save_product(user_data,
+                                               session,
+                                               scheduler)
+                            # save product without percent
                     else:
                         # second message
                         print(f'second message {message_text}')
                         if message_text.isdigit():
                             print(user_data)
+                            # add percent to product
                         else:
                             print(user_data)
-                        # if message_text.isdigit():
-                        #     user_data['percent'] = message_text
-                        # else:
-                        #     user_data['link'] = link
+                            user_data['link'] = link
+                            user_data['name'] = _name
+
+                            percent = user_data.get('percent')
+
+                            await save_product(user_data,
+                                               session,
+                                               scheduler,
+                                               percent=percent)
+                            # get percent from storage and save product with percent
                             
                         user_data['last_action_time'] = now_time.timestamp()
                         pass
                 else:
                     # first message
+                    user_data['percent'] = None
+                    
                     print(f'first message {message_text}')
                     print(user_data)
                     user_data['last_action_time'] = now_time.timestamp()
 
-                # await pipe.multi()
+                    if message_text.isdigit():
+                        user_data['percent'] = message_text
+                        pass
+                    else:
+                        user_data['link'] = link
+                        user_data['name'] = _name
+                        await save_product(user_data,
+                                            session,
+                                            scheduler)
+                        # save product without percent
+                        pass
+
                 user_data = json.dumps(user_data)
                 await pipe.set(key, user_data)
 
                 await pipe.execute()
 
-            # finally:
-            #     # Сбросим pipeline
-            #     await pipe.close()
     
     # query = (
     #     select(
@@ -143,30 +163,205 @@ async def check_user_last_message_time(user_id: int,
     #         # await sleep(1)
     #         return 'link'
         
+async def save_product(user_data: dict,
+                       session: AsyncSession,
+                       scheduler: AsyncIOScheduler,
+                       percent: str = None):
+    msg = user_data.get('msg')
+    name = user_data.get('name')
+    link: str = user_data.get('link')
+    # percent: int = user_data.get('percent')
 
-async def validate_link(message: types.Message,
-                        state: FSMContext,
-                        session: AsyncSession):
-    _idx = message.text.find('https')
+    if link.find('ozon') > 0:
+        # save ozon product
+        if link.startswith('https://ozon.ru/t/'):
+            _idx = link.find('/t/')
+            print(_idx)
+            _prefix = '/t/'
+            ozon_short_link = 'croppedLink|' + link[_idx+len(_prefix):]
+            print(ozon_short_link)
+        else:
+            _prefix = 'product/'
 
-    if _idx > 0:
-        link = message.text[_idx:]
-    else:
-        return
-    
-    if link.startswith('https://ozon'):
-        query = (
-            update(
-                User
-            )\
-            .values(last_action_time=datetime.now(),
-                    last_action='ozon')\
-            .where(User.tg_id == message.from_user.id)
-        )
+            _idx = link.rfind('product/')
 
-        await session.execute(query)
-        await session.commit()
+            ozon_short_link = link[(_idx + len(_prefix)):]
+
+        # await state.update_data(ozon_link=ozon_link,
+        #                         ozon_short_link=ozon_short_link)
+        # await state.update_data(ozon_short_link=ozon_short_link)
+
+        print('do request')
+
+        try:
+            async with aiohttp.ClientSession() as aiosession:
+                # _url = f"http://5.61.53.235:1441/product/{message.text}"
+                _url = f"http://172.18.0.4:8080/product/{ozon_short_link}"
+
+                response = await aiosession.get(url=_url)
+
+                print(response.status)
+
+                res = await response.text()
+
+                # print(res)
+
+                w = re.findall(r'\"cardPrice.*currency?', res)
+                print(w)
+
+                _alt = re.findall(r'\"alt.*,?', res)
+                _product_name = None
+                _product_name_limit = 21
+                
+                if _alt:
+                    _product_name = _alt[0].split('//')[0]
+                    _prefix = f'\"alt\":\"'
+                    
+                    # if _product_name.startswith(_prefix):
+                    # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
+                    _product_name = _product_name[len(_prefix)+2:]
+
+                print(_product_name)
+
+                # await state.update_data(ozon_product_name=_product_name)
+                # print('NAME   ',_alt[0].split('//')[0])
+
+                if w:
+                    w = w[0].split(',')[:3]
+
+                    _d = {
+                        'price': None,
+                        'originalPrice': None,
+                        'cardPrice': None,
+                    }
+
+                    for k in _d:
+                        if not all(v for v in _d.values()):
+                            for q in w:
+                                if q.find(k) != -1:
+                                    name, price = q.split(':')
+                                    price = price.replace('\\', '').replace('"', '')
+                                    price = float(''.join(price.split()[:-1]))
+                                    print(price)
+                                    _d[k] = price
+                                    break
+                        else:
+                            break
+
+                    print(_d)
+
+                    _data = {
+                        'link': link,
+                        'short_link': ozon_short_link,
+                        'actual_price': _d.get('cardPrice'),
+                        'start_price': _d.get('cardPrice'),
+                        # 'percent': int(data.get('percent')),
+                        'name': name,
+                        'time_create': datetime.now(),
+                        'user_id': msg[0],
+                    }
+
+                    if percent:
+                        _data.update(percent=int(percent))
+                    
+                    # query = (
+                    #     insert(OzonProduct)\
+                    #     .values(**_data)
+                    # )
+
+                    # await session.execute(query)
+                    ozon_product = OzonProduct(**_data)
+
+                    session.add(ozon_product)
+
+                    await session.flush()
+
+                    ozon_product_id = ozon_product.id
+
+                    job = scheduler.add_job(push_check_ozon_price,
+                                    trigger='cron',
+                                    minute=1,
+                                    jobstore='sqlalchemy',
+                                    kwargs={'user_id': msg[0],
+                                            'product_id': ozon_product_id})
+                    
+                    _data = {
+                        'user_id': msg[0],
+                        'product_id': ozon_product_id,
+                        'product_marker': 'ozon_product',
+                        'job_id': job.id,
+                    }
+
+                    user_job = UserJob(**_data)
+
+                    session.add(user_job)
+
+                    try:
+                        await session.commit()
+                        _text = 'Ozon товар успешно добавлен'
+                        print(_text)
+                    except Exception as ex:
+                        print(ex)
+                        await session.rollback()
+                        _text = 'Ozon товар не был добавлен'
+                        print(_text)
+
+        except Exception as ex:
+            print(ex)
         pass
+    elif link.find('wildberries') > 0:
+        # save wb product
+        pass
+    else:
+        # error
+        pass
+
+
+    # if _idx > 0:
+    #     link = message.text[_idx:]
+    # else:
+    #     return
+    
+    # if link.startswith('https://ozon'):
+    #     query = (
+    #         update(
+    #             User
+    #         )\
+    #         .values(last_action_time=datetime.now(),
+    #                 last_action='ozon')\
+    #         .where(User.tg_id == message.from_user.id)
+    #     )
+
+    #     await session.execute(query)
+    #     await session.commit()
+    #     pass
+
+# async def validate_link(message: types.Message,
+#                         state: FSMContext,
+#                         session: AsyncSession):
+#     _idx = message.text.find('https')
+
+#     if _idx > 0:
+#         link = message.text[_idx:]
+#     else:
+#         return
+    
+#     if link.startswith('https://ozon'):
+#         query = (
+#             update(
+#                 User
+#             )\
+#             .values(last_action_time=datetime.now(),
+#                     last_action='ozon')\
+#             .where(User.tg_id == message.from_user.id)
+#         )
+
+#         await session.execute(query)
+#         await session.commit()
+#         pass
+
+
+
         # ozon_link = message.text.strip()
 
         # query = (
@@ -310,21 +505,21 @@ async def validate_link(message: types.Message,
         # except Exception as ex:
         #     print(ex)
         #     pass
-    elif link.startswith('https://www.wildberries'):
-        query = (
-            update(
-                User
-            )\
-            .values(lact_action_time=datetime.now(),
-                    last_action='wb')\
-            .where(User.tg_id == message.from_user.id)
-        )
+    # elif link.startswith('https://www.wildberries'):
+    #     query = (
+    #         update(
+    #             User
+    #         )\
+    #         .values(lact_action_time=datetime.now(),
+    #                 last_action='wb')\
+    #         .where(User.tg_id == message.from_user.id)
+    #     )
 
-        await session.execute(query)
-        await session.commit()
-        pass
-    else:
-        pass
+    #     await session.execute(query)
+    #     await session.commit()
+    #     pass
+    # else:
+    #     pass
 
 
 

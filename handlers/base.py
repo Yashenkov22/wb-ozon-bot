@@ -32,7 +32,7 @@ from keyboards import (create_remove_kb, create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import check_user_last_message_time, save_data_to_storage, check_user, show_item, validate_link
+from utils.handlers import check_user_last_message_time, save_data_to_storage, check_user, show_item
 from utils.scheduler import test_scheduler
 
 from db.base import OzonProduct as OzonProductModel, User, Base, UserJob, WbProduct
@@ -553,14 +553,6 @@ async def any_input(message: types.Message,
     _now = datetime.now()
     moscow_time = _now.astimezone(moscow_tz)
 
-    # _message_text = message.text.strip().split()
-
-    # if len(_message_text) > 1:
-    #     *_name, link = _message_text
-    #     _name = ' '.join(_name)
-    # else:
-
-
     # _time_delta = moscow_time - timedelta(seconds=20)
     if message.from_user.id == int(DEV_ID):
         print(message.text, moscow_time)
@@ -568,9 +560,7 @@ async def any_input(message: types.Message,
     await check_user_last_message_time(message.from_user.id,
                                         moscow_time,
                                         message.text,
-                                        state)
-    # print(w)
-    # await validate_link(message,
-    #                     state,
-    #                     session)
+                                        session,
+                                        scheduler)
+
     await message.answer(text=message.text)
