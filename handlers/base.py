@@ -92,17 +92,17 @@ async def start(message: types.Message | types.CallbackQuery,
     
     await state.update_data(msg=(msg.chat.id, msg.message_id))
 
-    try:
-        await bot.unpin_all_chat_messages(chat_id=msg.chat.id)
-    except Exception as ex:
-        print(ex)
+    # try:
+    #     await bot.unpin_all_chat_messages(chat_id=msg.chat.id)
+    # except Exception as ex:
+    #     print(ex)
 
-    try:
-        await bot.pin_chat_message(chat_id=msg.chat.id,
-                                message_id=msg.message_id,
-                                disable_notification=True)
-    except Exception as ex:
-        print(ex)
+    # try:
+    #     await bot.pin_chat_message(chat_id=msg.chat.id,
+    #                             message_id=msg.message_id,
+    #                             disable_notification=True)
+    # except Exception as ex:
+    #     print(ex)
     try:
         await message.delete()
         
