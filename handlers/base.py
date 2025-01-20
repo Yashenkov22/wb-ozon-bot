@@ -92,9 +92,9 @@ async def start(message: types.Message | types.CallbackQuery,
     
     await state.update_data(msg=(msg.chat.id, msg.message_id))
 
-    await bot.pin_chat_message(chat_id=msg.chat.id,
-                               message_id=message.message_id,
-                               disable_notification=True)
+    # await bot.pin_chat_message(chat_id=msg.chat.id,
+    #                            message_id=message.message_id,
+    #                            disable_notification=True)
     
     try:
         await message.delete()
