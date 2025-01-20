@@ -214,6 +214,7 @@ async def add_procent_to_product(user_data: dict,
                 update(
                     OzonProduct
                 )\
+                .values(percent=int(percent))
                 .where(
                     and_(
                         OzonProduct.user_id == msg[0],
