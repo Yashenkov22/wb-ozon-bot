@@ -135,8 +135,8 @@ async def check_user_last_message_time(user_id: int,
                     
                     # write last_action_time to redis
                     user_data['last_action_time'] = now_time.timestamp()
-                    user_data = json.dumps(user_data)
-                    await pipe.set(key, user_data)
+                    sub_user_data = json.dumps(user_data)
+                    await pipe.set(key, sub_user_data)
                     await pipe.execute()
 
                     if message_text.isdigit():
