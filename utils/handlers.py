@@ -33,7 +33,7 @@ from keyboards import (add_back_btn,
 from utils.storage import redis_client
 
 
-lock = asyncio.Lock()
+# lock = asyncio.Lock()
 
 
 async def check_user_last_message_time(user_id: int,
@@ -42,7 +42,7 @@ async def check_user_last_message_time(user_id: int,
                                        session: AsyncSession,
                                        state: FSMContext,
                                        scheduler: AsyncIOScheduler):
-        # lock = asyncio.Lock()
+        lock = asyncio.Lock()
 
         _message_text = message_text.strip().split()
 
