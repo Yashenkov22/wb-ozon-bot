@@ -41,7 +41,7 @@ async def check_user_last_message_time(user_id: int,
                                        session: AsyncSession,
                                        state: FSMContext,
                                        scheduler: AsyncIOScheduler):
-        lock = asyncio.Lock()
+        # lock = asyncio.Lock()
 
         _message_text = message_text.strip().split()
 
@@ -55,121 +55,121 @@ async def check_user_last_message_time(user_id: int,
 
         # key = f'fsm:{user_id}:{user_id}:data'
         # async with redis_client.pipeline(transaction=True) as pipe:
-        async with lock:
+        # async with lock:
                 
-                state_dict = {}
+        state_dict = {}
 
-                # user_data: bytes = await pipe.get(key)
-                user_data = await state.get_data()
-                # Выполняем все команды в pipeline
-                # results = await pipe.execute()
-                # Извлекаем результат из выполненного pipeline
-                # print(results)
-                print(user_data)
+        # user_data: bytes = await pipe.get(key)
+        user_data = await state.get_data()
+        # Выполняем все команды в pipeline
+        # results = await pipe.execute()
+        # Извлекаем результат из выполненного pipeline
+        # print(results)
+        print(user_data)
 
-                # user_data: dict = json.loads(results[0])
+        # user_data: dict = json.loads(results[0])
 
-                if last_action_time := user_data.get('last_action_time'):
-                    print(user_data)
-                    moscow_tz = pytz.timezone('Europe/Moscow')
-                    _last_action_time = datetime.fromtimestamp(last_action_time).astimezone(moscow_tz)
+        if last_action_time := user_data.get('last_action_time'):
+            print(user_data)
+            moscow_tz = pytz.timezone('Europe/Moscow')
+            _last_action_time = datetime.fromtimestamp(last_action_time).astimezone(moscow_tz)
 
 
-                    # #
-                    # user_data['percent'] = None
-                    # #
+            # #
+            # user_data['percent'] = None
+            # #
 
-                    time_delta = now_time - timedelta(seconds=5)
-                    
-                    moscow_tz = pytz.timezone('Europe/Moscow')
-                    
-                    print('ACTUAL TIME', now_time)
-                    print('LAST TIME FROM REDIS', _last_action_time)
-                    print('TIMEDELTA', time_delta)
+            time_delta = now_time - timedelta(seconds=5)
+            
+            moscow_tz = pytz.timezone('Europe/Moscow')
+            
+            print('ACTUAL TIME', now_time)
+            print('LAST TIME FROM REDIS', _last_action_time)
+            print('TIMEDELTA', time_delta)
 
-                    if time_delta >= datetime.fromtimestamp(last_action_time).astimezone(moscow_tz):
-                        # first message
-                        #
-                        state_dict['percent'] = None
-                        state_dict['last_action_time'] = now_time.timestamp()
-                        #
+            if time_delta >= datetime.fromtimestamp(last_action_time).astimezone(moscow_tz):
+                # first message
+                #
+                state_dict['percent'] = None
+                state_dict['last_action_time'] = now_time.timestamp()
+                #
 
-                        print(f'first message {message_text}')
-                        
-                        # write last_action_time to redis
-                        # user_data['last_action_time'] = now_time.timestamp()
-                        # await state.update_data(state_dict)
+                print(f'first message {message_text}')
+                
+                # write last_action_time to redis
+                # user_data['last_action_time'] = now_time.timestamp()
+                # await state.update_data(state_dict)
 
-                        # sub_user_data = json.dumps(user_data)
-                        # await pipe.set(key, sub_user_data)
-                        # await pipe.execute()
+                # sub_user_data = json.dumps(user_data)
+                # await pipe.set(key, sub_user_data)
+                # await pipe.execute()
 
-                        if message_text.isdigit():
-                            state_dict['percent'] = message_text
-                        else:
-                            state_dict['link'] = link
-                            state_dict['name'] = _name
-                            user_data.update(state_dict)
-                            await save_product(user_data,
-                                               session,
-                                               scheduler)
-                            # save product without percent
-                    else:
-                        # second message
-                        print(f'second message {message_text}')
-                        if message_text.isdigit():
-                            print(user_data)
-                            _percent = message_text
-                            await add_procent_to_product(user_data,
-                                                         session,
-                                                         _percent)
-                            # add percent to product
-                        else:
-                            print(user_data)
-                            state_dict['link'] = link
-                            state_dict['name'] = _name
-
-                            percent = user_data.get('percent')
-                            user_data.update(state_dict)
-
-                            await save_product(user_data,
-                                               session,
-                                               scheduler,
-                                               percent=percent)
-                            # get percent from storage and save product with percent
-                            
-                        # user_data['last_action_time'] = now_time.timestamp()
-                        # await state.update_data(state_dict)
-                        pass
+                if message_text.isdigit():
+                    state_dict['percent'] = message_text
                 else:
-                    # first message
-                    state_dict['percent'] = None
-
-                    print(f'first message {message_text}')
+                    state_dict['link'] = link
+                    state_dict['name'] = _name
+                    user_data.update(state_dict)
+                    await save_product(user_data,
+                                        session,
+                                        scheduler)
+                    # save product without percent
+            else:
+                # second message
+                print(f'second message {message_text}')
+                if message_text.isdigit():
                     print(user_data)
+                    _percent = message_text
+                    await add_procent_to_product(user_data,
+                                                    session,
+                                                    _percent)
+                    # add percent to product
+                else:
+                    print(user_data)
+                    state_dict['link'] = link
+                    state_dict['name'] = _name
+
+                    percent = user_data.get('percent')
+                    user_data.update(state_dict)
+
+                    await save_product(user_data,
+                                        session,
+                                        scheduler,
+                                        percent=percent)
+                    # get percent from storage and save product with percent
                     
-                    # write last_action_time to redis
-                    state_dict['last_action_time'] = now_time.timestamp()
-                    # await state.update_data(state_dict)
-                    # sub_user_data = json.dumps(user_data)
-                    # await pipe.set(key, sub_user_data)
-                    # await pipe.execute()
+                # user_data['last_action_time'] = now_time.timestamp()
+                # await state.update_data(state_dict)
+                pass
+        else:
+            # first message
+            state_dict['percent'] = None
 
-                    if message_text.isdigit():
-                        state_dict['percent'] = message_text
-                        pass
-                    else:
-                        state_dict['link'] = link
-                        state_dict['name'] = _name
-                        user_data.update(state_dict)
-                        await save_product(user_data,
-                                            session,
-                                            scheduler)
-                        # save product without percent
-                        pass
+            print(f'first message {message_text}')
+            print(user_data)
+            
+            # write last_action_time to redis
+            state_dict['last_action_time'] = now_time.timestamp()
+            # await state.update_data(state_dict)
+            # sub_user_data = json.dumps(user_data)
+            # await pipe.set(key, sub_user_data)
+            # await pipe.execute()
 
-                await state.update_data(state_dict)
-                print('state on end', await state.get_data())
+            if message_text.isdigit():
+                state_dict['percent'] = message_text
+                pass
+            else:
+                state_dict['link'] = link
+                state_dict['name'] = _name
+                user_data.update(state_dict)
+                await save_product(user_data,
+                                    session,
+                                    scheduler)
+                # save product without percent
+                pass
+
+        await state.update_data(state_dict)
+        print('state on end', await state.get_data())
                 # user_data = json.dumps(user_data)
                 # await pipe.set(key, user_data)
 
