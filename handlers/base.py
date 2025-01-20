@@ -91,6 +91,15 @@ async def start(message: types.Message | types.CallbackQuery,
                                 reply_markup=_kb.as_markup())
     
     await state.update_data(msg=(msg.chat.id, msg.message_id))
+    
+    try:
+        await bot.unpin_all_chat_messages(chat_id=msg.chat.id)
+    except Exception as ex:
+        print(ex)
+
+    await bot.pin_chat_message(chat_id=msg.chat.id,
+                               message_id=message.message_id)
+    
     try:
         await message.delete()
         
