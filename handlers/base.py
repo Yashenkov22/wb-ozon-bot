@@ -561,7 +561,7 @@ async def any_input(message: types.Message,
     q = data.get('_time')
 
     if q:
-        if moscow_time > datetime.fromtimestamp(q) - timedelta(seconds=3):
+        if moscow_time > datetime.fromtimestamp(q).astimezone(moscow_tz) - timedelta(seconds=3):
             print('FIRST')
         else:
             print('SECOND')
