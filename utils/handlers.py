@@ -63,6 +63,10 @@ async def check_user_last_message_time(user_id: int,
 
                 if last_action_time := user_data.get('last_action_time'):
                     print(user_data)
+                    _last_action_time = datetime.fromtimestamp(last_action_time).astimezone(moscow_tz)
+
+                    print('ACTUAL TIME', now_time)
+                    print('LAST TIME FROM REDIS', _last_action_time)
 
                     # #
                     # user_data['percent'] = None
