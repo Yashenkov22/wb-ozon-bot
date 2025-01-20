@@ -576,6 +576,7 @@ async def any_input(message: types.Message,
                                         moscow_time,
                                         message.text,
                                         session,
+                                        state,
                                         scheduler)
 
     await message.answer(text=message.text)

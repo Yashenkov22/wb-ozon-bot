@@ -38,6 +38,7 @@ async def check_user_last_message_time(user_id: int,
                                        now_time: datetime,
                                        message_text: str,
                                        session: AsyncSession,
+                                       state: FSMContext,
                                        scheduler: AsyncIOScheduler):
         _message_text = message_text.strip().split()
 
@@ -52,14 +53,15 @@ async def check_user_last_message_time(user_id: int,
         key = f'fsm:{user_id}:{user_id}:data'
         async with redis_client.pipeline(transaction=True) as pipe:
 
-                user_data: bytes = await pipe.get(key)
+                # user_data: bytes = await pipe.get(key)
+                user_data = await state.get_data()
                 # Выполняем все команды в pipeline
-                results = await pipe.execute()
+                # results = await pipe.execute()
                 # Извлекаем результат из выполненного pipeline
-                print(results)
+                # print(results)
                 print(user_data)
 
-                user_data: dict = json.loads(results[0])
+                # user_data: dict = json.loads(results[0])
 
                 if last_action_time := user_data.get('last_action_time'):
                     print(user_data)
@@ -86,7 +88,8 @@ async def check_user_last_message_time(user_id: int,
                         print(f'first message {message_text}')
                         
                         # write last_action_time to redis
-                        user_data['last_action_time'] = now_time.timestamp()
+                        # user_data['last_action_time'] = now_time.timestamp()
+                        await state.update_data(last_action_time=now_time.timestamp())
 
                         sub_user_data = json.dumps(user_data)
                         await pipe.set(key, sub_user_data)
@@ -124,7 +127,8 @@ async def check_user_last_message_time(user_id: int,
                                                percent=percent)
                             # get percent from storage and save product with percent
                             
-                        user_data['last_action_time'] = now_time.timestamp()
+                        # user_data['last_action_time'] = now_time.timestamp()
+                        await state.update_data(last_action_time=now_time.timestamp())
                         pass
                 else:
                     # first message
@@ -134,10 +138,11 @@ async def check_user_last_message_time(user_id: int,
                     print(user_data)
                     
                     # write last_action_time to redis
-                    user_data['last_action_time'] = now_time.timestamp()
-                    sub_user_data = json.dumps(user_data)
-                    await pipe.set(key, sub_user_data)
-                    await pipe.execute()
+                    # user_data['last_action_time'] = now_time.timestamp()
+                    await state.update_data(last_action_time=now_time.timestamp())
+                    # sub_user_data = json.dumps(user_data)
+                    # await pipe.set(key, sub_user_data)
+                    # await pipe.execute()
 
                     if message_text.isdigit():
                         user_data['percent'] = message_text
@@ -151,10 +156,10 @@ async def check_user_last_message_time(user_id: int,
                         # save product without percent
                         pass
 
-                user_data = json.dumps(user_data)
-                await pipe.set(key, user_data)
+                # user_data = json.dumps(user_data)
+                # await pipe.set(key, user_data)
 
-                await pipe.execute()
+                # await pipe.execute()
 
     
     # query = (
