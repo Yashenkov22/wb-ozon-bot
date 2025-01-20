@@ -197,8 +197,11 @@ async def push_check_ozon_price(user_id: str,
 
             if check_price:
                 _text = 'цена не изменилась'
+                return
             else:
-                _waiting_price = actual_price - ((actual_price * percent) / 100)
+                _waiting_price = None
+                if percent:
+                    _waiting_price = start_price - ((start_price * percent) / 100)
 
                 query = (
                     update(
@@ -215,10 +218,10 @@ async def push_check_ozon_price(user_id: str,
                         await session.rollback()
                         print(ex)
                 # if _waiting_price == actual_price:
-                _text = f'Цена изменилась\nОбновленная цена товара: {_product_price}'
+                _text = f'Ozon товар\n{name}\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
 
-                if _waiting_price >= _product_price:
-                    _text = f'Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price}'
+                if _waiting_price <= _product_price:
+                    _text = f'Ozon товар\n{name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
                 
                 await bot.send_message(chat_id=user_id,
                                         text=_text)
