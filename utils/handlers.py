@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 
@@ -40,6 +41,8 @@ async def check_user_last_message_time(user_id: int,
                                        session: AsyncSession,
                                        state: FSMContext,
                                        scheduler: AsyncIOScheduler):
+        lock = asyncio.Lock()
+
         _message_text = message_text.strip().split()
 
         _name = link = None
@@ -50,8 +53,9 @@ async def check_user_last_message_time(user_id: int,
         else:
             pass
 
-        key = f'fsm:{user_id}:{user_id}:data'
-        async with redis_client.pipeline(transaction=True) as pipe:
+        # key = f'fsm:{user_id}:{user_id}:data'
+        # async with redis_client.pipeline(transaction=True) as pipe:
+        async with lock:
 
                 # user_data: bytes = await pipe.get(key)
                 user_data = await state.get_data()
@@ -91,9 +95,9 @@ async def check_user_last_message_time(user_id: int,
                         # user_data['last_action_time'] = now_time.timestamp()
                         await state.update_data(last_action_time=now_time.timestamp())
 
-                        sub_user_data = json.dumps(user_data)
-                        await pipe.set(key, sub_user_data)
-                        await pipe.execute()
+                        # sub_user_data = json.dumps(user_data)
+                        # await pipe.set(key, sub_user_data)
+                        # await pipe.execute()
 
                         if message_text.isdigit():
                             user_data['percent'] = message_text
