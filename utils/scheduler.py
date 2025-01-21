@@ -253,7 +253,8 @@ async def push_check_ozon_price(user_id: str,
                             _kb = create_remove_kb(user_id,
                                                     product_id,
                                                     marker='ozon',
-                                                    job_id=job_id)
+                                                    job_id=job_id,
+                                                    with_redirect=False)
                             
                             _kb = add_or_create_close_kb(_kb)
 

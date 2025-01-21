@@ -351,7 +351,16 @@ async def delete_callback(callback: types.CallbackQuery,
                         session: AsyncSession,
                         bot: Bot,
                         scheduler: AsyncIOScheduler):
-    callback_data = callback.data.split('_')[1:]
+    with_redirect = True
+    
+    _callback_data = callback.data.split('_')
+
+    callback_prefix = _callback_data[0]
+
+    if callback_prefix.endswith('rd'):
+        with_redirect = False
+
+    callback_data = _callback_data[1:]
     marker, user_id, product_id, job_id = callback_data
 
     match marker:
@@ -444,12 +453,14 @@ async def delete_callback(callback: types.CallbackQuery,
                 else:
                     await callback.answer('Товар успешно удален',
                                           show_alert=True)
-            await redirect_to_(callback,
-                            state,
-                            session,
-                            bot,
-                            scheduler,
-                            marker=marker)
+            
+            if with_redirect:
+                await redirect_to_(callback,
+                                state,
+                                session,
+                                bot,
+                                scheduler,
+                                marker=marker)
             
 
 @main_router.callback_query(F.data.startswith('product'))

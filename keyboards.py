@@ -82,12 +82,20 @@ def create_remove_kb(user_id: int,
                      product_id: str,
                      marker: Literal['wb', 'ozon'],
                      job_id: str,
-                     _kb: InlineKeyboardBuilder = None):
+                     _kb: InlineKeyboardBuilder = None,
+                     with_redirect: bool = True):
     if not _kb:
         _kb = InlineKeyboardBuilder()
 
+    _callback_data = f'{marker}_{user_id}_{product_id}_{job_id}'
+
+    if with_redirect:
+        _callback_data = f'delete_{_callback_data}'
+    else:
+        _callback_data = f'delete.no.rd_{_callback_data}'
+
     _kb.row(types.InlineKeyboardButton(text='Удалить товар',
-                                       callback_data=f'delete_{marker}_{user_id}_{product_id}_{job_id}'))
+                                       callback_data=_callback_data))
     
     return _kb
 
