@@ -17,7 +17,8 @@ from bot22 import bot
 
 timezone = pytz.timezone('Europe/Moscow')
 
-scheduler_cron = CronTrigger(minute=1, timezone=timezone)
+scheduler_cron = CronTrigger(minute=1,
+                             timezone=timezone)
 
 
 async def push_check_wb_price(user_id: str,
