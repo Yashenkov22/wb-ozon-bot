@@ -297,6 +297,46 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
                        scheduler,
                        marker=action)
     
+
+@main_router.callback_query(F.data == 'close')
+async def callback_close(callback: types.Message | types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot,
+                        scheduler: AsyncIOScheduler):
+    try:
+        await callback.message.delete()
+    except Exception as ex:
+        print(ex)
+    # data = await state.get_data()
+
+    # action = data.get('action')
+    # msg = data.get('msg')
+
+    # callback_data = callback.data.split('__')[-1]
+
+    # _text = await save_data_to_storage(callback,
+    #                                     state,
+    #                                     session,
+    #                                     bot,
+    #                                     scheduler,
+    #                                     callback_data)
+    
+    # await state.clear()
+
+    # if msg:
+    #     await state.update_data(msg=msg)
+    
+    # await callback.answer(text=_text,
+    #                       show_alert=True)
+    
+    # await redirect_to_(callback,
+    #                    state,
+    #                    session,
+    #                    bot,
+    #                    scheduler,
+    #                    marker=action)
+    
     # await callback.answer(text='Пункт выдачи добавлен.',
     #                       show_alert=True)
     # await start(callback,

@@ -133,3 +133,14 @@ def create_product_list_kb(user_id: int,
                                            callback_data=_callback_data))
     
     return _kb
+
+
+
+def add_or_create_close_kb(_kb: InlineKeyboardBuilder = None):
+    if not _kb:
+        _kb = InlineKeyboardBuilder()
+
+    _kb.add(types.InlineKeyboardButton(text='Закрыть',
+                                       callback_data='close'))
+    
+    return _kb

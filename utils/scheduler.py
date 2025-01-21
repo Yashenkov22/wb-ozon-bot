@@ -12,6 +12,8 @@ from sqlalchemy import select, and_, update
 
 from db.base import WbProduct, WbPunkt, User, get_session, UserJob, OzonProduct
 
+from keyboards import add_or_create_close_kb, create_remove_kb
+
 from bot22 import bot
 
 
@@ -127,51 +129,63 @@ async def push_check_ozon_price(user_id: str,
     print(f'фоновая задача {user_id}')
 
     async for session in get_session():
-        try:
-            query = (
-                select(
-                    User.username,
-                    OzonProduct.link,
-                    OzonProduct.short_link,
-                    OzonProduct.actual_price,
-                    OzonProduct.start_price,
-                    OzonProduct.name,
-                    OzonProduct.percent,
-                )\
-                .select_from(OzonProduct)\
-                .join(User,
-                        OzonProduct.user_id == User.tg_id)\
-                .where(
-                    and_(
-                        User.tg_id == user_id,
-                        OzonProduct.id == product_id,
-                    ))
-            )
-
-            res = await session.execute(query)
-
-            res = res.fetchall()
-        finally:
+        async with session as _session:
             try:
-                await session.close()
-            except Exception:
-                pass
+                subquery = (
+                    select(UserJob.job_id,
+                        UserJob.user_id,
+                        UserJob.product_id)
+                    .where(UserJob.user_id == user_id)
+                ).subquery()
+
+                query = (
+                    select(
+                        User.username,
+                        OzonProduct.link,
+                        OzonProduct.short_link,
+                        OzonProduct.actual_price,
+                        OzonProduct.start_price,
+                        OzonProduct.name,
+                        OzonProduct.percent,
+                        subquery.c.job_id,
+                    )\
+                    .select_from(OzonProduct)\
+                    .join(User,
+                          OzonProduct.user_id == User.tg_id)\
+                    .outerjoin(subquery,
+                               subquery.c.product_id == OzonProduct.id)\
+                    .where(
+                        and_(
+                            User.tg_id == user_id,
+                            OzonProduct.id == product_id,
+                        ))\
+                    .distinct(OzonProduct.id)
+                )
+
+                res = await _session.execute(query)
+
+                res = res.fetchall()
+            finally:
+                try:
+                    await _session.close()
+                except Exception:
+                    pass
     if res:
-        username, link, short_link, actual_price, start_price, _name, percent = res[0]
+        username, link, short_link, actual_price, start_price, _name, percent, job_id = res[0]
 
         _name = _name if _name is not None else 'Отсутствует'
+        try:
+            async with aiohttp.ClientSession() as aiosession:
+                # _url = f"http://5.61.53.235:1441/product/{message.text}"
+                _url = f"http://172.18.0.4:8080/product/{short_link}"
 
-        async with aiohttp.ClientSession() as aiosession:
-            # _url = f"http://5.61.53.235:1441/product/{message.text}"
-            _url = f"http://172.18.0.4:8080/product/{short_link}"
+                response = await aiosession.get(url=_url)
 
-            response = await aiosession.get(url=_url)
+                print(response.status)
 
-            print(response.status)
+                res = await response.text()
 
-            res = await response.text()
-
-            # print(res)
+                # print(res)
 
             w = re.findall(r'\"cardPrice.*currency?', res)
             # print(w)
@@ -206,6 +220,7 @@ async def push_check_ozon_price(user_id: str,
 
                 if check_price:
                     _text = 'цена не изменилась'
+                    print(f'{_text} user {user_id} product {_name}')
                     return
                 else:
                     _waiting_price = None
@@ -220,23 +235,39 @@ async def push_check_ozon_price(user_id: str,
                         .where(OzonProduct.id == product_id)
                     )
                     async for session in get_session():
-                        try:
-                            await session.execute(query)
-                            await session.commit()
-                        except Exception as ex:
-                            await session.rollback()
-                            print(ex)
-                    # if _waiting_price == actual_price:
+                        async with session as _session:
+                            try:
+                                await session.execute(query)
+                                await session.commit()
+                            except Exception as ex:
+                                await session.rollback()
+                                print(ex)
+                        # if _waiting_price == actual_price:
                     
                     _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
                     
                     if _waiting_price:
                         if _waiting_price >= _product_price:
                             _text = f'Ozon товар\n{_name[:21]}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                            
+                            _kb = create_remove_kb(user_id,
+                                                    product_id,
+                                                    marker='ozon',
+                                                    job_id=job_id)
+                            
+                            _kb = add_or_create_close_kb(_kb)
+
+                            await bot.send_message(chat_id=user_id,
+                                                    text=_text,
+                                                    reply_markup=_kb.as_markup())
+                            return
             else:
                 _text = 'Не получилось спарсить цену'
+
             await bot.send_message(chat_id=user_id,
                                     text=_text)
+        except Exception as ex:
+            print('OZON SCHEDULER ERROR', ex)
 
 
 
