@@ -461,7 +461,11 @@ async def delete_callback(callback: types.CallbackQuery,
                                 bot,
                                 scheduler,
                                 marker=marker)
-            
+            else:
+                try:
+                    await callback.message.delete()
+                except Exception as ex:
+                    print(ex)
 
 @main_router.callback_query(F.data.startswith('product'))
 async def init_current_item(callback: types.CallbackQuery,
