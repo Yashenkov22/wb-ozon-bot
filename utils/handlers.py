@@ -359,7 +359,7 @@ async def save_product(user_data: dict,
 
                     job = scheduler.add_job(push_check_ozon_price,
                                     trigger='interval',
-                                    minute=1,
+                                    minutes=1,
                                     jobstore='sqlalchemy',
                                     kwargs={'user_id': msg[0],
                                             'product_id': ozon_product_id})
