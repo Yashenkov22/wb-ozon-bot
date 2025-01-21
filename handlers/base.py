@@ -280,6 +280,8 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
                                         scheduler,
                                         callback_data)
     
+    await state.clear()
+    
     await callback.answer(text=_text,
                           show_alert=True)
     
