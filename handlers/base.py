@@ -271,6 +271,8 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
     data = await state.get_data()
 
     action = data.get('action')
+    msg = data.get('msg')
+
     callback_data = callback.data.split('__')[-1]
 
     _text = await save_data_to_storage(callback,
@@ -281,6 +283,9 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
                                         callback_data)
     
     await state.clear()
+
+    if msg:
+        await state.update_data(msg=msg)
     
     await callback.answer(text=_text,
                           show_alert=True)
