@@ -536,7 +536,7 @@ async def view_product(callback: types.CallbackQuery,
     moscow_time = time_create.astimezone(moscow_tz)
     
     if percent:
-        waiting_price = actaul_price - ((actaul_price * percent) / 100)
+        waiting_price = start_price - ((start_price * percent) / 100)
 
         _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
     else:

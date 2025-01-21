@@ -688,8 +688,8 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                 ozon_product_id = ozon_product.id
 
                 job = scheduler.add_job(push_check_ozon_price,
-                                trigger='cron',
-                                minute=1,
+                                trigger='interval',
+                                minutes=1,
                                 jobstore='sqlalchemy',
                                 kwargs={'user_id': callback.from_user.id,
                                         'product_id': ozon_product_id})
