@@ -157,9 +157,9 @@ async def push_check_ozon_price(user_id: str,
             except Exception:
                 pass
     if res:
-        username, link, short_link, actual_price, start_price, name, percent = res[0]
+        username, link, short_link, actual_price, start_price, _name, percent = res[0]
 
-        _name = name if name is not None else 'Отсутствует'
+        _name = _name if _name is not None else 'Отсутствует'
 
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
@@ -228,11 +228,11 @@ async def push_check_ozon_price(user_id: str,
                             print(ex)
                     # if _waiting_price == actual_price:
                     
-                    _text = f'Ozon товар\n{_name}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                    _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
                     
                     if _waiting_price:
                         if _waiting_price >= _product_price:
-                            _text = f'Ozon товар\n{_name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                            _text = f'Ozon товар\n{_name[:21]}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
             else:
                 _text = 'Не получилось спарсить цену'
             await bot.send_message(chat_id=user_id,
