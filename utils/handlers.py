@@ -22,7 +22,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from db.base import User, WbProduct, WbPunkt, OzonProduct, UserJob
 
-from utils.scheduler import push_check_ozon_price, push_check_wb_price
+from utils.scheduler import push_check_ozon_price, push_check_wb_price, scheduler_cron
 
 from keyboards import (add_back_btn,
                        create_or_add_cancel_btn,
@@ -358,8 +358,7 @@ async def save_product(user_data: dict,
                     ozon_product_id = ozon_product.id
 
                     job = scheduler.add_job(push_check_ozon_price,
-                                    trigger='cron',
-                                    minute=1,
+                                    trigger=scheduler_cron,
                                     jobstore='sqlalchemy',
                                     kwargs={'user_id': msg[0],
                                             'product_id': ozon_product_id})

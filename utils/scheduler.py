@@ -1,8 +1,10 @@
 import re
-
+import pytz
 import aiohttp
 
 from aiogram import types, Bot
+
+from apscheduler.triggers.cron import CronTrigger
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +13,11 @@ from sqlalchemy import select, and_, update
 from db.base import WbProduct, WbPunkt, User, get_session, UserJob, OzonProduct
 
 from bot22 import bot
+
+
+timezone = pytz.timezone('Europe/Moscow')
+
+scheduler_cron = CronTrigger(minute=1, timezone=timezone)
 
 
 async def push_check_wb_price(user_id: str,
