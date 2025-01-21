@@ -358,13 +358,14 @@ async def save_product(user_data: dict,
                     ozon_product_id = ozon_product.id
 
                     #          user_id | marker | product_id
-                    job_id = f'{msg[0]}_ozon_{ozon_product_id}'
+                    job_id = f'{msg[0]}.ozon.{ozon_product_id}'
 
                     job = scheduler.add_job(push_check_ozon_price,
                                     trigger='interval',
                                     minutes=1,
                                     id=job_id,
                                     jobstore='sqlalchemy',
+                                    coalesce=True,
                                     kwargs={'user_id': msg[0],
                                             'product_id': ozon_product_id})
                     
@@ -629,7 +630,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                                scheduler: AsyncIOScheduler,
                                callback_data: str):
     data = await state.get_data()
-    
+
     async with session as session:
         match callback_data:
             case 'wb_punkt':
@@ -693,13 +694,14 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                 ozon_product_id = ozon_product.id
 
                 #          user_id | marker | product_id
-                job_id = f'{callback.from_user.id}_ozon_{ozon_product_id}'
+                job_id = f'{callback.from_user.id}.ozon.{ozon_product_id}'
 
                 job = scheduler.add_job(push_check_ozon_price,
                                 trigger='interval',
                                 minutes=1,
                                 id=job_id,
                                 jobstore='sqlalchemy',
+                                coalesce=True,
                                 kwargs={'user_id': callback.from_user.id,
                                         'product_id': ozon_product_id})
                 
