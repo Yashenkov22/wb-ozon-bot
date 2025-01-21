@@ -104,7 +104,7 @@ JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
 
 # Настройка хранилища задач
 jobstores = {
-    'sqlalchemy': SQLAlchemyJobStore(engine=engine),
+    'sqlalchemy': SQLAlchemyJobStore(url=JOB_STORE_URL),
 }
 
 # Создание и настройка планировщика
