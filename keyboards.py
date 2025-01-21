@@ -91,10 +91,12 @@ def create_remove_kb(user_id: int,
 
     if with_redirect:
         _callback_data = f'delete_{_callback_data}'
+        _text = 'Удалить товар'
     else:
         _callback_data = f'delete.no.rd_{_callback_data}'
+        _text = 'Перестать отслеживать'
 
-    _kb.row(types.InlineKeyboardButton(text='Удалить товар',
+    _kb.row(types.InlineKeyboardButton(text=_text,
                                        callback_data=_callback_data))
     
     return _kb
