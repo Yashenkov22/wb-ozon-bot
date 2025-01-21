@@ -263,8 +263,8 @@ async def push_check_ozon_price(user_id: str,
                                                     reply_markup=_kb.as_markup())
                             return
             else:
-                _text = 'Не получилось спарсить цену'
-                print(res[:100])
+                _text = f'Не получилось спарсить цену {_name}'
+                print(f'{_text} {res[:100]}')
 
             await bot.send_message(chat_id=user_id,
                                     text=_text)
