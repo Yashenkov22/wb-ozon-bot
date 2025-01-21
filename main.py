@@ -101,9 +101,18 @@ WEBHOOK_PATH = f'/webhook_'
 
 JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
 
-scheduler = AsyncIOScheduler()
 
-scheduler.add_jobstore('sqlalchemy', 'sqlalchemy', url=JOB_STORE_URL)
+# Настройка хранилища задач
+jobstores = {
+    'sqlalchemy': SQLAlchemyJobStore(engine=engine),
+}
+
+# Создание и настройка планировщика
+scheduler = AsyncIOScheduler(jobstores=jobstores)
+
+# scheduler = AsyncIOScheduler()
+
+# scheduler.add_jobstore('sqlalchemy', 'sqlalchemy', url=JOB_STORE_URL)
 
 
 dp.update.middleware(DbSessionMiddleware(session_pool=session,
@@ -124,7 +133,18 @@ async def on_startup():
                           drop_pending_updates=True)
                         #   allowed_updates=['message', 'callback_query'])
     scheduler.start()
-    
+
+
+@app.on_event('shutdown')
+async def on_shutdown():
+    # await bot.delete_webhook()
+    # await bot.set_webhook(f"{PUBLIC_URL}{WEBHOOK_PATH}",
+    #                       drop_pending_updates=True)
+                        #   allowed_updates=['message', 'callback_query'])
+    try:
+        scheduler.shutdown()
+    except Exception as ex:
+        print(ex)
     # await init_db()
     # Base.metadata.reflect(bind=engine)
     
