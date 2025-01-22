@@ -573,8 +573,10 @@ async def save_product(user_data: dict,
                     _text = 'Что то пошло не так'
                 else:
                     _text = 'Wb товар успешно добавлен'
+                    print(_text)
             else:
                 _text = 'Что то пошло не так'
+                print(_text)
 
 
                     # await state.update_data(wb_product_link=wb_product_link,
