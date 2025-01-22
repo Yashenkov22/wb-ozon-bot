@@ -109,7 +109,9 @@ async def push_check_wb_price(user_id: str,
             if check_price:
                 _text = 'цена не изменилась'
             else:
-                _waiting_price = start_price - ((start_price * percent) / 100)
+                _waiting_price = None
+                if percent:
+                    _waiting_price = start_price - ((start_price * percent) / 100)
 
                 query = (
                     update(
@@ -128,8 +130,8 @@ async def push_check_wb_price(user_id: str,
                 # if _waiting_price == actual_price:
                 _text = f'WB товар\n{_name}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
 
-                if _waiting_price >= _product_price:
-                    _text = f'WB товар\nНазвание: {name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price}'
+                if _waiting_price and _waiting_price >= _product_price:
+                    _text = f'WB товар\nНазвание: {name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
                     
                     _kb = create_remove_kb(user_id,
                                             product_id,
