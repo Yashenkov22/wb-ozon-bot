@@ -543,7 +543,7 @@ async def save_product(user_data: dict,
                 }
 
                 if percent:
-                    _data.update(percent=percent)
+                    _data.update(percent=int(percent))
 
                 wb_product = WbProduct(**_data)
 
