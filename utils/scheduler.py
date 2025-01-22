@@ -128,10 +128,10 @@ async def push_check_wb_price(user_id: str,
                         await session.rollback()
                         print(ex)
                 # if _waiting_price == actual_price:
-                _text = f'WB товар\n{_name}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                _text = f'WB товар\n{_name[:21]}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
 
                 if _waiting_price and _waiting_price >= _product_price:
-                    _text = f'WB товар\nНазвание: {name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                    _text = f'WB товар\nНазвание: {name[:21]}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
                     
                     _kb = create_remove_kb(user_id,
                                             product_id,
