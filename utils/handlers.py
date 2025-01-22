@@ -453,7 +453,7 @@ async def save_product(user_data: dict,
             return
 
         async with aiohttp.ClientSession() as aiosession:
-            _url = f"http://172.18.0.2:8080/product/{del_zone}/{wb_product_id}"
+            _url = f"http://172.18.0.2:8080/product/{del_zone}/{short_link}"
             response = await aiosession.get(url=_url)
 
             try:
