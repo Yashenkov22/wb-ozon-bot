@@ -52,7 +52,8 @@ async def check_user_last_message_time(user_id: int,
             *_name, link = _message_text
             _name = ' '.join(_name)
         else:
-            pass
+            if not message_text.isdigit():
+                link = message_text
 
         # key = f'fsm:{user_id}:{user_id}:data'
         # async with redis_client.pipeline(transaction=True) as pipe:
@@ -395,6 +396,8 @@ async def save_product(user_data: dict,
         except Exception as ex:
             print(ex)
         pass
+
+## WB
     elif link.find('wildberries') > 0:
         # save wb product
         _prefix = 'catalog/'
@@ -500,6 +503,8 @@ async def save_product(user_data: dict,
 
             # print('short_link', data.get('wb_product_id'))
 
+            _data_name = name if name else _product_name
+
             if _wb_punkt_id:
                 _wb_punkt_id, zone = _wb_punkt_id[0]
                 _data = {
@@ -508,11 +513,14 @@ async def save_product(user_data: dict,
                     'start_price': _product_price,
                     'actual_price': _product_price,
                     # 'percent': float(data.get('percent')),
-                    'name': _name[:21],
+                    'name': _data_name,
                     'time_create': datetime.now(),
                     'user_id': msg[0],
                     'wb_punkt_id': _wb_punkt_id,
                 }
+
+                if percent:
+                    _data.update(percent=percent)
 
                 wb_product = WbProduct(**_data)
 
@@ -537,11 +545,11 @@ async def save_product(user_data: dict,
                 # else:
                     # scheduler.add_job()
                 #          user_id | marker | product_id
-                job_id = f'{msg[0]}.ozon.{ozon_product_id}'
+                job_id = f'{msg[0]}.wb.{wb_product_id}'
         
                 job = scheduler.add_job(push_check_wb_price,
-                                trigger='cron',
-                                minute=1,
+                                trigger='interval',
+                                minutes=1,
                                 id=job_id,
                                 jobstore='sqlalchemy',
                                 kwargs={'user_id': msg[0],
