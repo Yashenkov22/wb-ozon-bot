@@ -55,7 +55,7 @@ async def push_check_wb_price(user_id: str,
                 .join(User,
                         WbProduct.user_id == User.tg_id)\
                 .outerjoin(subquery,
-                            subquery.c.product_id == OzonProduct.id)\
+                            subquery.c.product_id == WbProduct.id)\
                 .where(
                     and_(
                         User.tg_id == user_id,
