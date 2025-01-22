@@ -397,6 +397,184 @@ async def save_product(user_data: dict,
         pass
     elif link.find('wildberries') > 0:
         # save wb product
+        _prefix = 'catalog/'
+
+        _idx_prefix = link.find(_prefix)
+
+        short_link = link[_idx_prefix + len(_prefix):].split('/')[0]
+
+        # data = await state.get_data()
+
+        # msg: tuple = data.get('msg')
+
+        query = (
+            select(WbPunkt.zone)\
+            .join(User,
+                WbPunkt.user_id == User.tg_id)\
+            .where(User.tg_id == msg[0])
+        )
+        async with session as session:
+            res = await session.execute(query)
+
+            del_zone = res.scalar_one_or_none()
+
+        if not res:
+            # await message.answer('Не получилось найти пункт выдачи')
+            return
+        
+        query = (
+            select(
+                WbProduct.id
+            )\
+            .join(User,
+                WbProduct.user_id == User.tg_id)\
+            .where(
+                and_(
+                    User.tg_id == msg[0],
+                    WbProduct.link == link,
+                )
+            )
+        )
+        async with session as session:
+            res = await session.execute(query)
+
+            check_product_by_user = res.scalar_one_or_none()
+
+        if check_product_by_user:
+            # _kb = create_or_add_cancel_btn()
+            # await bot.edit_message_text(chat_id=msg[0],
+            #                             message_id=msg[-1],
+            #                             text='Продукт уже добален',
+            #                             reply_markup=_kb.as_markup())
+            # await message.delete()
+            return
+
+        async with aiohttp.ClientSession() as aiosession:
+            _url = f"http://172.18.0.2:8080/product/{del_zone}/{wb_product_id}"
+            response = await aiosession.get(url=_url)
+
+            try:
+                res = await response.json()
+                print(res)
+            except Exception as ex:
+                print('API RESPONSE ERROR', ex)
+                # await message.answer('ошибка при запросе к апи\n/start')
+                return
+
+            d = res.get('data')
+
+            print(d.get('products')[0].get('sizes'))
+
+            sizes = d.get('products')[0].get('sizes')
+
+            _product_name = d.get('products')[0].get('name')
+
+            _basic_price = _product_price = None
+            
+            for size in sizes:
+                _price = size.get('price')
+                if _price:
+                    _basic_price = size.get('price').get('basic')
+                    _product_price = size.get('price').get('product')
+
+                    _basic_price = str(_basic_price)[:-2]
+                    _product_price = str(_product_price)[:-2]
+
+                    print('основная:', _basic_price)
+                    print('актупльная:', _product_price)
+
+                    _product_price = float(_product_price)
+
+        async with session.begin():
+            query = (
+                select(WbPunkt.id,
+                        WbPunkt.zone)\
+                .join(User,
+                        WbPunkt.user_id == User.tg_id)\
+                .where(User.tg_id == msg[0])
+            )
+
+            _wb_punkt_id = await session.execute(query)
+
+            _wb_punkt_id = _wb_punkt_id.fetchall()
+
+            # print('short_link', data.get('wb_product_id'))
+
+            if _wb_punkt_id:
+                _wb_punkt_id, zone = _wb_punkt_id[0]
+                _data = {
+                    'link': link,
+                    'short_link': short_link,
+                    'start_price': _product_price,
+                    'actual_price': _product_price,
+                    # 'percent': float(data.get('percent')),
+                    'name': _name[:21],
+                    'time_create': datetime.now(),
+                    'user_id': msg[0],
+                    'wb_punkt_id': _wb_punkt_id,
+                }
+
+                wb_product = WbProduct(**_data)
+
+                session.add(wb_product)
+
+                await session.flush()
+
+                wb_product_id = wb_product.id
+
+                print('product_id', wb_product_id)
+                
+                # query = (
+                #     insert(WbProduct)\
+                #     .values(**data)
+                # )
+                # await session.execute(query)
+
+                # try:
+                #     await session.commit()
+                # except Exception as ex:
+                #     print(ex)
+                # else:
+                    # scheduler.add_job()
+                #          user_id | marker | product_id
+                job_id = f'{msg[0]}.ozon.{ozon_product_id}'
+        
+                job = scheduler.add_job(push_check_wb_price,
+                                trigger='cron',
+                                minute=1,
+                                id=job_id,
+                                jobstore='sqlalchemy',
+                                kwargs={'user_id': msg[0],
+                                        'product_id': wb_product_id})
+                
+                _data = {
+                    'user_id': msg[0],
+                    'product_id': wb_product_id,
+                    'product_marker': 'wb_product',
+                    'job_id': job.id,
+                }
+
+                user_job = UserJob(**_data)
+
+                session.add(user_job)
+
+                try:
+                    await session.commit()
+                except Exception as ex:
+                    print(ex)
+                    _text = 'Что то пошло не так'
+                else:
+                    _text = 'Wb товар успешно добавлен'
+            else:
+                _text = 'Что то пошло не так'
+
+
+                    # await state.update_data(wb_product_link=wb_product_link,
+                    #                         wb_product_id=wb_product_id,
+                    #                         wb_start_price=float(_product_price),
+                    #                         wb_product_price=float(_product_price),
+                    #                         wb_product_name=_product_name)
+
         pass
     else:
         # error

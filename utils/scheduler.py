@@ -30,26 +30,38 @@ async def push_check_wb_price(user_id: str,
 
     async for session in get_session():
         try:
+            subquery = (
+                select(UserJob.job_id,
+                    UserJob.user_id,
+                    UserJob.product_id)
+                .where(UserJob.user_id == user_id)
+            ).subquery()
+
             query = (
                 select(
                     User.username,
+                    WbProduct.link,
                     WbProduct.short_link,
                     WbProduct.actual_price,
                     WbProduct.start_price,
                     WbProduct.name,
                     WbProduct.percent,
-                    WbPunkt.zone
+                    WbPunkt.zone,
+                    subquery.c.job_id,
                 )\
                 .select_from(WbProduct)\
                 .join(WbPunkt,
                         WbProduct.wb_punkt_id == WbPunkt.id)\
                 .join(User,
                         WbProduct.user_id == User.tg_id)\
+                .outerjoin(subquery,
+                            subquery.c.product_id == OzonProduct.id)\
                 .where(
                     and_(
                         User.tg_id == user_id,
                         WbProduct.id == product_id,
-                    ))
+                    ))\
+                .distinct(WbProduct.id)
             )
 
             res = await session.execute(query)
@@ -61,7 +73,7 @@ async def push_check_wb_price(user_id: str,
             except Exception:
                 pass
     if res:
-        username, short_link, actual_price, start_price, name, percent, zone = res[0]
+        username, link, short_link, actual_price, start_price, _name, percent, zone, job_id = res[0]
 
         name = name if name is not None else 'Отсутствует'
 
@@ -97,7 +109,7 @@ async def push_check_wb_price(user_id: str,
             if check_price:
                 _text = 'цена не изменилась'
             else:
-                _waiting_price = actual_price - ((actual_price * percent) / 100)
+                _waiting_price = start_price - ((start_price * percent) / 100)
 
                 query = (
                     update(
@@ -114,10 +126,23 @@ async def push_check_wb_price(user_id: str,
                         await session.rollback()
                         print(ex)
                 # if _waiting_price == actual_price:
-                _text = f'WB товар\nНазвание: {name}\nЦена изменилась\nОбновленная цена товара: {_product_price}'
+                _text = f'WB товар\n{_name[:21]}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
 
                 if _waiting_price >= _product_price:
                     _text = f'WB товар\nНазвание: {name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price}'
+                    
+                    _kb = create_remove_kb(user_id,
+                                            product_id,
+                                            marker='wb',
+                                            job_id=job_id,
+                                            with_redirect=False)
+                    
+                    _kb = add_or_create_close_kb(_kb)
+
+                    await bot.send_message(chat_id=user_id,
+                                            text=_text,
+                                            reply_markup=_kb.as_markup())
+                    return
                 
                 await bot.send_message(chat_id=user_id,
                                         text=_text)
