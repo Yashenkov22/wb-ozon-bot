@@ -503,7 +503,7 @@ async def save_product(user_data: dict,
 
             # print('short_link', data.get('wb_product_id'))
 
-            _data_name = name if name else _product_name
+            _data_name = _name if _name else _product_name
 
             if _wb_punkt_id:
                 _wb_punkt_id, zone = _wb_punkt_id[0]
