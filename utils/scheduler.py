@@ -75,7 +75,7 @@ async def push_check_wb_price(user_id: str,
     if res:
         username, link, short_link, actual_price, start_price, _name, percent, zone, job_id = res[0]
 
-        name = name if name is not None else 'Отсутствует'
+        name = _name if _name is not None else 'Отсутствует'
 
         async with aiohttp.ClientSession() as aiosession:
             _url = f"http://172.18.0.2:8080/product/{zone}/{short_link}"
@@ -126,7 +126,7 @@ async def push_check_wb_price(user_id: str,
                         await session.rollback()
                         print(ex)
                 # if _waiting_price == actual_price:
-                _text = f'WB товар\n{_name[:21]}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                _text = f'WB товар\n{_name}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
 
                 if _waiting_price >= _product_price:
                     _text = f'WB товар\nНазвание: {name}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price}'
