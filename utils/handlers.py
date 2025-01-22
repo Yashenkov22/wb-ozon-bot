@@ -236,6 +236,29 @@ async def add_procent_to_product(user_data: dict,
                 await session.rollback()
             #add to ozon
         elif link.find('wildberries') > 0:
+            query = (
+                update(
+                    WbProduct
+                )\
+                .values(percent=int(percent))
+                .where(
+                    and_(
+                        WbProduct.user_id == msg[0],
+                        WbProduct.link == link,
+                    )
+                )
+            )
+
+            await session.execute(query)
+
+            try:
+                print('percent updated')
+                await session.commit()
+            except Exception as ex:
+                print(ex)
+                print('update percent failed')
+                await session.rollback()
+
             pass
         else:
             # error
