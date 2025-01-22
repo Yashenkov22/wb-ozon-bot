@@ -51,6 +51,7 @@ async def start(message: types.Message | types.CallbackQuery,
                 session: AsyncSession,
                 bot: Bot,
                 scheduler: AsyncIOScheduler):
+    await message.answer(text='☔️')
     _message = message
     
     await state.clear()
