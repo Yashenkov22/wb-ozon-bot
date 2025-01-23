@@ -153,6 +153,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     print('do request')
 
+    sub_msg = await message.answer(text='Товар проверяется...')
+
     try:
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
@@ -214,9 +216,11 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                 await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
 
                 price_text = '|'.join(str(v) for v in _d.items())
+
+                await sub_msg.edit_text(text='Товар проверен')
             else:
                 _text = 'Возникли проблемы'
-                await message.answer(text=f'{_text}. Ожидается ссылка, передано {message.text}')
+                await sub_msg.edit_text(text=f'{_text}. Ожидается ссылка, передано {message.text}')
                 await clear_state_and_redirect_to_start(message,
                                                         state,
                                                         bot)
