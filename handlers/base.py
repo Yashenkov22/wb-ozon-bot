@@ -406,12 +406,19 @@ async def delete_callback(callback: types.CallbackQuery,
                 else:
                     await callback.answer('Товар успешно удален',
                                           show_alert=True)
-            await redirect_to_(callback,
-                            state,
-                            session,
-                            bot,
-                            scheduler,
-                            marker=marker)
+            
+            if with_redirect:
+                await redirect_to_(callback,
+                                state,
+                                session,
+                                bot,
+                                scheduler,
+                                marker=marker)
+            else:
+                try:
+                    await callback.message.delete()
+                except Exception as ex:
+                    print(ex)
             pass
         case 'ozon':
             query1 = (
