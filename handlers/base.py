@@ -641,6 +641,10 @@ async def any_input(message: types.Message,
                     session: AsyncSession,
                     bot: Bot,
                     scheduler: AsyncIOScheduler):
+    if not check_input_link(message.text.strip()):
+        await message.answer(text='Невалидная ссылка')
+        return
+
     _message_text = message.text.strip().split()
 
     _name = link = None

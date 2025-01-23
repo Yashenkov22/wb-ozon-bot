@@ -37,8 +37,8 @@ from utils.storage import redis_client
 
 
 def check_input_link(link: str):
-    return (not link.startswith('https://ozon')) or \
-        (not link.startswith('https://www.wildberries'))
+    return (link.startswith('https://ozon')) or \
+        (link.startswith('https://www.wildberries'))
 
 
 def generate_sale_for_price(price: float):
