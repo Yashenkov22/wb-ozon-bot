@@ -218,11 +218,11 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                 _text = 'Возникли проблемы'
         
         _product_price = _d.get('cardPrice')
-        example_percent = 10
-        example_different = (_product_price * example_percent) / 100
-        example_price = _product_price - example_different
+        example_sale = 100
+        # example_different = (_product_price * example_percent) / 100
+        example_price = _product_price - example_sale
 
-        _text = f'Основная цена товара: {_product_price}\nАктуальная цена товара: {_product_price}\nВведите <b>процент как число</b>.\nКогда цена товара снизится <b>на этот процент или ниже</b>, мы сообщим Вам.\n\nПример:\n   Процент: {example_percent}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_different} = {example_price}'
+        _text = f'Основная цена товара: {_product_price}\nАктуальная цена товара: {_product_price}\nВведите <b>скидку как число</b>.\nКогда цена товара снизится <b>на эту сумму или ниже</b>, мы сообщим Вам.\n\nПример:\n   Скидка: {example_sale}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_sale} = {example_price}'
 
         # _text = f'Ваш продукт\n{message.text}\nЦена продукта: {price_text}'
 
