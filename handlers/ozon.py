@@ -123,7 +123,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         _kb = create_or_add_cancel_btn()
         await bot.edit_message_text(chat_id=msg[0],
                                     message_id=msg[-1],
-                                    text='Продукт уже добален',
+                                    text='Продукт уже добавлен',
                                     reply_markup=_kb.as_markup())
         await message.delete()
         return
