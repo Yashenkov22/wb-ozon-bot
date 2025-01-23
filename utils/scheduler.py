@@ -204,7 +204,7 @@ async def push_check_ozon_price(user_id: str,
         try:
             async with aiohttp.ClientSession() as aiosession:
                 # _url = f"http://5.61.53.235:1441/product/{message.text}"
-                _url = f"http://172.18.0.4:8080/product/{short_link}"
+                _url = f"http://172.18.0.7:8080/product/{short_link}"
 
                 response = await aiosession.get(url=_url)
 
