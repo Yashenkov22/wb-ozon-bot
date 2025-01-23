@@ -126,7 +126,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                                     text='Продукт уже добавлен',
                                     reply_markup=_kb.as_markup())
         await message.delete()
-        return
+        return True
 
     # _kb = create_done_kb(marker='ozon_product')
 

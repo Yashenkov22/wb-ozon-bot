@@ -345,7 +345,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                                     text='Продукт уже добавлен',
                                     reply_markup=_kb.as_markup())
         await message.delete()
-        return
+        return True
 
     async with aiohttp.ClientSession() as aiosession:
         _url = f"http://172.18.0.2:8080/product/{del_zone}/{wb_product_id}"

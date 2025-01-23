@@ -692,11 +692,16 @@ async def any_input(message: types.Message,
             'name': _name,
             'link': link,
         }
-        await save_product(user_data=user_data,
-                           session=session,
-                           scheduler=scheduler)
+        find_in_db = await save_product(user_data=user_data,
+                                        session=session,
+                                        scheduler=scheduler)
         
-        await add_msg.edit_text(text='Товар успешно добавлен!')
+        if find_in_db:
+            _text = 'Товар уже был в Вашем списке'
+        else:
+            _text = 'Товар успешно добавлен!'
+            
+        await add_msg.edit_text(text=_text)
     else:
         await message.answer(text='Невалидная ссылка')
     
