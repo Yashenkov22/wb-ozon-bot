@@ -679,7 +679,7 @@ async def any_input(message: types.Message,
     #                                     session,
     #                                     state,
     #                                     scheduler)
-    check_link = check_input_link(message.text)
+    check_link = check_input_link(link)
 
     if check_link:
     # msg = user_data.get('msg')
