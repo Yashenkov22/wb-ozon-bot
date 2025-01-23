@@ -331,9 +331,9 @@ async def save_product(user_data: dict,
         res = res.scalar_one_or_none()
 
         if res:
-            await bot.send_message(chat_id=msg[0],
-                                   text='Товар уже добавлен')
-            return
+            # await bot.send_message(chat_id=msg[0],
+            #                        text='Товар уже добавлен')
+            return True
 
         print('do request')
 
@@ -493,9 +493,9 @@ async def save_product(user_data: dict,
         res = res.scalar_one_or_none()
 
         if res:
-            await bot.send_message(chat_id=msg[0],
-                                   text='Товар уже добавлен')
-            return
+            # await bot.send_message(chat_id=msg[0],
+            #                        text='Товар уже добавлен')
+            return True
 
 
         # msg: tuple = data.get('msg')
