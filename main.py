@@ -132,6 +132,7 @@ async def on_startup():
     await bot.set_webhook(f"{PUBLIC_URL}{WEBHOOK_PATH}",
                           drop_pending_updates=True)
                         #   allowed_updates=['message', 'callback_query'])
+    await init_db()
     scheduler.start()
 
 
