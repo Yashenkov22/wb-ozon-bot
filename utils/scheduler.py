@@ -45,7 +45,7 @@ async def push_check_wb_price(user_id: str,
                     WbProduct.actual_price,
                     WbProduct.start_price,
                     WbProduct.name,
-                    WbProduct.percent,
+                    WbProduct.sale,
                     WbPunkt.zone,
                     subquery.c.job_id,
                 )\
@@ -73,7 +73,7 @@ async def push_check_wb_price(user_id: str,
             except Exception:
                 pass
     if res:
-        username, link, short_link, actual_price, start_price, _name, percent, zone, job_id = res[0]
+        username, link, short_link, actual_price, start_price, _name, sale, zone, job_id = res[0]
 
         name = _name if _name is not None else 'Отсутствует'
 
@@ -109,29 +109,31 @@ async def push_check_wb_price(user_id: str,
             if check_price:
                 _text = 'цена не изменилась'
             else:
-                _waiting_price = None
-                if percent:
-                    _waiting_price = start_price - ((start_price * percent) / 100)
+                # _waiting_price = None
+                # if percent:
+                #     _waiting_price = start_price - ((start_price * percent) / 100)
 
-                query = (
-                    update(
-                        WbProduct
-                    )\
-                    .values(actual_price=_product_price)\
-                    .where(WbProduct.id == product_id)
-                )
-                async for session in get_session():
-                    try:
-                        await session.execute(query)
-                        await session.commit()
-                    except Exception as ex:
-                        await session.rollback()
-                        print(ex)
+                # query = (
+                #     update(
+                #         WbProduct
+                #     )\
+                #     .values(actual_price=_product_price)\
+                #     .where(WbProduct.id == product_id)
+                # )
+                # async for session in get_session():
+                #     try:
+                #         await session.execute(query)
+                #         await session.commit()
+                #     except Exception as ex:
+                #         await session.rollback()
+                #         print(ex)
                 # if _waiting_price == actual_price:
-                _text = f'WB товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                _waiting_price = start_price - sale
 
-                if _waiting_price and _waiting_price >= _product_price:
-                    _text = f'WB товар\nНазвание: {name[:21]}\n<a href="{link}">Ссылка на товар</a>\nЦена товара, которую(или ниже) Вы ждали ({_waiting_price})\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                _text = f'WB товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
+
+                if _waiting_price >= _product_price:
+                    _text = f'WB товар\nНазвание: {name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена товара, которую(или ниже) Вы ждали ({_waiting_price})\nОбновленная цена товара: {_product_price} (было {actual_price})'
                     
                     _kb = create_remove_kb(user_id,
                                             product_id,
@@ -173,7 +175,7 @@ async def push_check_ozon_price(user_id: str,
                         OzonProduct.actual_price,
                         OzonProduct.start_price,
                         OzonProduct.name,
-                        OzonProduct.percent,
+                        OzonProduct.sale,
                         subquery.c.job_id,
                     )\
                     .select_from(OzonProduct)\
@@ -198,7 +200,7 @@ async def push_check_ozon_price(user_id: str,
                 except Exception:
                     pass
     if res:
-        username, link, short_link, actual_price, start_price, _name, percent, job_id = res[0]
+        username, link, short_link, actual_price, start_price, _name, sale, job_id = res[0]
 
         _name = _name if _name is not None else 'Отсутствует'
         try:
@@ -250,45 +252,45 @@ async def push_check_ozon_price(user_id: str,
                     print(f'{_text} user {user_id} product {_name}')
                     return
                 else:
-                    _waiting_price = None
-                    if percent:
-                        _waiting_price = start_price - ((start_price * percent) / 100)
+                    _waiting_price = start_price - sale
+                    # if percent:
+                    #     _waiting_price = start_price - ((start_price * percent) / 100)
 
-                    query = (
-                        update(
-                            OzonProduct
-                        )\
-                        .values(actual_price=_product_price)\
-                        .where(OzonProduct.id == product_id)
-                    )
-                    async for session in get_session():
-                        async with session as _session:
-                            try:
-                                await session.execute(query)
-                                await session.commit()
-                            except Exception as ex:
-                                await session.rollback()
-                                print(ex)
+                    # query = (
+                    #     update(
+                    #         OzonProduct
+                    #     )\
+                    #     .values(actual_price=_product_price)\
+                    #     .where(OzonProduct.id == product_id)
+                    # )
+                    # async for session in get_session():
+                    #     async with session as _session:
+                    #         try:
+                    #             await session.execute(query)
+                    #             await session.commit()
+                    #         except Exception as ex:
+                    #             await session.rollback()
+                    #             print(ex)
                         # if _waiting_price == actual_price:
                     
-                    _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}"Ссылка на товар</a>\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                    _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
                     
-                    if _waiting_price:
-                        if _waiting_price >= _product_price:
-                            _text = f'Ozon товар\n{_name[:21]}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
-                            
-                            _kb = create_remove_kb(user_id,
-                                                    product_id,
-                                                    marker='ozon',
-                                                    job_id=job_id,
-                                                    with_redirect=False)
-                            
-                            _kb = add_or_create_close_kb(_kb)
+                    # if _waiting_price:
+                    if _waiting_price >= _product_price:
+                        _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                        
+                        _kb = create_remove_kb(user_id,
+                                                product_id,
+                                                marker='ozon',
+                                                job_id=job_id,
+                                                with_redirect=False)
+                        
+                        _kb = add_or_create_close_kb(_kb)
 
-                            await bot.send_message(chat_id=user_id,
-                                                    text=_text,
-                                                    reply_markup=_kb.as_markup())
-                            return
+                        await bot.send_message(chat_id=user_id,
+                                                text=_text,
+                                                reply_markup=_kb.as_markup())
+                        return
             else:
                 _text = f'Не получилось спарсить цену {_name}'
                 print(f'{_text} {res[:100]}')

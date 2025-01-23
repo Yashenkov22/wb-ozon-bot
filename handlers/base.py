@@ -32,7 +32,12 @@ from keyboards import (create_remove_kb, create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import check_user_last_message_time, save_data_to_storage, check_user, show_item
+from utils.handlers import (check_input_link,
+                            check_user_last_message_time,
+                            save_data_to_storage,
+                            check_user,
+                            show_item,
+                            save_product)
 from utils.scheduler import test_scheduler
 
 from db.base import OzonProduct as OzonProductModel, User, Base, UserJob, WbProduct
@@ -202,9 +207,6 @@ async def redirect_to_(callback: types.CallbackQuery,
     for r in res:
         print(r)
 ###
-
-
-
     _text = f'{marker.upper()} бот\nВыберите действие'
 
     _kb = create_bot_start_kb(marker=marker)
@@ -212,10 +214,15 @@ async def redirect_to_(callback: types.CallbackQuery,
     _kb = add_back_btn(_kb)
 
     if msg:
-        await bot.edit_message_text(text=_text,
-                                    chat_id=callback.message.chat.id,
-                                    message_id=msg[-1],
-                                    reply_markup=_kb.as_markup())
+        try:
+            await bot.edit_message_text(text=_text,
+                                        chat_id=callback.message.chat.id,
+                                        message_id=msg[-1],
+                                        reply_markup=_kb.as_markup())
+        except Exception:
+            await bot.send_message(chat_id=callback.message.chat.id,
+                                text=_text,
+                                reply_markup=_kb.as_markup())
     else:
         await bot.send_message(chat_id=callback.message.chat.id,
                                text=_text,
@@ -526,7 +533,7 @@ async def view_product(callback: types.CallbackQuery,
                     WbProduct.user_id,
                     WbProduct.time_create,
                     WbProduct.name,
-                    WbProduct.percent,
+                    WbProduct.sale,
                     subquery.c.job_id)\
                 .select_from(WbProduct)\
                 .join(User,
@@ -551,7 +558,7 @@ async def view_product(callback: types.CallbackQuery,
             
             if _data:
                 _product = _data[0]
-                product_id, link, actaul_price, start_price, user_id, time_create, name, percent, job_id = _product
+                product_id, link, actaul_price, start_price, user_id, time_create, name, sale, job_id = _product
 
         case 'ozon':
             # pass
@@ -571,7 +578,7 @@ async def view_product(callback: types.CallbackQuery,
                     OzonProductModel.user_id,
                     OzonProductModel.time_create,
                     OzonProductModel.name,
-                    OzonProductModel.percent,
+                    OzonProductModel.sale,
                     subquery.c.job_id)\
                 .select_from(OzonProductModel)\
                 .join(User,
@@ -597,19 +604,20 @@ async def view_product(callback: types.CallbackQuery,
             if _data:
                 len(_data)
                 _product = _data[0]
-                product_id, link, actaul_price, start_price, user_id, time_create, name, percent, job_id = _product
+                product_id, link, actaul_price, start_price, user_id, time_create, name, sale, job_id = _product
 
 
     time_create: datetime
     moscow_tz = pytz.timezone('Europe/Moscow')
     moscow_time = time_create.astimezone(moscow_tz)
     
-    if percent:
-        waiting_price = start_price - ((start_price * percent) / 100)
+    # if percent:
+    #     waiting_price = start_price - ((start_price * percent) / 100)
+    waiting_price = start - sale
 
-        _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
-    else:
-        _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\n\nДата начала отслеживания: {moscow_time}'
+    _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nУстановленная скидка: {sale}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+    # else:
+    #     _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\n\nДата начала отслеживания: {moscow_time}'
 
     # _kb = add_cancel_btn_to_photo_keyboard(photo_kb)
 
@@ -633,9 +641,21 @@ async def any_input(message: types.Message,
                     session: AsyncSession,
                     bot: Bot,
                     scheduler: AsyncIOScheduler):
-    moscow_tz = pytz.timezone('Europe/Moscow')
-    _now = datetime.now()
-    moscow_time = _now.astimezone(moscow_tz)
+    _message_text = message.text.strip().split()
+
+    _name = link = None
+
+    if len(_message_text) > 1:
+        *_name, link = _message_text
+        _name = ' '.join(_name)
+    else:
+        # if not message_text.isdigit():
+        link = message.text.strip()
+        _name = 'Отсутствует'
+
+    # moscow_tz = pytz.timezone('Europe/Moscow')
+    # _now = datetime.now()
+    # moscow_time = _now.astimezone(moscow_tz)
 
     # data = await state.get_data()
 
@@ -647,18 +667,32 @@ async def any_input(message: types.Message,
     #     else:
     #         print('SECOND')
 
-    await state.update_data(_time=moscow_time.timestamp())
+    # await state.update_data(_time=moscow_time.timestamp())
 
     # _time_delta = moscow_time - timedelta(seconds=20)
-    if message.from_user.id == int(DEV_ID):
-        print(message.text, moscow_time)
+    # if message.from_user.id == int(DEV_ID):
+    #     print(message.text, moscow_time)
     
-    await check_user_last_message_time(message.from_user.id,
-                                        moscow_time,
-                                        message.text,
-                                        session,
-                                        state,
-                                        scheduler)
+    # await check_user_last_message_time(message.from_user.id,
+    #                                     moscow_time,
+    #                                     message.text,
+    #                                     session,
+    #                                     state,
+    #                                     scheduler)
+    check_link = check_input_link(message.text)
+
+    if check_link:
+    # msg = user_data.get('msg')
+    # _name = user_data.get('name')
+    # link: str = user_data.get('link')
+        user_data = {
+            'msg': (message.chat.id, message.message_id),
+            'name': _name,
+            'link': link,
+        }
+        await save_product(user_data=user_data,
+                           session=session,
+                           scheduler=scheduler)
 
     # await message.answer(text=message.text)
     await message.delete()

@@ -395,11 +395,11 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
                 await state.set_state(ProductStates.percent)
 
-                example_percent = 10
-                example_different = (_product_price * example_percent) / 100
-                example_price = _product_price - example_different
+                example_sale = 100
+                # example_different = (_product_price * example_percent) / 100
+                example_price = _product_price - example_sale
 
-                _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}\nВведите <b>процент как число</b>.\nКогда цена товара снизится <b>на этот процент или ниже</b>, мы сообщим Вам.\n\nПример:\n   Процент: {example_percent}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_different} = {example_price}'
+                _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}\nВведите <b>скидку как число</b>.\nКогда цена товара снизится <b>на эту сумму или ниже</b>, мы сообщим Вам.\n\nПример:\n   Скидка: {example_sale}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_sale} = {example_price}'
             else:
                 _text = 'Не удалось найти цену товара'
 
@@ -423,9 +423,9 @@ async def proccess_push_price(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
                             session: AsyncSession,
                             bot: Bot):
-    percent = message.text.strip()
+    sale = message.text.strip()
 
-    if percent == '/start':
+    if sale == '/start':
         await clear_state_and_redirect_to_start(message,
                                                 state,
                                                 bot)
@@ -437,7 +437,7 @@ async def proccess_push_price(message: types.Message | types.CallbackQuery,
     msg = data.get('msg')
     
 
-    await state.update_data(percent=percent)
+    await state.update_data(sale=float(sale))
 
     _kb = create_done_kb(marker='wb_product')
     _kb = create_or_add_cancel_btn(_kb)
@@ -446,20 +446,26 @@ async def proccess_push_price(message: types.Message | types.CallbackQuery,
     start_price = data.get('wb_start_price')
     product_price = data.get('wb_product_price')
 
-    waiting_price = float(product_price) - ((float(product_price) * int(percent) / 100))
+    waiting_price = float(product_price) - float(sale)
 
-    _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nпроцент: {percent}\nОжидаемая цена: {waiting_price}'
+    _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nСкидка: {sale}\nОжидаемая цена: {waiting_price}'
 
     if msg:
-        await bot.edit_message_text(text=_text,
-                                    chat_id=msg[0],
-                                    message_id=msg[-1],
-                                    reply_markup=_kb.as_markup())
+        try:
+            await bot.edit_message_text(text=_text,
+                                        chat_id=msg[0],
+                                        message_id=msg[-1],
+                                        reply_markup=_kb.as_markup())
+        except Exception:
+            await message.answer(text=_text,
+                                reply_markup=_kb.as_markup())
     else:
         await message.answer(text=_text,
                              reply_markup=_kb.as_markup())
-
-    await message.delete()
+    try:
+        await message.delete()
+    except Exception:
+        pass
 
 
 @wb_router.callback_query(F.data == 'view_price')
@@ -487,7 +493,7 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
                WbProduct.user_id,
                WbProduct.time_create,
                WbProduct.name,
-               WbProduct.percent,
+               WbProduct.sale,
                subquery.c.job_id)\
         .select_from(WbProduct)\
         .join(User,
@@ -507,11 +513,11 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
         _data = res.fetchall()
         _new_data = []
         for _d in _data:
-            product_id, link, actual, start, user_id, _date, name, percent, job_id = _d
+            product_id, link, actual, start, user_id, _date, name, sale, job_id = _d
             moscow_tz = pytz.timezone('Europe/Moscow')
             
             date = _date.astimezone(moscow_tz).timestamp()
-            _new_data.append((product_id, link, actual, start, user_id, date, name, percent, job_id))
+            _new_data.append((product_id, link, actual, start, user_id, date, name, sale, job_id))
                     # _now = datetime.now()
                     # moscow_time = _now.astimezone(moscow_tz)
 

@@ -36,6 +36,26 @@ from utils.storage import redis_client
 # lock = asyncio.Lock()
 
 
+def check_input_link(link: str):
+    return (not link.startswith('https://ozon')) or \
+        (not link.startswith('https://www.wildberries'))
+
+
+def generate_sale_for_price(price: float):
+    if 0 <= price <= 100:
+        _sale = 10
+    elif 100 < price <= 500:
+        _sale = 50
+    elif 500 < price <= 2000:
+        _sale = 100
+    elif 2000 < price <= 5000:
+        _sale = 300
+    else:
+        _sale = 500
+    
+    return _sale
+
+
 async def check_user_last_message_time(user_id: int,
                                        now_time: datetime,
                                        message_text: str,
@@ -353,11 +373,16 @@ async def save_product(user_data: dict,
 
                     print(_d)
 
+                    _sale = generate_sale_for_price(_d.get('cardPrice'))
+
                     _data = {
                         'link': link,
                         'short_link': ozon_short_link,
                         'actual_price': _d.get('cardPrice'),
                         'start_price': _d.get('cardPrice'),
+                        #
+                        'waiting_price': _d.get('cardPrice') - _sale,
+                        #
                         # 'percent': int(data.get('percent')),
                         'name': _name,
                         'time_create': datetime.now(),
@@ -525,6 +550,7 @@ async def save_product(user_data: dict,
             _wb_punkt_id = _wb_punkt_id.fetchall()
 
             # print('short_link', data.get('wb_product_id'))
+            _sale = generate_sale_for_price(float(_product_price))
 
             _data_name = _name if _name else _product_name
 
@@ -535,6 +561,9 @@ async def save_product(user_data: dict,
                     'short_link': short_link,
                     'start_price': _product_price,
                     'actual_price': _product_price,
+                    #
+                    'waiting_price': _product_price - _sale,
+                    #
                     # 'percent': float(data.get('percent')),
                     'name': _data_name,
                     'time_create': datetime.now(),
@@ -574,6 +603,7 @@ async def save_product(user_data: dict,
                                 trigger='interval',
                                 minutes=1,
                                 id=job_id,
+                                coalesce=True,
                                 jobstore='sqlalchemy',
                                 kwargs={'user_id': msg[0],
                                         'product_id': wb_product_id})
@@ -884,7 +914,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                     'short_link': data.get('ozon_short_link'),
                     'actual_price': data.get('ozon_actual_price'),
                     'start_price': data.get('ozon_start_price'),
-                    'percent': int(data.get('percent')),
+                    'sale': int(data.get('sale')),
                     'name': data.get('ozon_product_name'),
                     'time_create': datetime.now(),
                     'user_id': callback.from_user.id,
@@ -960,7 +990,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                             'short_link': data.get('wb_product_id'),
                             'start_price': data.get('wb_start_price'),
                             'actual_price': data.get('wb_product_price'),
-                            'percent': float(data.get('percent')),
+                            'sale': float(data.get('sale')),
                             'name': data.get('wb_product_name')[:21],
                             'time_create': datetime.now(),
                             'user_id': callback.from_user.id,
@@ -996,6 +1026,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                                         trigger='interval',
                                         minutes=1,
                                         id=job_id,
+                                        coalesce=True,
                                         jobstore='sqlalchemy',
                                         kwargs={'user_id': callback.from_user.id,
                                                 'product_id': wb_product_id})
@@ -1140,7 +1171,7 @@ def item_constructor(data: dict[str, Any]):
     _product = product_list[product_idx]
     # name = data['name']
     # price = data['price']
-    product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id = _product
+    product_id, link, actaul_price, start_price, user_id, time_create, sale, job_id = _product
 
     return (
         product_id,
@@ -1149,7 +1180,7 @@ def item_constructor(data: dict[str, Any]):
         start_price,
         user_id,
         time_create,
-        percent,
+        sale,
         job_id,
         photo_kb,
     )

@@ -61,7 +61,8 @@ class OzonProduct(Base):
     short_link = Column(String)
     start_price = Column(Float)
     actual_price = Column(Float)
-    percent = Column(Integer)
+    sale = Column(Float)
+    # percent = Column(Integer)
     name = Column(String,
                   nullable=True,
                   default=None)
@@ -86,7 +87,8 @@ class WbProduct(Base):
     short_link = Column(String)
     start_price = Column(Float)
     actual_price = Column(Float)
-    percent = Column(Integer)
+    sale = Column(Float)
+    # percent = Column(Integer)
     name = Column(String,
                   nullable=True,
                   default=None)

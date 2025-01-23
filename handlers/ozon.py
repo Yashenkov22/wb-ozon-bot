@@ -251,21 +251,23 @@ async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
                             session: AsyncSession,
                             bot: Bot):
-    percent = message.text.strip()
+    sale = message.text.strip()
 
-    if percent == '/start' or  not percent.isdigit():
+    if sale == '/start' or  not sale.isdigit():
         await clear_state_and_redirect_to_start(message,
                                                 state,
                                                 bot)
         await message.delete()
         return
     
+    sale = float(sale)
+
     data = await state.get_data()
 
     msg: tuple = data.get('msg')
     
 
-    await state.update_data(percent=percent)
+    await state.update_data(sale=sale)
 
     _kb = create_done_kb(marker='ozon_product')
     _kb = create_or_add_cancel_btn(_kb)
@@ -274,9 +276,9 @@ async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
     start_price = data.get('ozon_start_price')
     product_price = data.get('ozon_actual_price')
 
-    waiting_price = float(product_price) - ((float(product_price) * int(percent) / 100))
+    waiting_price = float(product_price) - sale
 
-    _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nпроцент: {percent}\nОжидаемая цена: {waiting_price}'
+    _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nУстановленная скидка: {sale}\nОжидаемая цена: {waiting_price}'
 
     if msg:
         await bot.edit_message_text(text=_text,
@@ -316,7 +318,7 @@ async def list_product(callback: types.Message | types.CallbackQuery,
             OzonProductModel.user_id,
             OzonProductModel.time_create,
             OzonProductModel.name,
-            OzonProductModel.percent,
+            OzonProductModel.sale,
             subquery.c.job_id)\
         .select_from(OzonProductModel)\
         .join(User,
@@ -336,16 +338,16 @@ async def list_product(callback: types.Message | types.CallbackQuery,
 
         _new_data = []
         for _d in _data:
-            product_id, link, actual, start, user_id, _date, name, percent, job_id = _d
+            product_id, link, actual, start, user_id, _date, name, sale, job_id = _d
             moscow_tz = pytz.timezone('Europe/Moscow')
             
             date = _date.astimezone(moscow_tz).timestamp()
-            _new_data.append((product_id, link, actual, start, user_id, date, name, percent, job_id))
+            _new_data.append((product_id, link, actual, start, user_id, date, name, sale, job_id))
 
 
     print('ozon products22',_data)
 
-    if not _data:
+    if not _new_data:
         await callback.answer(text='Сначала добавьте товар',
                               show_alert=True)
         return
