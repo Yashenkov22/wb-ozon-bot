@@ -613,7 +613,7 @@ async def view_product(callback: types.CallbackQuery,
     
     # if percent:
     #     waiting_price = start_price - ((start_price * percent) / 100)
-    waiting_price = start - sale
+    waiting_price = start_price - sale
 
     _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nУстановленная скидка: {sale}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
     # else:
