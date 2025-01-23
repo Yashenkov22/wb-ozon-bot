@@ -216,6 +216,12 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                 price_text = '|'.join(str(v) for v in _d.items())
             else:
                 _text = 'Возникли проблемы'
+                await message.answer(text=f'{_text}. Ожидается ссылка, передано {message.text}')
+                await clear_state_and_redirect_to_start(message,
+                                                        state,
+                                                        bot)
+                await message.delete()
+                return
         
         _product_price = _d.get('cardPrice')
         example_sale = 100
