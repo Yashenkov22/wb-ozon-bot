@@ -324,11 +324,9 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         select(
             WbProduct.id
         )\
-        .join(User,
-            WbProduct.user_id == User.tg_id)\
         .where(
             and_(
-                User.tg_id == message.from_user.id,
+                WbProduct.user_id == message.from_user.id,
                 WbProduct.link == wb_product_link,
             )
         )
@@ -342,10 +340,11 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         _kb = create_or_add_cancel_btn()
         await bot.edit_message_text(chat_id=msg[0],
                                     message_id=msg[-1],
-                                    text='Продукт уже добавлен',
+                                    text='Продукт уже добавлен ранее',
                                     reply_markup=_kb.as_markup())
         await message.delete()
-        return True
+        await state.set_state()
+        return
 
     async with aiohttp.ClientSession() as aiosession:
         _url = f"http://172.18.0.2:8080/product/{del_zone}/{wb_product_id}"
