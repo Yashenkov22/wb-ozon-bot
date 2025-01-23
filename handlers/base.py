@@ -682,6 +682,8 @@ async def any_input(message: types.Message,
     check_link = check_input_link(link)
 
     if check_link:
+        add_msg = await message.answer(text='Товар добавляется...',
+                                       disable_notification=True)
     # msg = user_data.get('msg')
     # _name = user_data.get('name')
     # link: str = user_data.get('link')
@@ -693,8 +695,11 @@ async def any_input(message: types.Message,
         await save_product(user_data=user_data,
                            session=session,
                            scheduler=scheduler)
+        
+        await add_msg.edit_text(text='Товар успешно добавлен!')
     else:
         await message.answer(text='Невалидная ссылка')
+    
 
     # await message.answer(text=message.text)
     await message.delete()

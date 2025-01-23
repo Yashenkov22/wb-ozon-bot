@@ -20,6 +20,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from bot22 import bot
+
 from db.base import User, WbProduct, WbPunkt, OzonProduct, UserJob
 
 from utils.scheduler import push_check_ozon_price, push_check_wb_price, scheduler_cron
@@ -314,6 +316,25 @@ async def save_product(user_data: dict,
         #                         ozon_short_link=ozon_short_link)
         # await state.update_data(ozon_short_link=ozon_short_link)
 
+        query = (
+            select(
+                OzonProduct.id,
+            )\
+            .where(
+                OzonProduct.user_id == msg[0],
+                OzonProduct.link == link,
+            )
+        )
+        async with session as _session:
+            res = await _session.execute(query)
+
+        res = res.scalar_one_or_none()
+
+        if res:
+            await bot.send_message(chat_id=msg[0],
+                                   text='Товар уже добавлен')
+            return
+
         print('do request')
 
         try:
@@ -373,6 +394,8 @@ async def save_product(user_data: dict,
 
                     print(_d)
 
+                    _name = _name if _name else _product_name
+
                     _sale = generate_sale_for_price(_d.get('cardPrice'))
 
                     _data = {
@@ -389,8 +412,8 @@ async def save_product(user_data: dict,
                         'user_id': msg[0],
                     }
 
-                    if percent:
-                        _data.update(percent=int(percent))
+                    # if percent:
+                    #     _data.update(percent=int(percent))
                     
                     # query = (
                     #     insert(OzonProduct)\
@@ -455,6 +478,25 @@ async def save_product(user_data: dict,
         short_link = link[_idx_prefix + len(_prefix):].split('/')[0]
 
         # data = await state.get_data()
+        query = (
+            select(
+                WbProduct.id,
+            )\
+            .where(
+                WbProduct.user_id == msg[0],
+                WbProduct.link == link,
+            )
+        )
+        async with session as _session:
+            res = await _session.execute(query)
+
+        res = res.scalar_one_or_none()
+
+        if res:
+            await bot.send_message(chat_id=msg[0],
+                                   text='Товар уже добавлен')
+            return
+
 
         # msg: tuple = data.get('msg')
 
@@ -470,35 +512,36 @@ async def save_product(user_data: dict,
             del_zone = res.scalar_one_or_none()
 
         if not res:
-            # await message.answer('Не получилось найти пункт выдачи')
+            await bot.send_message(chat_id=msg[0],
+                                   text='Не получилось найти пункт выдачи')
             return
         
-        query = (
-            select(
-                WbProduct.id
-            )\
-            .join(User,
-                WbProduct.user_id == User.tg_id)\
-            .where(
-                and_(
-                    User.tg_id == msg[0],
-                    WbProduct.link == link,
-                )
-            )
-        )
-        async with session as session:
-            res = await session.execute(query)
+        # query = (
+        #     select(
+        #         WbProduct.id
+        #     )\
+        #     .join(User,
+        #         WbProduct.user_id == User.tg_id)\
+        #     .where(
+        #         and_(
+        #             User.tg_id == msg[0],
+        #             WbProduct.link == link,
+        #         )
+        #     )
+        # )
+        # async with session as session:
+        #     res = await session.execute(query)
 
-            check_product_by_user = res.scalar_one_or_none()
+        #     check_product_by_user = res.scalar_one_or_none()
 
-        if check_product_by_user:
+        # if check_product_by_user:
             # _kb = create_or_add_cancel_btn()
             # await bot.edit_message_text(chat_id=msg[0],
             #                             message_id=msg[-1],
             #                             text='Продукт уже добален',
             #                             reply_markup=_kb.as_markup())
             # await message.delete()
-            return
+            # return
 
         async with aiohttp.ClientSession() as aiosession:
             _url = f"http://172.18.0.2:8080/product/{del_zone}/{short_link}"
@@ -571,8 +614,8 @@ async def save_product(user_data: dict,
                     'wb_punkt_id': _wb_punkt_id,
                 }
 
-                if percent:
-                    _data.update(percent=int(percent))
+                # if percent:
+                #     _data.update(percent=int(percent))
 
                 wb_product = WbProduct(**_data)
 
