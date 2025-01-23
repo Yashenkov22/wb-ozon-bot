@@ -156,76 +156,79 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
     sub_msg = await message.answer(text='Товар проверяется...')
 
     try:
+        timeout = aiohttp.ClientTimeout(total=5)
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
             _url = f"http://172.18.0.7:8080/product/{ozon_short_link}"
 
-            response = await aiosession.get(url=_url)
+            # response = await aiosession.get(url=_url)
+            async with aiosession.get(url=_url,
+                                      timeout=timeout) as response:
 
-            print(response.status)
+                print(response.status)
 
-            res = await response.text()
+                res = await response.text()
 
             # print(res)
 
-            w = re.findall(r'\"cardPrice.*currency?', res)
-            print(w)
+        w = re.findall(r'\"cardPrice.*currency?', res)
+        print(w)
 
-            _alt = re.findall(r'\"alt.*,?', res)
-            _product_name = None
-            _product_name_limit = 21
+        _alt = re.findall(r'\"alt.*,?', res)
+        _product_name = None
+        _product_name_limit = 21
+        
+        if _alt:
+            _product_name = _alt[0].split('//')[0]
+            _prefix = f'\"alt\":\"'
             
-            if _alt:
-                _product_name = _alt[0].split('//')[0]
-                _prefix = f'\"alt\":\"'
-                
-                # if _product_name.startswith(_prefix):
-                # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
-                _product_name = _product_name[len(_prefix)+2:]
+            # if _product_name.startswith(_prefix):
+            # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
+            _product_name = _product_name[len(_prefix)+2:]
 
-            print(_product_name)
+        print(_product_name)
 
-            await state.update_data(ozon_product_name=_product_name)
-            # print('NAME   ',_alt[0].split('//')[0])
+        await state.update_data(ozon_product_name=_product_name)
+        # print('NAME   ',_alt[0].split('//')[0])
 
-            if w:
-                w = w[0].split(',')[:3]
+        if w:
+            w = w[0].split(',')[:3]
 
-                _d = {
-                    'price': None,
-                    'originalPrice': None,
-                    'cardPrice': None,
-                }
+            _d = {
+                'price': None,
+                'originalPrice': None,
+                'cardPrice': None,
+            }
 
-                for k in _d:
-                    if not all(v for v in _d.values()):
-                        for q in w:
-                            if q.find(k) != -1:
-                                name, price = q.split(':')
-                                price = price.replace('\\', '').replace('"', '')
-                                price = float(''.join(price.split()[:-1]))
-                                print(price)
-                                _d[k] = price
-                                break
-                    else:
-                        break
+            for k in _d:
+                if not all(v for v in _d.values()):
+                    for q in w:
+                        if q.find(k) != -1:
+                            name, price = q.split(':')
+                            price = price.replace('\\', '').replace('"', '')
+                            price = float(''.join(price.split()[:-1]))
+                            print(price)
+                            _d[k] = price
+                            break
+                else:
+                    break
 
-                print(_d)
+            print(_d)
 
-                await state.update_data(ozon_start_price=_d.get('cardPrice', 0))
-                await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
+            await state.update_data(ozon_start_price=_d.get('cardPrice', 0))
+            await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
 
-                price_text = '|'.join(str(v) for v in _d.items())
+            price_text = '|'.join(str(v) for v in _d.items())
 
-                await sub_msg.edit_text(text='Товар проверен')
-            else:
-                _text = 'Возникли проблемы'
-                await sub_msg.edit_text(text=f'{_text}. Ожидается ссылка, передано {message.text}')
-                await clear_state_and_redirect_to_start(message,
-                                                        state,
-                                                        bot)
-                await message.delete()
-                return
+            await sub_msg.edit_text(text='Товар проверен')
+        else:
+            _text = 'Возникли проблемы'
+            await sub_msg.edit_text(text=f'{_text}. Ожидается ссылка, передано {message.text}')
+            await clear_state_and_redirect_to_start(message,
+                                                    state,
+                                                    bot)
+            await message.delete()
+            return
         
         _product_price = _d.get('cardPrice')
         example_sale = 100
@@ -250,10 +253,14 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                                 text=_text,
                                 reply_markup=_kb.as_markup())
             
-        await message.delete()
     except Exception as ex:
         print(ex)
         pass
+    finally:
+        try:
+            await message.delete()
+        except Exception:
+            pass
         
 
 @ozon_router.message(OzonProduct.percent)

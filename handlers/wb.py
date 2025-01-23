@@ -345,18 +345,22 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         await message.delete()
         await state.set_state()
         return
+    
+    try:
+        timeout = aiohttp.ClientTimeout(total=5)
+        async with aiohttp.ClientSession() as aiosession:
+            _url = f"http://172.18.0.2:8080/product/{del_zone}/{wb_product_id}"
+            async with aiosession.get(url=_url,
+                                        timeout=timeout) as response:
+            # response = await aiosession.get(url=_url)
 
-    async with aiohttp.ClientSession() as aiosession:
-        _url = f"http://172.18.0.2:8080/product/{del_zone}/{wb_product_id}"
-        response = await aiosession.get(url=_url)
-
-        try:
-            res = await response.json()
-            print(res)
-        except Exception as ex:
-            print('API RESPONSE ERROR', ex)
-            await message.answer('ошибка при запросе к апи\n/start')
-            return
+                try:
+                    res = await response.json()
+                    print(res)
+                except Exception as ex:
+                    print('API RESPONSE ERROR', ex)
+                    await message.answer('ошибка при запросе к апи\n/start')
+                    return
 
         d = res.get('data')
 
@@ -407,6 +411,13 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                                                         bot)
                 await message.delete()
                 return
+    except Exception as ex:
+        print(ex)
+        try:
+            await message.delete()
+            return
+        except Exception:
+            pass
 
     _kb = create_or_add_cancel_btn()
 

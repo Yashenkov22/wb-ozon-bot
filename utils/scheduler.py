@@ -76,11 +76,14 @@ async def push_check_wb_price(user_id: str,
         username, link, short_link, actual_price, start_price, _name, sale, zone, job_id = res[0]
 
         name = _name if _name is not None else 'Отсутствует'
-
-        async with aiohttp.ClientSession() as aiosession:
-            _url = f"http://172.18.0.2:8080/product/{zone}/{short_link}"
-            response = await aiosession.get(url=_url)
-            res = await response.json()
+        try:
+            timeout = aiohttp.ClientTimeout(total=5)
+            async with aiohttp.ClientSession() as aiosession:
+                _url = f"http://172.18.0.2:8080/product/{zone}/{short_link}"
+                async with aiosession.get(url=_url,
+                            timeout=timeout) as response:
+                # response = await aiosession.get(url=_url)
+                    es = await response.json()
 
             d = res.get('data')
 
@@ -150,7 +153,10 @@ async def push_check_wb_price(user_id: str,
                 
                 await bot.send_message(chat_id=user_id,
                                         text=_text)
-            
+        except Exception as ex:
+            print(ex)
+            pass
+                
 
 async def push_check_ozon_price(user_id: str,
                               product_id: str):
@@ -204,15 +210,18 @@ async def push_check_ozon_price(user_id: str,
 
         _name = _name if _name is not None else 'Отсутствует'
         try:
+            timeout = aiohttp.ClientTimeout(total=5)
             async with aiohttp.ClientSession() as aiosession:
                 # _url = f"http://5.61.53.235:1441/product/{message.text}"
                 _url = f"http://172.18.0.7:8080/product/{short_link}"
+                async with aiosession.get(url=_url,
+                            timeout=timeout) as response:
 
-                response = await aiosession.get(url=_url)
+                # response = await aiosession.get(url=_url)
 
-                print(response.status)
+                    print(response.status)
 
-                res = await response.text()
+                    res = await response.text()
 
                 # print(res)
 
