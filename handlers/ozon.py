@@ -88,9 +88,20 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                         state: FSMContext,
                         session: AsyncSession,
                         bot: Bot):
-    ozon_link = message.text.strip()
+    # ozon_link = message.text.strip()
+    _message_text = message.text.strip().split()
+
+    _name = link = None
+
+    if len(_message_text) > 1:
+        *_name, link = _message_text
+        _name = ' '.join(_name)
+    else:
+        # if not message_text.isdigit():
+        link = message.text.strip()
+        # _name = 'Отсутствует'
     
-    if ozon_link == '/start':
+    if message.text == '/start':
         await clear_state_and_redirect_to_start(message,
                                                 state,
                                                 bot)
@@ -110,7 +121,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         .where(
             and_(
                 User.tg_id == message.from_user.id,
-                OzonProductModel.link == ozon_link,
+                OzonProductModel.link == link,
             )
         )
     )
@@ -132,22 +143,20 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     _kb = create_or_add_cancel_btn()
 
-
-
-    if ozon_link.startswith('https://ozon.ru/t/'):
-        _idx = ozon_link.find('/t/')
+    if link.startswith('https://ozon.ru/t/'):
+        _idx = link.find('/t/')
         print(_idx)
         _prefix = '/t/'
-        ozon_short_link = 'croppedLink|' + ozon_link[_idx+len(_prefix):]
+        ozon_short_link = 'croppedLink|' + link[_idx+len(_prefix):]
         print(ozon_short_link)
     else:
         _prefix = 'product/'
 
-        _idx = ozon_link.rfind('product/')
+        _idx = link.rfind('product/')
 
-        ozon_short_link = ozon_link[(_idx + len(_prefix)):]
+        ozon_short_link = link[(_idx + len(_prefix)):]
 
-    await state.update_data(ozon_link=ozon_link,
+    await state.update_data(ozon_link=link,
                             ozon_short_link=ozon_short_link)
     # await state.update_data(ozon_short_link=ozon_short_link)
 
@@ -187,6 +196,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
             _product_name = _product_name[len(_prefix)+2:]
 
         print(_product_name)
+
+        _product_name = _name if _name else _product_name
 
         await state.update_data(ozon_product_name=_product_name)
         # print('NAME   ',_alt[0].split('//')[0])

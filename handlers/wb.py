@@ -286,9 +286,20 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                     state: FSMContext,
                     session: AsyncSession,
                     bot: Bot):
-    wb_product_link = message.text.strip()
+    # wb_product_link = message.text.strip()
+    _message_text = message.text.strip().split()
 
-    if wb_product_link == '/start':
+    _name = link = None
+
+    if len(_message_text) > 1:
+        *_name, link = _message_text
+        _name = ' '.join(_name)
+    else:
+        # if not message_text.isdigit():
+        link = message.text.strip()
+        # _name = 'Отсутствует'
+
+    if message.text == '/start':
         await clear_state_and_redirect_to_start(message,
                                                 state,
                                                 bot)
@@ -297,9 +308,9 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     _prefix = 'catalog/'
 
-    _idx_prefix = wb_product_link.find(_prefix)
+    _idx_prefix = link.find(_prefix)
 
-    wb_product_id = wb_product_link[_idx_prefix + len(_prefix):].split('/')[0]
+    wb_product_id = link[_idx_prefix + len(_prefix):].split('/')[0]
 
     data = await state.get_data()
 
@@ -327,7 +338,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         .where(
             and_(
                 WbProduct.user_id == message.from_user.id,
-                WbProduct.link == wb_product_link,
+                WbProduct.link == link,
             )
         )
     )
@@ -370,6 +381,8 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         _product_name = d.get('products')[0].get('name')
 
+        _product_name = _name if _name else _product_name
+
         _basic_price = _product_price = None
         
         for size in sizes:
@@ -386,7 +399,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
                 _product_price = float(_product_price)
 
-                await state.update_data(wb_product_link=wb_product_link,
+                await state.update_data(wb_product_link=link,
                                         wb_product_id=wb_product_id,
                                         wb_start_price=float(_product_price),
                                         wb_product_price=float(_product_price),
