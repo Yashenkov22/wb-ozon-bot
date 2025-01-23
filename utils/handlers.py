@@ -381,7 +381,7 @@ async def save_product(user_data: dict,
                         'actual_price': _d.get('cardPrice'),
                         'start_price': _d.get('cardPrice'),
                         #
-                        'waiting_price': _d.get('cardPrice') - _sale,
+                        'sale': _sale,
                         #
                         # 'percent': int(data.get('percent')),
                         'name': _name,
@@ -562,7 +562,7 @@ async def save_product(user_data: dict,
                     'start_price': _product_price,
                     'actual_price': _product_price,
                     #
-                    'waiting_price': _product_price - _sale,
+                    'sale': _sale,
                     #
                     # 'percent': float(data.get('percent')),
                     'name': _data_name,
