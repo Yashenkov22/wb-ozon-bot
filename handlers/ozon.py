@@ -189,12 +189,15 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         
         if _alt:
             print('OZON PARSED ALT', _alt[0])
-            _product_name = _alt[0].split('//')[0]
+            _product_name = _alt[0].split(',')[0]
             _prefix = f'\"alt\":\"'
             
             # if _product_name.startswith(_prefix):
             # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
-            _product_name = _product_name[len(_prefix)+2:]
+            _product_name: str = _product_name[len(_prefix)+2:]
+
+            _product_name = ' '.join([part_name for part_name in _product_name.split() \
+                                      if part_name.isalnum()])
 
         print(_product_name)
 
