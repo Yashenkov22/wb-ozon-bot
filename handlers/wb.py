@@ -375,7 +375,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         d = res.get('data')
 
-        print(d.get('products')[0].get('sizes'))
+        # print(d.get('products')[0].get('sizes'))
 
         sizes = d.get('products')[0].get('sizes')
 
