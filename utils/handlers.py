@@ -351,121 +351,121 @@ async def save_product(user_data: dict,
 
                     res = await response.text()
 
-                # print(res)
+                print(res)
 
-                w = re.findall(r'\"cardPrice.*currency?', res)
-                # print(w)
+            w = re.findall(r'\"cardPrice.*currency?', res)
+            # print(w)
 
-                _alt = re.findall(r'\"alt.*,?', res)
-                _product_name = None
-                _product_name_limit = 21
+            _alt = re.findall(r'\"alt.*,?', res)
+            _product_name = None
+            _product_name_limit = 21
+            
+            if _alt:
+                _product_name = _alt[0].split('//')[0]
+                _prefix = f'\"alt\":\"'
                 
-                if _alt:
-                    _product_name = _alt[0].split('//')[0]
-                    _prefix = f'\"alt\":\"'
-                    
-                    # if _product_name.startswith(_prefix):
-                    # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
-                    _product_name = _product_name[len(_prefix)+2:]
+                # if _product_name.startswith(_prefix):
+                # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
+                _product_name = _product_name[len(_prefix)+2:]
 
-                print(_product_name)
+            print(_product_name)
 
-                # await state.update_data(ozon_product_name=_product_name)
-                # print('NAME   ',_alt[0].split('//')[0])
+            # await state.update_data(ozon_product_name=_product_name)
+            # print('NAME   ',_alt[0].split('//')[0])
 
-                if w:
-                    w = w[0].split(',')[:3]
+            if w:
+                w = w[0].split(',')[:3]
 
-                    _d = {
-                        'price': None,
-                        'originalPrice': None,
-                        'cardPrice': None,
-                    }
+                _d = {
+                    'price': None,
+                    'originalPrice': None,
+                    'cardPrice': None,
+                }
 
-                    for k in _d:
-                        if not all(v for v in _d.values()):
-                            for q in w:
-                                if q.find(k) != -1:
-                                    name, price = q.split(':')
-                                    price = price.replace('\\', '').replace('"', '')
-                                    price = float(''.join(price.split()[:-1]))
-                                    print(price)
-                                    _d[k] = price
-                                    break
-                        else:
-                            break
+                for k in _d:
+                    if not all(v for v in _d.values()):
+                        for q in w:
+                            if q.find(k) != -1:
+                                name, price = q.split(':')
+                                price = price.replace('\\', '').replace('"', '')
+                                price = float(''.join(price.split()[:-1]))
+                                print(price)
+                                _d[k] = price
+                                break
+                    else:
+                        break
 
-                    print(_d)
+                print(_d)
 
-                    _name = _name if _name else _product_name
+                _name = _name if _name else _product_name
 
-                    _sale = generate_sale_for_price(_d.get('cardPrice'))
+                _sale = generate_sale_for_price(_d.get('cardPrice'))
 
-                    _data = {
-                        'link': link,
-                        'short_link': ozon_short_link,
-                        'actual_price': _d.get('cardPrice'),
-                        'start_price': _d.get('cardPrice'),
-                        #
-                        'sale': _sale,
-                        #
-                        # 'percent': int(data.get('percent')),
-                        'name': _name,
-                        'time_create': datetime.now(),
-                        'user_id': msg[0],
-                    }
+                _data = {
+                    'link': link,
+                    'short_link': ozon_short_link,
+                    'actual_price': _d.get('cardPrice'),
+                    'start_price': _d.get('cardPrice'),
+                    #
+                    'sale': _sale,
+                    #
+                    # 'percent': int(data.get('percent')),
+                    'name': _name,
+                    'time_create': datetime.now(),
+                    'user_id': msg[0],
+                }
 
-                    # if percent:
-                    #     _data.update(percent=int(percent))
-                    
-                    # query = (
-                    #     insert(OzonProduct)\
-                    #     .values(**_data)
-                    # )
+                # if percent:
+                #     _data.update(percent=int(percent))
+                
+                # query = (
+                #     insert(OzonProduct)\
+                #     .values(**_data)
+                # )
 
-                    # await session.execute(query)
-                    ozon_product = OzonProduct(**_data)
+                # await session.execute(query)
+                ozon_product = OzonProduct(**_data)
 
-                    session.add(ozon_product)
+                session.add(ozon_product)
 
-                    await session.flush()
+                await session.flush()
 
-                    ozon_product_id = ozon_product.id
+                ozon_product_id = ozon_product.id
 
-                    #          user_id | marker | product_id
-                    job_id = f'{msg[0]}.ozon.{ozon_product_id}'
+                #          user_id | marker | product_id
+                job_id = f'{msg[0]}.ozon.{ozon_product_id}'
 
-                    job = scheduler.add_job(push_check_ozon_price,
-                                    trigger='interval',
-                                    minutes=1,
-                                    id=job_id,
-                                    jobstore='sqlalchemy',
-                                    coalesce=True,
-                                    kwargs={'user_id': msg[0],
-                                            'product_id': ozon_product_id})
-                    
-                    _data = {
-                        'user_id': msg[0],
-                        'product_id': ozon_product_id,
-                        'product_marker': 'ozon_product',
-                        'job_id': job.id,
-                    }
+                job = scheduler.add_job(push_check_ozon_price,
+                                trigger='interval',
+                                minutes=1,
+                                id=job_id,
+                                jobstore='sqlalchemy',
+                                coalesce=True,
+                                kwargs={'user_id': msg[0],
+                                        'product_id': ozon_product_id})
+                
+                _data = {
+                    'user_id': msg[0],
+                    'product_id': ozon_product_id,
+                    'product_marker': 'ozon_product',
+                    'job_id': job.id,
+                }
 
-                    user_job = UserJob(**_data)
+                user_job = UserJob(**_data)
 
-                    session.add(user_job)
+                session.add(user_job)
 
-                    try:
-                        await session.commit()
-                        _text = 'Ozon товар успешно добавлен'
-                        print(_text)
-                    except Exception as ex:
-                        print(ex)
-                        await session.rollback()
-                        _text = 'Ozon товар не был добавлен'
-                        print(_text)
-                else:
-                    print('PRICE PARSE ERROR', user_data)
+                try:
+                    await session.commit()
+                    _text = 'Ozon товар успешно добавлен'
+                    print(_text)
+                except Exception as ex:
+                    print(ex)
+                    await session.rollback()
+                    _text = 'Ozon товар не был добавлен'
+                    print(_text)
+            else:
+                print('PRICE PARSE ERROR', user_data)
 
         except Exception as ex:
             print(ex)
@@ -545,44 +545,48 @@ async def save_product(user_data: dict,
             #                             reply_markup=_kb.as_markup())
             # await message.delete()
             # return
-        timeout = aiohttp.ClientTimeout(total=15)
-        async with aiohttp.ClientSession() as aiosession:
-            _url = f"http://172.18.0.2:8080/product/{del_zone}/{short_link}"
-            async with aiosession.get(url=_url,
-                            timeout=timeout) as response:
-            # response = await aiosession.get(url=_url)
+        try:
+            timeout = aiohttp.ClientTimeout(total=15)
+            async with aiohttp.ClientSession() as aiosession:
+                _url = f"http://172.18.0.2:8080/product/{del_zone}/{short_link}"
+                async with aiosession.get(url=_url,
+                                timeout=timeout) as response:
+                # response = await aiosession.get(url=_url)
 
-                try:
-                    res = await response.json()
-                    print(res)
-                except Exception as ex:
-                    print('API RESPONSE ERROR', ex)
-                    # await message.answer('ошибка при запросе к апи\n/start')
-                    return
+                    try:
+                        res = await response.json()
+                        print(res)
+                    except Exception as ex:
+                        print('API RESPONSE ERROR', ex)
+                        # await message.answer('ошибка при запросе к апи\n/start')
+                        return
+        except Exception as ex:
+            print(ex)
+            return True
 
-            d = res.get('data')
+        d = res.get('data')
 
-            print(d.get('products')[0].get('sizes'))
+        print(d.get('products')[0].get('sizes'))
 
-            sizes = d.get('products')[0].get('sizes')
+        sizes = d.get('products')[0].get('sizes')
 
-            _product_name = d.get('products')[0].get('name')
+        _product_name = d.get('products')[0].get('name')
 
-            _basic_price = _product_price = None
-            
-            for size in sizes:
-                _price = size.get('price')
-                if _price:
-                    _basic_price = size.get('price').get('basic')
-                    _product_price = size.get('price').get('product')
+        _basic_price = _product_price = None
+        
+        for size in sizes:
+            _price = size.get('price')
+            if _price:
+                _basic_price = size.get('price').get('basic')
+                _product_price = size.get('price').get('product')
 
-                    _basic_price = str(_basic_price)[:-2]
-                    _product_price = str(_product_price)[:-2]
+                _basic_price = str(_basic_price)[:-2]
+                _product_price = str(_product_price)[:-2]
 
-                    print('основная:', _basic_price)
-                    print('актупльная:', _product_price)
+                print('основная:', _basic_price)
+                print('актупльная:', _product_price)
 
-                    _product_price = float(_product_price)
+                _product_price = float(_product_price)
 
         async with session.begin():
             query = (
