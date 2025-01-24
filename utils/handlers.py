@@ -469,6 +469,7 @@ async def save_product(user_data: dict,
 
         except Exception as ex:
             print(ex)
+            return True
         pass
 
 ## WB
