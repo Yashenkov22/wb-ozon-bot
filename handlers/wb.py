@@ -418,6 +418,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                 example_price = _product_price - example_sale
 
                 _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}\nВведите <b>скидку как число</b>.\nКогда цена товара снизится <b>на эту сумму или ниже</b>, мы сообщим Вам.\n\nПример:\n   Скидка: {example_sale}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_sale} = {example_price}'
+                break
             else:
                 _text = 'Не удалось найти цену товара'
                 print(_text)
