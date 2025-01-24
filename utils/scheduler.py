@@ -116,20 +116,20 @@ async def push_check_wb_price(user_id: str,
                 # if percent:
                 #     _waiting_price = start_price - ((start_price * percent) / 100)
 
-                # query = (
-                #     update(
-                #         WbProduct
-                #     )\
-                #     .values(actual_price=_product_price)\
-                #     .where(WbProduct.id == product_id)
-                # )
-                # async for session in get_session():
-                #     try:
-                #         await session.execute(query)
-                #         await session.commit()
-                #     except Exception as ex:
-                #         await session.rollback()
-                #         print(ex)
+                query = (
+                    update(
+                        WbProduct
+                    )\
+                    .values(actual_price=_product_price)\
+                    .where(WbProduct.id == product_id)
+                )
+                async for session in get_session():
+                    try:
+                        await session.execute(query)
+                        await session.commit()
+                    except Exception as ex:
+                        await session.rollback()
+                        print(ex)
                 # if _waiting_price == actual_price:
                 _waiting_price = start_price - sale
 
@@ -265,21 +265,21 @@ async def push_check_ozon_price(user_id: str,
                     # if percent:
                     #     _waiting_price = start_price - ((start_price * percent) / 100)
 
-                    # query = (
-                    #     update(
-                    #         OzonProduct
-                    #     )\
-                    #     .values(actual_price=_product_price)\
-                    #     .where(OzonProduct.id == product_id)
-                    # )
-                    # async for session in get_session():
-                    #     async with session as _session:
-                    #         try:
-                    #             await session.execute(query)
-                    #             await session.commit()
-                    #         except Exception as ex:
-                    #             await session.rollback()
-                    #             print(ex)
+                    query = (
+                        update(
+                            OzonProduct
+                        )\
+                        .values(actual_price=_product_price)\
+                        .where(OzonProduct.id == product_id)
+                    )
+                    async for session in get_session():
+                        async with session as _session:
+                            try:
+                                await session.execute(query)
+                                await session.commit()
+                            except Exception as ex:
+                                await session.rollback()
+                                print(ex)
                         # if _waiting_price == actual_price:
                     
                     _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
