@@ -181,14 +181,14 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
             # print(res)
 
         w = re.findall(r'\"cardPrice.*currency?', res)
-        print(w)
+        # print(w)
 
         _alt = re.findall(r'\"alt.*,?', res)
         _product_name = None
         _product_name_limit = 21
         
         if _alt:
-            print('OZON PARSED ALT', _alt[0])
+            # print('OZON PARSED ALT', _alt[0])
             _product_name = _alt[0].split(',')[0]
             _prefix = f'\"alt\":\"'
             

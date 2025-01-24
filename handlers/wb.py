@@ -420,6 +420,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                 _text = f'Основная цена товара: {_basic_price}\nАктуальная цена товара: {_product_price}\nВведите <b>скидку как число</b>.\nКогда цена товара снизится <b>на эту сумму или ниже</b>, мы сообщим Вам.\n\nПример:\n   Скидка: {example_sale}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_sale} = {example_price}'
             else:
                 _text = 'Не удалось найти цену товара'
+                print(_text)
                 await message.answer(text=f'{_text}. Ожидается ссылка, передано {message.text}')
                 await clear_state_and_redirect_to_start(message,
                                                         state,
