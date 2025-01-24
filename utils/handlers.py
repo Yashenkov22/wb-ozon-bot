@@ -338,15 +338,18 @@ async def save_product(user_data: dict,
         print('do request')
 
         try:
+            timeout = aiohttp.ClientTimeout(total=15)
             async with aiohttp.ClientSession() as aiosession:
                 # _url = f"http://5.61.53.235:1441/product/{message.text}"
                 _url = f"http://172.18.0.7:8080/product/{ozon_short_link}"
+                async with aiosession.get(url=_url,
+                            timeout=timeout) as response:
 
-                response = await aiosession.get(url=_url)
+                # response = await aiosession.get(url=_url)
 
-                print(response.status)
+                    print(response.status)
 
-                res = await response.text()
+                    res = await response.text()
 
                 # print(res)
 
@@ -542,18 +545,20 @@ async def save_product(user_data: dict,
             #                             reply_markup=_kb.as_markup())
             # await message.delete()
             # return
-
+        timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession() as aiosession:
             _url = f"http://172.18.0.2:8080/product/{del_zone}/{short_link}"
-            response = await aiosession.get(url=_url)
+            async with aiosession.get(url=_url,
+                            timeout=timeout) as response:
+            # response = await aiosession.get(url=_url)
 
-            try:
-                res = await response.json()
-                print(res)
-            except Exception as ex:
-                print('API RESPONSE ERROR', ex)
-                # await message.answer('ошибка при запросе к апи\n/start')
-                return
+                try:
+                    res = await response.json()
+                    print(res)
+                except Exception as ex:
+                    print('API RESPONSE ERROR', ex)
+                    # await message.answer('ошибка при запросе к апи\n/start')
+                    return
 
             d = res.get('data')
 

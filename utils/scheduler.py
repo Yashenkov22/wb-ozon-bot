@@ -77,7 +77,7 @@ async def push_check_wb_price(user_id: str,
 
         name = _name if _name is not None else 'Отсутствует'
         try:
-            timeout = aiohttp.ClientTimeout(total=5)
+            timeout = aiohttp.ClientTimeout(total=15)
             async with aiohttp.ClientSession() as aiosession:
                 _url = f"http://172.18.0.2:8080/product/{zone}/{short_link}"
                 async with aiosession.get(url=_url,
@@ -210,7 +210,7 @@ async def push_check_ozon_price(user_id: str,
 
         _name = _name if _name is not None else 'Отсутствует'
         try:
-            timeout = aiohttp.ClientTimeout(total=5)
+            timeout = aiohttp.ClientTimeout(total=15)
             async with aiohttp.ClientSession() as aiosession:
                 # _url = f"http://5.61.53.235:1441/product/{message.text}"
                 _url = f"http://172.18.0.7:8080/product/{short_link}"

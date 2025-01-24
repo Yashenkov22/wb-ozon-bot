@@ -358,7 +358,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         return
     
     try:
-        timeout = aiohttp.ClientTimeout(total=5)
+        timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession() as aiosession:
             _url = f"http://172.18.0.2:8080/product/{del_zone}/{wb_product_id}"
             async with aiosession.get(url=_url,
