@@ -381,6 +381,8 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         _product_name = d.get('products')[0].get('name')
 
+        print('WB PARSED NAME', _product_name)
+
         _product_name = _name if _name else _product_name
 
         _basic_price = _product_price = None
