@@ -697,7 +697,7 @@ async def any_input(message: types.Message,
                                         scheduler=scheduler)
         
         if find_in_db:
-            _text = 'Товар уже был в Вашем списке'
+            _text = 'Товар уже был в Вашем списке или ошибка'
         else:
             _text = 'Товар успешно добавлен!'
             
