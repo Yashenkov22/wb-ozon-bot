@@ -346,13 +346,14 @@ async def save_product(user_data: dict,
                             timeout=timeout) as response:
 
                 # response = await aiosession.get(url=_url)
+                    print(f'OZON RESPONSE CODE {response.status}')
                     if response.status == 408:
                         print('TIMEOUT')
                         await bot.send_message(chat_id=msg[0],
                                                text='Таймаут API')
                         return
 
-                    print(response.status)
+                    # print(f'OZON RESPONSE CODE {response.status}')
 
                     res = await response.text()
 
