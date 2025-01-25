@@ -221,7 +221,7 @@ async def push_check_ozon_price(user_id: str,
 
                     print(response.status)
 
-                    if response.status != 200:
+                    if response.status == 408:
                         print('OZON TIMEOUT')
                         return
 

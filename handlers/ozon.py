@@ -160,7 +160,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                             ozon_short_link=ozon_short_link)
     # await state.update_data(ozon_short_link=ozon_short_link)
 
-    print('do request')
+    print('do request on OZON API')
 
     sub_msg = await message.answer(text='Товар проверяется...')
 
@@ -174,8 +174,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
             async with aiosession.get(url=_url,
                                       timeout=timeout) as response:
 
-                print(response.status)
-                if response.status != 200:
+                print(f'OZON RESPONSE CODE {response.status}')
+                if response.status == 408:
                     print('OZON TIMEOUT')
                     await clear_state_and_redirect_to_start(message,
                                                             state,

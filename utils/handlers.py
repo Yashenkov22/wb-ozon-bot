@@ -335,10 +335,10 @@ async def save_product(user_data: dict,
             #                        text='Товар уже добавлен')
             return True
 
-        print('do request')
+        print('do request on OZON API')
 
         try:
-            timeout = aiohttp.ClientTimeout(total=15)
+            timeout = aiohttp.ClientTimeout(total=30)
             async with aiohttp.ClientSession() as aiosession:
                 # _url = f"http://5.61.53.235:1441/product/{message.text}"
                 _url = f"http://172.18.0.7:8080/product/{ozon_short_link}"
@@ -346,6 +346,11 @@ async def save_product(user_data: dict,
                             timeout=timeout) as response:
 
                 # response = await aiosession.get(url=_url)
+                    if response.status == 408:
+                        print('TIMEOUT')
+                        await bot.send_message(chat_id=msg[0],
+                                               text='Таймаут API')
+                        return
 
                     print(response.status)
 
@@ -910,7 +915,7 @@ async def clear_state_and_redirect_to_start(message: types.Message | types.Callb
 
     _kb = add_back_btn(InlineKeyboardBuilder())
 
-    _text = 'Что пошло не так\nВернитесь в главное меню и попробуйте еще раз'
+    _text = 'Что то пошло не так\nВернитесь в главное меню и попробуйте еще раз'
 
     await bot.send_message(chat_id=message.from_user.id,
                            text=_text,
