@@ -192,7 +192,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
             # print(res)
 
         w = re.findall(r'\"cardPrice.*currency?', res)
-        # print(w)
+        print(w)
 
         _alt = re.findall(r'\"alt.*,?', res)
         _product_name = None
