@@ -351,13 +351,19 @@ async def save_product(user_data: dict,
                         print('TIMEOUT')
                         await bot.send_message(chat_id=msg[0],
                                                text='Таймаут API')
-                        return
+                        return True
 
                     # print(f'OZON RESPONSE CODE {response.status}')
 
                     res = await response.text()
 
                 print(res)
+
+            if res == '408 Request Timeout':
+                await bot.send_message(chat_id=msg[0],
+                                       text=f'status 200, text {res}')
+                
+                return True
 
             w = re.findall(r'\"cardPrice.*currency?', res)
             # print(w)
