@@ -165,7 +165,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
     sub_msg = await message.answer(text='Товар проверяется...')
 
     try:
-        timeout = aiohttp.ClientTimeout(total=15)
+        timeout = aiohttp.ClientTimeout(total=30)
         async with aiohttp.ClientSession() as aiosession:
             # _url = f"http://5.61.53.235:1441/product/{message.text}"
             _url = f"http://172.18.0.7:8080/product/{ozon_short_link}"
@@ -175,6 +175,17 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                                       timeout=timeout) as response:
 
                 print(response.status)
+                if response.status != 200:
+                    print('OZON TIMEOUT')
+                    await clear_state_and_redirect_to_start(message,
+                                                            state,
+                                                            bot)
+                    try:
+                        await message.delete()
+                    except Exception:
+                        pass
+                    
+                    return
 
                 res = await response.text()
 
