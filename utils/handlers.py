@@ -365,6 +365,8 @@ async def save_product(user_data: dict,
                                        text=f'status 200, text {res}')
                 
                 return True
+            
+            _new_short_link = res.split('|')[0]
 
             w = re.findall(r'\"cardPrice.*currency?', res)
             # print(w)
@@ -417,7 +419,7 @@ async def save_product(user_data: dict,
 
                 _data = {
                     'link': link,
-                    'short_link': ozon_short_link,
+                    'short_link': _new_short_link,
                     'actual_price': _d.get('cardPrice'),
                     'start_price': _d.get('cardPrice'),
                     #
