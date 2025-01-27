@@ -682,8 +682,8 @@ async def any_input(message: types.Message,
     check_link = check_input_link(link)
 
     if check_link:
-        add_msg = await message.answer(text='Товар добавляется...',
-                                       disable_notification=True)
+        # add_msg = await message.answer(text='Товар добавляется...',
+        #                                disable_notification=True)
     # msg = user_data.get('msg')
     # _name = user_data.get('name')
     # link: str = user_data.get('link')
@@ -701,7 +701,7 @@ async def any_input(message: types.Message,
         else:
             _text = 'Товар успешно добавлен!'
             
-        await add_msg.edit_text(text=_text)
+            await message.answer(text=_text)
     else:
         await message.answer(text='Невалидная ссылка')
     

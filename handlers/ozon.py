@@ -162,7 +162,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     print('do request on OZON API')
 
-    sub_msg = await message.answer(text='Товар проверяется...')
+    # sub_msg = await message.answer(text='Товар проверяется...')
 
     try:
         timeout = aiohttp.ClientTimeout(total=30)
@@ -252,10 +252,10 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
             price_text = '|'.join(str(v) for v in _d.items())
 
-            await sub_msg.edit_text(text='Товар проверен')
+            # await sub_msg.edit_text(text='Товар проверен')
         else:
             _text = 'Возникли проблемы'
-            await sub_msg.edit_text(text=f'{_text}. Ожидается ссылка, передано {message.text}')
+            # await sub_msg.edit_text(text=f'{_text}. Ожидается ссылка, передано {message.text}')
             await clear_state_and_redirect_to_start(message,
                                                     state,
                                                     bot)
