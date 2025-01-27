@@ -191,7 +191,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
         print('ОТВЕТ ОТ АПИ',res)
 
-        new_short_link = res.find('|')[0]
+        new_short_link = res.split('|')[0]
 
         await state.update_data(ozon_link=link,
                                 ozon_short_link=new_short_link)
