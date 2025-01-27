@@ -39,7 +39,7 @@ from utils.storage import redis_client
 
 
 def check_input_link(link: str):
-    return (link.startswith('https://ozon')) or \
+    return (link.startswith('https://www.ozon')) or \
         (link.startswith('https://www.wildberries'))
 
 
