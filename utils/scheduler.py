@@ -150,9 +150,9 @@ async def push_check_wb_price(user_id: str,
                                             text=_text,
                                             reply_markup=_kb.as_markup())
                     return
-                
-                await bot.send_message(chat_id=user_id,
-                                        text=_text)
+                if _product_price < actual_price:
+                    await bot.send_message(chat_id=user_id,
+                                            text=_text)
         except Exception as ex:
             print(ex)
             pass
@@ -304,12 +304,20 @@ async def push_check_ozon_price(user_id: str,
                                                 text=_text,
                                                 reply_markup=_kb.as_markup())
                         return
+                    
+                    if _product_price < actual_price:
+                        await bot.send_message(chat_id=user_id,
+                                                text=_text,
+                                                reply_markup=_kb.as_markup())
+                        return
+
             else:
                 _text = f'Не получилось спарсить цену {_name}'
                 print(f'{_text} {res[:100]}')
+                return
 
-            await bot.send_message(chat_id=user_id,
-                                    text=_text)
+            # await bot.send_message(chat_id=user_id,
+            #                         text=_text)
         except Exception as ex:
             print('OZON SCHEDULER ERROR', ex)
 
