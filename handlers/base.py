@@ -679,9 +679,11 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
         )
 
         async with session as _session:
-            res = await _session.execute(query)
+            res = await _session.execute(user_job_query)
 
             job_ids = res.scalars().all()
+
+            # print(job_ids)
 
         del_query_1 = (
             delete(
