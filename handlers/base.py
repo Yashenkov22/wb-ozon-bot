@@ -635,6 +635,88 @@ async def view_product(callback: types.CallbackQuery,
 # _callback_data = f'view-product_{user_id}_{marker}_{product_id}'
 
 
+@main_router.callback_query(F.data == 'remove_all_products')
+async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
+                                            state: FSMContext,
+                                            session: AsyncSession,
+                                            scheduler: AsyncIOScheduler):
+    try:
+        query = select(
+            OzonProductModel.id,
+            OzonProductModel.user_id,
+        )\
+        .where(OzonProductModel.user_id == callback.from_user.id)
+
+        async with session as _session:
+            res = await _session.execute(query)
+
+            res = res.fetchall()
+
+        user_ids = []
+        product_ids = []
+
+        for record in res:
+            _id, _product_id = record
+            user_ids.append(_id)
+            product_ids.append(_product_id)
+
+        user_job_query = (
+            select(
+                UserJob.job_id,
+            )\
+            .where(
+                and_(
+                    UserJob.user_id.in_(user_ids),
+                    UserJob.product_id.in_(product_ids),
+                    UserJob.product_marker == 'ozon',
+                )
+            )
+        )
+
+        async with session as _session:
+            res = await _session.execute(query)
+
+            job_ids = res.scalars().all()
+
+        del_query_1 = (
+            delete(
+                UserJob
+            )\
+            .where(
+                and_(
+                    UserJob.user_id.in_(user_ids),
+                    UserJob.product_id.in_(product_ids),
+                    UserJob.product_marker == 'ozon',
+                )
+            )
+        )
+
+        del_query_2 = (
+            delete(
+                OzonProductModel
+            )\
+            .where(OzonProductModel.id.in_(user_ids))
+        )
+
+        async with session as _session:
+            await _session.execute(del_query_1)
+            await _session.execute(del_query_2)
+
+        
+        for job in job_ids:
+            scheduler.remove_job(job,
+                                 'sqlalchemy')
+            
+    except Exception:
+        await callback.answer(text='Не получилось',
+                              show_alert=True)
+    else:
+        await callback.answer(text='Товары Озон успешно удалены',
+                              show_alert=True)
+            
+            
+
+
 @main_router.message()
 async def any_input(message: types.Message,
                     state: FSMContext,
@@ -707,4 +789,5 @@ async def any_input(message: types.Message,
     
 
     # await message.answer(text=message.text)
+    # await state.set_state()
     await message.delete()

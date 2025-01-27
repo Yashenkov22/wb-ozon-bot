@@ -302,7 +302,7 @@ async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
                             bot: Bot):
     sale = message.text.strip()
 
-    if sale == '/start' or  not sale.isdigit():
+    if sale == '/start' or not sale.isdigit():
         await clear_state_and_redirect_to_start(message,
                                                 state,
                                                 bot)
