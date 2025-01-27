@@ -709,12 +709,12 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
             await _session.execute(del_query_1)
             await _session.execute(del_query_2)
 
+            await _session.commit()
         
         for job in job_ids:
             scheduler.remove_job(job,
-                                 'sqlalchemy')
+                                    'sqlalchemy')
             
-        await session.commit()
             
     except Exception as ex:
         print(ex)
