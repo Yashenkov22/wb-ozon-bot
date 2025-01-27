@@ -358,7 +358,7 @@ async def save_product(user_data: dict,
 
                     res = await response.text()
 
-                print(res)
+                # print(res)
 
             if res == '408 Request Timeout':
                 await bot.send_message(chat_id=msg[0],

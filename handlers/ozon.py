@@ -189,7 +189,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
                 res = await response.text()
 
-        print('ОТВЕТ ОТ АПИ',res)
+        # print('ОТВЕТ ОТ АПИ',res)
 
         new_short_link = res.split('|')[0]
 
@@ -198,7 +198,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
 
         w = re.findall(r'\"cardPrice.*currency?', res)
-        print(w)
+        # print(w)
 
         _alt = re.findall(r'\"alt.*,?', res)
         _product_name = None
