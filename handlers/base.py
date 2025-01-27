@@ -683,7 +683,7 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
 
             job_ids = res.scalars().all()
 
-            # print(job_ids)
+            print(job_ids)
 
         del_query_1 = (
             delete(
@@ -711,9 +711,9 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
 
             await _session.commit()
         
-        for job in job_ids:
-            scheduler.remove_job(job,
-                                    'sqlalchemy')
+        for job_id in job_ids:
+            scheduler.remove_job(job_id=job_id,
+                                    jobstore='sqlalchemy')
             
             
     except Exception as ex:
