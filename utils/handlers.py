@@ -379,6 +379,7 @@ async def save_product(user_data: dict,
                 # if _product_name.startswith(_prefix):
                 # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
                 _product_name = _product_name[len(_prefix)+2:]
+                _product_name = ' '.join(_product_name.split()[:4])
 
             print(_product_name)
 

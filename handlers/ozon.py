@@ -156,8 +156,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
         ozon_short_link = link[(_idx + len(_prefix)):]
 
-    await state.update_data(ozon_link=link,
-                            ozon_short_link=ozon_short_link)
+    # await state.update_data(ozon_link=link,
+    #                         ozon_short_link=ozon_short_link)
     # await state.update_data(ozon_short_link=ozon_short_link)
 
     print('do request on OZON API')
@@ -190,6 +190,12 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                 res = await response.text()
 
         print('ОТВЕТ ОТ АПИ',res)
+
+        new_short_link = res.find('|')[0]
+
+        await state.update_data(ozon_link=link,
+                                ozon_short_link=new_short_link)
+
 
         w = re.findall(r'\"cardPrice.*currency?', res)
         print(w)

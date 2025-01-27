@@ -651,7 +651,7 @@ async def any_input(message: types.Message,
     else:
         # if not message_text.isdigit():
         link = message.text.strip()
-        _name = 'Отсутствует'
+        # _name = 'Отсутствует'
 
     # moscow_tz = pytz.timezone('Europe/Moscow')
     # _now = datetime.now()
