@@ -673,7 +673,7 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
                 and_(
                     UserJob.user_id == callback.from_user.id,
                     UserJob.product_id.in_(product_ids),
-                    UserJob.product_marker == 'ozon',
+                    UserJob.product_marker == 'ozon_product',
                 )
             )
         )
