@@ -655,6 +655,11 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
         user_ids = []
         product_ids = []
 
+        if not res:
+            await callback.answer(text='Нет товаров на удаление',
+                                  show_alert=True)
+            return
+
         for record in res:
             _id, _product_id = record
             user_ids.append(_id)
