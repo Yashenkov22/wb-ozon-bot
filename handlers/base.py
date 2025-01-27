@@ -643,27 +643,27 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
     try:
         query = select(
             OzonProductModel.id,
-            OzonProductModel.user_id,
+            # OzonProductModel.user_id,
         )\
         .where(OzonProductModel.user_id == callback.from_user.id)
 
         async with session as _session:
             res = await _session.execute(query)
 
-            res = res.fetchall()
+            product_ids = res.scalars().all()
 
-        user_ids = []
-        product_ids = []
+        # user_ids = []
+        # product_ids = []
 
-        if not res:
+        if not product_ids:
             await callback.answer(text='Нет товаров на удаление',
                                   show_alert=True)
             return
 
-        for record in res:
-            _id, _product_id = record
-            user_ids.append(_id)
-            product_ids.append(_product_id)
+        # for record in res:
+        #     _id, _product_id = record
+        #     user_ids.append(_id)
+        #     product_ids.append(_product_id)
 
         user_job_query = (
             select(
@@ -671,7 +671,7 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
             )\
             .where(
                 and_(
-                    UserJob.user_id.in_(user_ids),
+                    UserJob.user_id == callback.from_user.id,
                     UserJob.product_id.in_(product_ids),
                     UserJob.product_marker == 'ozon',
                 )
@@ -691,7 +691,7 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
             )\
             .where(
                 and_(
-                    UserJob.user_id.in_(user_ids),
+                    UserJob.user_id == callback.from_user.id,
                     UserJob.product_id.in_(product_ids),
                     UserJob.product_marker == 'ozon',
                 )
@@ -702,7 +702,7 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
             delete(
                 OzonProductModel
             )\
-            .where(OzonProductModel.id.in_(user_ids))
+            .where(OzonProductModel.id.in_(product_ids))
         )
 
         async with session as _session:
