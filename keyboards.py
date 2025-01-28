@@ -118,6 +118,9 @@ def create_remove_and_edit_sale_kb(user_id: int,
 
     _callback_data = f'{marker}_{user_id}_{product_id}'
 
+    if link.find('?') > 0:
+        link = link[:link.find('?')]
+
     if with_redirect:
         delete_callback_data = f'delete_{_callback_data}_{job_id}'
         edit_sale_callback_data = f'edit.sale_{_callback_data}_{link}_{sale}'
