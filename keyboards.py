@@ -93,13 +93,46 @@ def create_remove_kb(user_id: int,
 
     if with_redirect:
         _callback_data = f'delete_{_callback_data}'
-        _text = 'Удалить товар'
+        # _text = 'Удалить товар'
     else:
         _callback_data = f'delete.no.rd_{_callback_data}'
-        _text = 'Перестать отслеживать'
+    
+    _text = 'Перестать отслеживать'
 
     _kb.row(types.InlineKeyboardButton(text=_text,
                                        callback_data=_callback_data))
+    
+    return _kb
+
+
+def create_remove_and_edit_sale_kb(user_id: int,
+                                   product_id: str,
+                                   marker: Literal['wb', 'ozon'],
+                                   job_id: str,
+                                   link: str,
+                                   sale: float,
+                                   _kb: InlineKeyboardBuilder = None,
+                                   with_redirect: bool = True):
+    if not _kb:
+        _kb = InlineKeyboardBuilder()
+
+    _callback_data = f'{marker}_{user_id}_{product_id}'
+
+    if with_redirect:
+        delete_callback_data = f'delete_{_callback_data}_{job_id}'
+        edit_sale_callback_data = f'edit.sale_{_callback_data}_{link}_{sale}'
+        # _text = 'Удалить товар'
+    else:
+        # _callback_data = f'delete.no.rd_{_callback_data}'
+        delete_callback_data = f'delete.no.rd{_callback_data}_{job_id}'
+        edit_sale_callback_data = f'edit.sale.no.rd_{_callback_data}_{link}_{sale}'
+    
+    # _text = 'Перестать отслеживать'
+
+    _kb.row(types.InlineKeyboardButton(text='Изменить сумму скидки',
+                                       callback_data=edit_sale_callback_data))
+    _kb.row(types.InlineKeyboardButton(text='Перестать отслеживать',
+                                       callback_data=delete_callback_data))
     
     return _kb
 
@@ -138,7 +171,7 @@ def create_product_list_kb(user_id: int,
     _kb = InlineKeyboardBuilder()
 
     for product in product_list:
-        product_id, link, actaul_price, start_price, user_id, time_create, name, percent, job_id = product
+        product_id, link, actaul_price, start_price, user_id, time_create, name, sale, job_id = product
         _callback_data = f'view-product_{user_id}_{marker}_{product_id}'
 
         _kb.row(types.InlineKeyboardButton(text=name,

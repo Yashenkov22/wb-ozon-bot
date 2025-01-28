@@ -15,7 +15,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from sqlalchemy.orm import Session, joinedload, sessionmaker
-from sqlalchemy import and_, insert, select, update, or_, delete
+from sqlalchemy import and_, insert, select, update, or_, delete, func
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,9 +28,10 @@ from keyboards import (create_remove_kb, create_start_kb,
                        create_done_kb,
                        create_wb_start_kb,
                        add_back_btn,
-                       create_bot_start_kb)
+                       create_bot_start_kb,
+                       create_remove_and_edit_sale_kb)
 
-from states import SwiftSepaStates, ProductStates, OzonProduct
+from states import EditSale, SwiftSepaStates, ProductStates, OzonProduct
 
 from utils.handlers import (check_input_link,
                             check_user_last_message_time,
@@ -481,6 +482,125 @@ async def delete_callback(callback: types.CallbackQuery,
                 except Exception as ex:
                     print(ex)
 
+
+@main_router.callback_query(F.data.startswith('edit.sale'))
+async def edit_sale_callback(callback: types.CallbackQuery,
+                          state: FSMContext,
+                          session: AsyncSession,
+                          bot: Bot,
+                          scheduler: AsyncIOScheduler):
+    with_redirect = True
+
+    callback_data = callback.data.split('_')
+    callback_prefix = callback_data[0]
+
+    # product_model = OzonProductModel if marker == 'ozon' else WbProduct
+
+    marker, user_id, product_id, link, sale = callback_data[1:]
+
+    if callback_prefix.endswith('rd'):
+        with_redirect = False
+
+    # query = (
+    #     select(
+    #         product_model.sale
+    #     )\
+    #     .where(
+    #         and_(
+    #             product_model.id == product_id,
+    #             product_model.user_id == user_id,
+    #         )
+    #     )
+    # )
+
+    # async with session as _session:
+    #     res = await _session.execute(query)
+
+    #     sale = res.scalar_one_or_none()
+
+    # if not sale:
+    #     await callback.answer(text='Не получилось найти товар.\nПопробуйте еще раз',
+    #                           show_alert=True)
+    #     return
+
+    await state.update_data(
+        sale_data={
+            'user_id': user_id,
+            'product_id': product_id,
+            'marker': marker,
+            'link': link,
+            'sale': sale,
+        }
+        )
+    # await state.set_state(EditSale.new_sale)
+
+    _kb = create_or_add_cancel_btn()
+
+    await bot.edit_message_text(text=f'<b>Установленная скидка на Ваш {marker.upper()} <a href="{link}">товар: {sale}</b>\n\nУкажите новую скидку в следующем сообщении',
+                                chat_id=callback.from_user.id,
+                                message_id=callback.message.message_id,
+                                reply_markup=_kb.as_markup())
+    await callback.answer()
+    pass
+
+
+@main_router.message(EditSale.new_sale)
+async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    new_sale = message.text.strip()
+
+    if not new_sale.isdigit():
+        await message.answer(text=f'Невалидные данные\nОжидается число, передано: {new_sale}')
+        return
+    
+    data = await state.get_data()
+
+    msg: tuple = data.get('msg')
+
+    sale_data: dict = data.get('sale_data')
+
+    if not sale_data:
+        await message.answer('Ошибка')
+        return
+    
+    user_id = sale_data.get('user_id')
+    product_id = sale_data.get('product_id')
+    marker = sale_data.get('marker')
+    
+    product_model = OzonProductModel if marker == 'ozon' else WbProduct
+
+    query = (
+        update(
+            product_model
+        )\
+        .values(sale=float(new_sale))\
+        .where(
+            and_(
+                product_model.id == product_id,
+                product_model.user_id == user_id
+            )
+        )
+    )
+
+    async with session as _session:
+        try:
+            await _session.execute(query)
+            await _session.commit()
+        except Exception:
+            await session.rollback()
+            await message.answer('Не удалось обновить скидку')
+        else:
+            # await message.answer('Скидка обновлена')
+            _kb = create_or_add_cancel_btn()
+            await bot.edit_message_text(text='Скидка обновлена',
+                                        chat_id=msg[0],
+                                        message_id=msg[-1],
+                                        reply_markup=_kb.as_markup())
+
+
 @main_router.callback_query(F.data.startswith('product'))
 async def init_current_item(callback: types.CallbackQuery,
                             state: FSMContext):
@@ -534,6 +654,7 @@ async def view_product(callback: types.CallbackQuery,
                     WbProduct.time_create,
                     WbProduct.name,
                     WbProduct.sale,
+                    func.text('WB').label('product_marker'),
                     subquery.c.job_id)\
                 .select_from(WbProduct)\
                 .join(User,
@@ -558,7 +679,7 @@ async def view_product(callback: types.CallbackQuery,
             
             if _data:
                 _product = _data[0]
-                product_id, link, actaul_price, start_price, user_id, time_create, name, sale, job_id = _product
+                product_id, link, actaul_price, start_price, user_id, time_create, name, sale, product_marker, job_id = _product
 
         case 'ozon':
             # pass
@@ -579,6 +700,7 @@ async def view_product(callback: types.CallbackQuery,
                     OzonProductModel.time_create,
                     OzonProductModel.name,
                     OzonProductModel.sale,
+                    func.text('OZON').label('product_marker'),
                     subquery.c.job_id)\
                 .select_from(OzonProductModel)\
                 .join(User,
@@ -604,7 +726,7 @@ async def view_product(callback: types.CallbackQuery,
             if _data:
                 len(_data)
                 _product = _data[0]
-                product_id, link, actaul_price, start_price, user_id, time_create, name, sale, job_id = _product
+                product_id, link, actaul_price, start_price, user_id, time_create, name, sale, product_marker, job_id = _product
 
 
     time_create: datetime
@@ -616,15 +738,23 @@ async def view_product(callback: types.CallbackQuery,
     waiting_price = start_price - sale
 
     _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nУстановленная скидка: {sale}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+    
+    _new_text = f'Название: <a href="{link}">{name}</a>\nМаркетплейс: {product_marker}\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
     # else:
     #     _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\n\nДата начала отслеживания: {moscow_time}'
 
     # _kb = add_cancel_btn_to_photo_keyboard(photo_kb)
 
-    _kb = create_remove_kb(user_id=callback.from_user.id,
-                        product_id=product_id,
-                        marker=marker,
-                        job_id=job_id)
+    # _kb = create_remove_kb(user_id=callback.from_user.id,
+    #                     product_id=product_id,
+    #                     marker=marker,
+    #                     job_id=job_id)
+    _kb = create_remove_and_edit_sale_kb(user_id=callback.from_user.id,
+                                         product_id=product_id,
+                                         marker=marker,
+                                         job_id=job_id,
+                                         link=link,
+                                         sale=sale)
     _kb = create_or_add_cancel_btn(_kb)
 
     if msg:

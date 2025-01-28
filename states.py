@@ -21,3 +21,8 @@ class ProductStates(StatesGroup):
 class OzonProduct(StatesGroup):
     product = State()
     percent = State()
+
+
+
+class EditSale(StatesGroup):
+    new_sale = State()
