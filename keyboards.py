@@ -43,9 +43,9 @@ def create_bot_start_kb(marker: Literal['wb', 'ozon']):
     else:
         _kb.add(types.InlineKeyboardButton(text='Добавить товар',
                                            callback_data='add_product'))
-        _kb.add(types.InlineKeyboardButton(text='Посмотреть товар',
+        _kb.row(types.InlineKeyboardButton(text='Посмотреть товар',
                                            callback_data='list_product'))
-        _kb.add(types.InlineKeyboardButton(text='Удалить все товары',
+        _kb.row(types.InlineKeyboardButton(text='Удалить все товары',
                                            callback_data='remove_all_products')) 
 
     return _kb
@@ -73,7 +73,7 @@ def create_done_kb(marker: Literal['wb_punkt',
                                    'ozon_product']):
     _kb = InlineKeyboardBuilder()
 
-    _kb.add(types.InlineKeyboardButton(text='Отправить',
+    _kb.row(types.InlineKeyboardButton(text='Отправить',
                                        callback_data=f'done__{marker}'))
     
     return _kb
@@ -183,7 +183,7 @@ def add_or_create_close_kb(_kb: InlineKeyboardBuilder = None):
     if not _kb:
         _kb = InlineKeyboardBuilder()
 
-    _kb.add(types.InlineKeyboardButton(text='Закрыть',
+    _kb.row(types.InlineKeyboardButton(text='Закрыть',
                                        callback_data='close'))
     
     return _kb
