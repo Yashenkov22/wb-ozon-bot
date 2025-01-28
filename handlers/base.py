@@ -503,7 +503,7 @@ async def edit_sale_callback(callback: types.CallbackQuery,
 
     # product_model = OzonProductModel if marker == 'ozon' else WbProduct
 
-    marker, user_id, product_id, link, sale = callback_data[1:]
+    marker, user_id, product_id = callback_data[1:]
 
     if callback_prefix.endswith('rd'):
         with_redirect = False
