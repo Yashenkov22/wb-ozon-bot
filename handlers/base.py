@@ -600,6 +600,10 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
                                         chat_id=msg[0],
                                         message_id=msg[-1],
                                         reply_markup=_kb.as_markup())
+    try:
+        await message.delete()
+    except Exception:
+        pass
 
 
 @main_router.callback_query(F.data.startswith('product'))
