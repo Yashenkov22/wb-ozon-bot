@@ -579,8 +579,8 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
         .values(sale=float(new_sale))\
         .where(
             and_(
-                product_model.id == product_id,
-                product_model.user_id == user_id
+                product_model.id == int(product_id),
+                product_model.user_id == int(user_id)
             )
         )
     )
