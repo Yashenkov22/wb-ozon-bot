@@ -589,7 +589,8 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
         try:
             await _session.execute(query)
             await _session.commit()
-        except Exception:
+        except Exception as ex:
+            print(ex)
             await session.rollback()
             await message.answer('Не удалось обновить скидку')
         else:
