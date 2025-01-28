@@ -754,6 +754,7 @@ async def view_product(callback: types.CallbackQuery,
     #                     product_id=product_id,
     #                     marker=marker,
     #                     job_id=job_id)
+    print(link)
     _kb = create_remove_and_edit_sale_kb(user_id=callback.from_user.id,
                                          product_id=product_id,
                                          marker=marker,
