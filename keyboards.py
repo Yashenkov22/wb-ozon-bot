@@ -109,8 +109,6 @@ def create_remove_and_edit_sale_kb(user_id: int,
                                    product_id: str,
                                    marker: Literal['wb', 'ozon'],
                                    job_id: str,
-                                   link: str,
-                                   sale: float,
                                    _kb: InlineKeyboardBuilder = None,
                                    with_redirect: bool = True):
     if not _kb:
@@ -118,25 +116,19 @@ def create_remove_and_edit_sale_kb(user_id: int,
 
     _callback_data = f'{marker}_{user_id}_{product_id}'
 
-    if link.find('?') > 0:
-        print('yes')
-        link = link[:link.find('?')]
-
-    print(link)
-
     if with_redirect:
         delete_callback_data = f'delete_{_callback_data}_{job_id}'
-        edit_sale_callback_data = f'edit.sale_{_callback_data}_{link}_{sale}'
+        edit_sale_callback_data = f'edit.sale_{_callback_data}'
         # _text = 'Удалить товар'
     else:
         # _callback_data = f'delete.no.rd_{_callback_data}'
         delete_callback_data = f'delete.no.rd{_callback_data}_{job_id}'
-        edit_sale_callback_data = f'edit.sale.no.rd_{_callback_data}_{link}_{sale}'
+        edit_sale_callback_data = f'edit.sale.no.rd_{_callback_data}'
     
     # _text = 'Перестать отслеживать'
 
-    # _kb.row(types.InlineKeyboardButton(text='Изменить сумму скидки',
-    #                                    callback_data=edit_sale_callback_data))
+    _kb.row(types.InlineKeyboardButton(text='Изменить сумму скидки',
+                                       callback_data=edit_sale_callback_data))
     _kb.row(types.InlineKeyboardButton(text='Перестать отслеживать',
                                        callback_data=delete_callback_data))
     

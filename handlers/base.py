@@ -489,6 +489,13 @@ async def edit_sale_callback(callback: types.CallbackQuery,
                           session: AsyncSession,
                           bot: Bot,
                           scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    _sale_data = data.get('sale_data')
+
+    link = _sale_data.get('link')
+    sale = _sale_data.get('sale')
+
     with_redirect = True
 
     callback_data = callback.data.split('_')
@@ -600,6 +607,8 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
                                         chat_id=msg[0],
                                         message_id=msg[-1],
                                         reply_markup=_kb.as_markup())
+            
+            await state.update_data(sale_data=None)
     try:
         await message.delete()
     except Exception:
@@ -754,7 +763,14 @@ async def view_product(callback: types.CallbackQuery,
     #                     product_id=product_id,
     #                     marker=marker,
     #                     job_id=job_id)
-    print(link)
+    # print(link)
+    await state.update_data(
+        sale_data={
+            'link': link,
+            'sale': sale,
+        }
+    )
+
     _kb = create_remove_and_edit_sale_kb(user_id=callback.from_user.id,
                                          product_id=product_id,
                                          marker=marker,
