@@ -379,11 +379,11 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
         sizes = d.get('products')[0].get('sizes')
 
-        _product_name = d.get('products')[0].get('name')
+        product_name = d.get('products')[0].get('name')
 
-        print('WB PARSED NAME', _product_name)
+        print('WB PARSED NAME', product_name)
 
-        _product_name = _name if _name else _product_name
+        product_name = _name if _name else product_name
 
         _basic_price = _product_price = None
         
@@ -405,7 +405,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
                                         wb_product_id=wb_product_id,
                                         wb_start_price=float(_product_price),
                                         wb_product_price=float(_product_price),
-                                        wb_product_name=_product_name)
+                                        wb_product_name=product_name)
                 # await state.update_data(wb_product_id=wb_product_id)
                 # await state.update_data(wb_start_price=float(_product_price))
                 # await state.update_data(wb_product_price=float(_product_price))
@@ -451,8 +451,7 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     # _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nСкидка: {sale}\nОжидаемая цена: {waiting_price}'
 
-    _text = f'Название: <a href="{link}">{_product_name}</a>\nМаркетплейс: WB\n\nНачальная цена: {start_price}\nАктуальная цена: {start_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
-
+    _text = f'Название: <a href="{link}">{product_name}</a>\nМаркетплейс: WB\n\nНачальная цена: {start_price}\nАктуальная цена: {start_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
 
     if msg:
         try:
