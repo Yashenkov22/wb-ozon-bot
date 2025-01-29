@@ -45,6 +45,7 @@ def check_input_link(link: str):
 
 
 def generate_sale_for_price(price: float):
+    price = float(price)
     if 0 <= price <= 100:
         _sale = 10
     elif 100 < price <= 500:
@@ -422,6 +423,7 @@ async def save_product(user_data: dict,
                     'short_link': _new_short_link,
                     'actual_price': _d.get('cardPrice'),
                     'start_price': _d.get('cardPrice'),
+                    'basic_price': _d.get('price'),
                     #
                     'sale': _sale,
                     #
@@ -983,6 +985,7 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                     'short_link': data.get('ozon_short_link'),
                     'actual_price': data.get('ozon_actual_price'),
                     'start_price': data.get('ozon_start_price'),
+                    'basic_price': data.get('ozon_basic_price'),
                     'sale': int(data.get('sale')),
                     'name': data.get('ozon_product_name'),
                     'time_create': datetime.now(),

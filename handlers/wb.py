@@ -33,7 +33,7 @@ from keyboards import (create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import save_data_to_storage, check_user, clear_state_and_redirect_to_start, show_item, show_item_list
+from utils.handlers import save_data_to_storage, check_user, clear_state_and_redirect_to_start, show_item, show_item_list, generate_sale_for_price
 
 from db.base import UserJob, WbProduct, WbPunkt, User
 
@@ -436,18 +436,50 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
         except Exception:
             pass
 
-    _kb = create_or_add_cancel_btn()
+    sale = generate_sale_for_price(_product_price)
+
+    await state.update_data(sale=float(sale))
+
+    _kb = create_done_kb(marker='wb_product')
+    _kb = create_or_add_cancel_btn(_kb)
+
+    link = data.get('wb_product_link')
+    start_price = data.get('wb_start_price')
+    product_price = data.get('wb_product_price')
+
+    waiting_price = float(product_price) - float(sale)
+
+    _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nСкидка: {sale}\nОжидаемая цена: {waiting_price}'
 
     if msg:
-        await bot.edit_message_text(text=_text,
-                                    chat_id=msg[0],
-                                    message_id=msg[-1],
-                                    reply_markup=_kb.as_markup())
+        try:
+            await bot.edit_message_text(text=_text,
+                                        chat_id=msg[0],
+                                        message_id=msg[-1],
+                                        reply_markup=_kb.as_markup())
+        except Exception:
+            await message.answer(text=_text,
+                                reply_markup=_kb.as_markup())
     else:
         await message.answer(text=_text,
                              reply_markup=_kb.as_markup())
+    try:
+        await message.delete()
+    except Exception:
+        pass
 
-    await message.delete()
+    # _kb = create_or_add_cancel_btn()
+
+    # if msg:
+    #     await bot.edit_message_text(text=_text,
+    #                                 chat_id=msg[0],
+    #                                 message_id=msg[-1],
+    #                                 reply_markup=_kb.as_markup())
+    # else:
+    #     await message.answer(text=_text,
+    #                          reply_markup=_kb.as_markup())
+
+    # await message.delete()
 
 
 

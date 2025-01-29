@@ -86,7 +86,7 @@ class WbProduct(Base):
                 index=True)
     link = Column(String)
     short_link = Column(String)
-    basic_price = Column(Float)
+    # basic_price = Column(Float)
     start_price = Column(Float)
     actual_price = Column(Float)
     sale = Column(Float)

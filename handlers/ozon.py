@@ -31,7 +31,12 @@ from keyboards import (create_remove_kb, create_start_kb,
                        create_bot_start_kb)
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
-from utils.handlers import clear_state_and_redirect_to_start, save_data_to_storage, check_user, show_item, show_item_list
+from utils.handlers import (clear_state_and_redirect_to_start,
+                            save_data_to_storage,
+                            check_user,
+                            show_item,
+                            show_item_list,
+                            generate_sale_for_price)
 
 from db.base import OzonProduct as OzonProductModel, User, UserJob
 # from .base import start
@@ -141,6 +146,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
     # _kb = create_done_kb(marker='ozon_product')
 
+    #proccess_msg = await bot.send_message('Товар добавляется')
+
     _kb = create_or_add_cancel_btn()
 
     if link.startswith('https://ozon.ru/t/'):
@@ -177,6 +184,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                 print(f'OZON RESPONSE CODE {response.status}')
                 if response.status == 408:
                     print('OZON TIMEOUT')
+                    # proccess_msg.edit_text('marker товар не получилось добавить, link')
                     await clear_state_and_redirect_to_start(message,
                                                             state,
                                                             bot)
@@ -249,12 +257,15 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
             await state.update_data(ozon_start_price=_d.get('cardPrice', 0))
             await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
+            await state.update_data(ozon_basic_price=_d.get('price', 0))
 
             price_text = '|'.join(str(v) for v in _d.items())
 
             # await sub_msg.edit_text(text='Товар проверен')
         else:
             _text = 'Возникли проблемы'
+            # proccess_msg.edit_text('marker товар не получилось добавить, link')
+
             # await sub_msg.edit_text(text=f'{_text}. Ожидается ссылка, передано {message.text}')
             await clear_state_and_redirect_to_start(message,
                                                     state,
@@ -273,7 +284,33 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
         await state.update_data(ozon_product=message.text)  # ?
 
-        await state.set_state(OzonProduct.percent)
+        # await state.set_state(OzonProduct.percent)
+
+        _kb = create_done_kb(marker='ozon_product')
+        _kb = create_or_add_cancel_btn(_kb)
+
+        link = data.get('ozon_link')
+        start_price = data.get('ozon_start_price')
+        product_price = data.get('ozon_actual_price')
+
+        sale = generate_sale_for_price(start_price)
+        await state.update_data(sale=sale)
+
+        waiting_price = float(product_price) - sale
+
+        _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nУстановленная скидка: {sale}\nОжидаемая цена: {waiting_price}'
+
+        if msg:
+            await bot.edit_message_text(text=_text,
+                                        chat_id=msg[0],
+                                        message_id=msg[-1],
+                                        reply_markup=_kb.as_markup())
+        else:
+            await message.answer(text=_text,
+                                reply_markup=_kb.as_markup())
+
+        await message.delete()
+#
 
         if msg:
             await bot.edit_message_text(text=_text,
@@ -286,6 +323,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                                 reply_markup=_kb.as_markup())
             
     except Exception as ex:
+        # proccess_msg.edit_text('marker товар не получилось добавить, link')
         print(ex)
         pass
     finally:
