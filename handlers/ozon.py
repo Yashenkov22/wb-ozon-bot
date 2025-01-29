@@ -289,9 +289,9 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         _kb = create_done_kb(marker='ozon_product')
         _kb = create_or_add_cancel_btn(_kb)
 
-        link = data.get('ozon_link')
-        start_price = data.get('ozon_start_price')
-        product_price = data.get('ozon_actual_price')
+        # link = data.get('ozon_link')
+        start_price = _d.get('cardPrice')
+        product_price = _d.get('cardPrice')
 
         sale = generate_sale_for_price(start_price)
         await state.update_data(sale=sale)

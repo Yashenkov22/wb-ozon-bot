@@ -443,9 +443,9 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
     _kb = create_done_kb(marker='wb_product')
     _kb = create_or_add_cancel_btn(_kb)
 
-    link = data.get('wb_product_link')
-    start_price = data.get('wb_start_price')
-    product_price = data.get('wb_product_price')
+    # link = data.get('wb_product_link')
+    start_price = _product_price
+    product_price = _product_price
 
     waiting_price = float(product_price) - float(sale)
 
