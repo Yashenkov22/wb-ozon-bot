@@ -278,7 +278,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         # example_different = (_product_price * example_percent) / 100
         example_price = _product_price - example_sale
 
-        _text = f'Основная цена товара: {_product_price}\nАктуальная цена товара: {_product_price}\nВведите <b>скидку как число</b>.\nКогда цена товара снизится <b>на эту сумму или ниже</b>, мы сообщим Вам.\n\nПример:\n   Скидка: {example_sale}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_sale} = {example_price}'
+        # _text = f'Основная цена товара: {_product_price}\nАктуальная цена товара: {_product_price}\nВведите <b>скидку как число</b>.\nКогда цена товара снизится <b>на эту сумму или ниже</b>, мы сообщим Вам.\n\nПример:\n   Скидка: {example_sale}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_sale} = {example_price}'
 
         # _text = f'Ваш продукт\n{message.text}\nЦена продукта: {price_text}'
 
@@ -300,7 +300,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
         # _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nУстановленная скидка: {sale}\nОжидаемая цена: {waiting_price}'
 
-        _text = f'Название: <a href="{link}">{_product_name}</a>\nМаркетплейс: Ozon\n\nНачальная цена: {start_price}\nАктуальная цена: {start_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
+        _text = f'Название: <a href="{link}">{_product_name}</a>\nМаркетплейс: Ozon\n\nОсновная цена(без Ozon карты): {_d.get('price', 0)}\nНачальная цена: {start_price}\nАктуальная цена: {start_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
 
 
         if msg:
