@@ -449,7 +449,10 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     waiting_price = float(product_price) - float(sale)
 
-    _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nСкидка: {sale}\nОжидаемая цена: {waiting_price}'
+    # _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nСкидка: {sale}\nОжидаемая цена: {waiting_price}'
+
+    _text = f'Название: <a href="{link}">{_product_name}</a>\nМаркетплейс: WB\n\nНачальная цена: {start_price}\nАктуальная цена: {start_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
+
 
     if msg:
         try:
