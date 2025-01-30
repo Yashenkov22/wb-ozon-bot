@@ -157,7 +157,7 @@ async def add_any_product(message: types.Message | types.CallbackQuery,
     except Exception:
         pass
 
-    
+
 @main_router.message(AnyProductStates.link)
 async def any_product_proccess(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
@@ -205,7 +205,8 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
         await bot.delete_message(chat_id=add_msg[0],
                                  message_id=add_msg[-1])
         await message.delete()
-    except Exception:
+    except Exception as ex:
+        print(ex)
         pass
     
 
