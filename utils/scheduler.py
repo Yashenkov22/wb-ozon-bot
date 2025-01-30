@@ -1,3 +1,4 @@
+import json
 import re
 import pytz
 import aiohttp
@@ -255,66 +256,166 @@ async def push_check_ozon_price(user_id: str,
                         break
 
                 print(_d)
-
-                _product_price = float(_d.get('cardPrice'))
-                
-                check_price = _product_price == actual_price
-
-                if check_price:
-                    _text = 'цена не изменилась'
-                    print(f'{_text} user {user_id} product {_name}')
-                    return
-                else:
-                    _waiting_price = start_price - sale
-                    # if percent:
-                    #     _waiting_price = start_price - ((start_price * percent) / 100)
-
-                    query = (
-                        update(
-                            OzonProduct
-                        )\
-                        .values(actual_price=_product_price)\
-                        .where(OzonProduct.id == product_id)
-                    )
-                    async for session in get_session():
-                        async with session as _session:
-                            try:
-                                await session.execute(query)
-                                await session.commit()
-                            except Exception as ex:
-                                await session.rollback()
-                                print(ex)
-                        # if _waiting_price == actual_price:
-                    
-                    _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
-                    
-                    # if _waiting_price:
-                    if _waiting_price >= _product_price:
-                        _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
-                        
-                        _kb = create_remove_kb(user_id,
-                                                product_id,
-                                                marker='ozon',
-                                                job_id=job_id,
-                                                with_redirect=False)
-                        
-                        _kb = add_or_create_close_kb(_kb)
-
-                        await bot.send_message(chat_id=user_id,
-                                                text=_text,
-                                                reply_markup=_kb.as_markup())
-                        return
-                    
-                    if _product_price < actual_price:
-                        await bot.send_message(chat_id=user_id,
-                                                text=_text,
-                                                reply_markup=_kb.as_markup())
-                        return
-
+                # start_price = _d.get('cardPrice', 0)
+                _product_price = _d.get('cardPrice', 0)
+                # basic_price = _d.get('price', 0)
             else:
-                _text = f'Не получилось спарсить цену {_name}'
-                print(f'{_text} {res[:100]}')
+                try:
+                    response_data = res.split('|')[-1]
+
+                    json_data: dict = json.loads(response_data)
+
+                    script_list = json_data.get('seo').get('script')
+
+                    # if v:
+                    #     t = v.get('script')
+
+                    if script_list:
+                        inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
+
+                        print('innerHTML', inner_html)
+
+                        if inner_html:
+                            # print(type(b))
+                            # try:
+                            inner_html_json: dict = json.loads(inner_html)
+                            offers = inner_html_json.get('offers')
+
+                            # print(offers)
+
+                            _price = offers.get('price')
+
+                            # start_price = _price
+                            _product_price = _price
+                            # basic_price = _price
+
+                            # price_dict = {
+                            #     'ozon_start_price': 0,
+                            #     'ozon_actual_price': float(_p),
+                            #     'ozon_basic_price': float(_p),
+                            # }
+
+                            # await state.update_data(data=price_dict)
+                            
+                            print('Price', _price)
+                        # except Exception as ex:
+                        #     print('problem', ex)
+                            return
+                except Exception as ex:
+                    print('scheduler parse inner html error', ex)
+                    return
+
+#
+            _product_price = float(_product_price)
+            
+            check_price = _product_price == actual_price
+
+            if check_price:
+                _text = 'цена не изменилась'
+                print(f'{_text} user {user_id} product {_name}')
                 return
+            else:
+                _waiting_price = start_price - sale
+                # if percent:
+                #     _waiting_price = start_price - ((start_price * percent) / 100)
+
+                query = (
+                    update(
+                        OzonProduct
+                    )\
+                    .values(actual_price=_product_price)\
+                    .where(OzonProduct.id == product_id)
+                )
+                async for session in get_session():
+                    async with session as _session:
+                        try:
+                            await session.execute(query)
+                            await session.commit()
+                        except Exception as ex:
+                            await session.rollback()
+                            print(ex)
+                    # if _waiting_price == actual_price:
+                
+                _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                
+                # if _waiting_price:
+                if _waiting_price >= _product_price:
+                    _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                    
+                    _kb = create_remove_kb(user_id,
+                                            product_id,
+                                            marker='ozon',
+                                            job_id=job_id,
+                                            with_redirect=False)
+                    
+                    _kb = add_or_create_close_kb(_kb)
+
+                    await bot.send_message(chat_id=user_id,
+                                            text=_text,
+                                            reply_markup=_kb.as_markup())
+                    return
+                    
+                    # if _product_price < actual_price:
+                    #     await bot.send_message(chat_id=user_id,
+                    #                             text=_text,
+                    #                             reply_markup=_kb.as_markup())
+                    #     return
+
+            # else:
+                # try:
+                #     response_data = res.split('|')[-1]
+
+                #     json_data: dict = json.loads(response_data)
+
+                #     script_list = json_data.get('seo').get('script')
+
+                #     # if v:
+                #     #     t = v.get('script')
+
+                #     if script_list:
+                #         inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
+
+                #         print('innerHTML', inner_html)
+
+                #         if inner_html:
+                #             # print(type(b))
+                #             try:
+                #                 inner_html_json: dict = json.loads(inner_html)
+                #                 offers = inner_html_json.get('offers')
+
+                #                 # print(offers)
+
+                #                 _price = offers.get('price')
+
+                #                 start_price = _price
+                #                 actual_price = _price
+                #                 basic_price = _price
+
+                #                 # price_dict = {
+                #                 #     'ozon_start_price': 0,
+                #                 #     'ozon_actual_price': float(_p),
+                #                 #     'ozon_basic_price': float(_p),
+                #                 # }
+
+                #                 # await state.update_data(data=price_dict)
+                                
+                #                 print('Price', _price)
+                #             except Exception as ex:
+                                
+                #                 print('problem', ex)
+
+
+
+                        # print('\nV', v)
+                        # print('\nT', t)
+                #     else:
+                #         print('problem')
+                #         return
+                # except Exception as ex:
+                #     print(ex)
+                # _text = f'Не получилось спарсить цену {_name}'
+                # print(f'{_text} {res[:100]}')
+                # return
 
             # await bot.send_message(chat_id=user_id,
             #                         text=_text)

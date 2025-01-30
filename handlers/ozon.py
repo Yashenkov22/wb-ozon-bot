@@ -115,7 +115,6 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         return
 
     data = await state.get_data()
-
     msg: tuple = data.get('msg')
 
     query = (
@@ -266,44 +265,69 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                     break
 
             print(_d)
+            
+            start_price =  _d.get('cardPrice', 0)
+            actual_price = _d.get('cardPrice', 0)
+            basic_price = _d.get('price', 0)
+            
+            # price_dict = {
+            #     'ozon_start_price': start_price,
+            #     'ozon_actual_price': actual_price,
+            #     'ozon_basic_price': basic_price,
+            # }
 
-            await state.update_data(ozon_start_price=_d.get('cardPrice', 0))
-            await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
-            await state.update_data(ozon_basic_price=_d.get('price', 0))
+            # await state.update_data(data=price_dict)
+
+
+            # await state.update_data(ozon_start_price=_d.get('cardPrice', 0))
+            # await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
+            # await state.update_data(ozon_basic_price=_d.get('price', 0))
 
             price_text = '|'.join(str(v) for v in _d.items())
 
             # await sub_msg.edit_text(text='Товар проверен')
         else:
             try:
-                r = res.split('|')[-1]
+                response_data = res.split('|')[-1]
 
-                f: dict = json.loads(r)
+                json_data: dict = json.loads(response_data)
 
-                v = f.get('seo')
+                script_list = json_data.get('seo').get('script')
 
-                if v:
-                    t = v.get('script')
+                # if v:
+                #     t = v.get('script')
 
-                    if t:
-                        b = t[0].get('innerHTML') #.get('offers').get('price')
+                if script_list:
+                    inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
 
-                        print('innerHTML', b)
+                    print('innerHTML', inner_html)
 
-                        if b:
-                            print(type(b))
-                            try:
-                                p = json.loads(b)
-                                y = p.get('offers')
+                    if inner_html:
+                        # print(type(b))
+                        try:
+                            inner_html_json: dict = json.loads(inner_html)
+                            offers = inner_html_json.get('offers')
 
-                                print(y)
+                            # print(offers)
 
-                                _p = y.get('price')
+                            _price = offers.get('price')
 
-                                print('Price', _p)
-                            except Exception as ex:
-                                
-                                print('problem', ex)
+                            start_price = _price
+                            actual_price = _price
+                            basic_price = _price
+
+                            # price_dict = {
+                            #     'ozon_start_price': 0,
+                            #     'ozon_actual_price': float(_p),
+                            #     'ozon_basic_price': float(_p),
+                            # }
+
+                            # await state.update_data(data=price_dict)
+                            
+                            print('Price', _price)
+                        except Exception as ex:
+                            
+                            print('problem', ex)
 
 
 
@@ -314,13 +338,18 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                     return
             except Exception as ex:
                 print(ex)
+                try:
+                    await bot.delete_message(chat_id=msg[0],
+                                            message_id=msg[-1])
+                except Exception:
+                    pass
                 await clear_state_and_redirect_to_start(message,
                                                         state,
                                                         bot)
                 await message.delete()
                 return
-            else:
-                print(f)
+            # else:
+            #     print(f)
 
             # _text = 'Возникли проблемы'
             # proccess_msg.edit_text('marker товар не получилось добавить, link')
@@ -331,11 +360,19 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
             #                                         bot)
             # await message.delete()
             # return
+
+        price_dict = {
+            'ozon_start_price': start_price,
+            'ozon_actual_price': actual_price,
+            'ozon_basic_price': basic_price,
+        }
+
+        await state.update_data(data=price_dict)
         
-        _product_price = _d.get('cardPrice')
-        example_sale = 100
+        # _product_price = _d.get('cardPrice')
+        # example_sale = 100
         # example_different = (_product_price * example_percent) / 100
-        example_price = _product_price - example_sale
+        # example_price = _product_price - example_sale
 
         # _text = f'Основная цена товара: {_product_price}\nАктуальная цена товара: {_product_price}\nВведите <b>скидку как число</b>.\nКогда цена товара снизится <b>на эту сумму или ниже</b>, мы сообщим Вам.\n\nПример:\n   Скидка: {example_sale}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_sale} = {example_price}'
 
@@ -349,24 +386,24 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
         _kb = create_or_add_cancel_btn(_kb)
 
         # link = data.get('ozon_link')
-        start_price = _d.get('cardPrice')
-        product_price = _d.get('cardPrice')
+        # start_price = _d.get('cardPrice')
+        # product_price = _d.get('cardPrice')
 
         sale = generate_sale_for_price(start_price)
         await state.update_data(sale=sale)
 
-        waiting_price = float(product_price) - sale
+        # waiting_price = float(product_price) - sale
 
 
         _text_start_price = generate_pretty_amount(start_price)
-        _text_product_price = generate_pretty_amount(product_price)
-        _text_basic_price = generate_pretty_amount(_d.get("price", 0))
+        _text_actual_price = generate_pretty_amount(actual_price)
+        _text_basic_price = generate_pretty_amount(basic_price)
 
         _text_sale = generate_pretty_amount(sale)
         _text_price_with_sale = generate_pretty_amount((start_price - sale))
         # _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nУстановленная скидка: {sale}\nОжидаемая цена: {waiting_price}'
 
-        _text = f'Название: <a href="{link}">{_product_name}</a>\nМаркетплейс: Ozon\n\nОсновная цена(без Ozon карты): {_text_basic_price}\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {_text_sale}\nОжидаемая цена: {_text_price_with_sale}'
+        _text = f'Название: <a href="{link}">{_product_name}</a>\nМаркетплейс: Ozon\n\nОсновная цена(без Ozon карты): {_text_basic_price}\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_actual_price}\n\nОтслеживается изменение цены на: {_text_sale}\nОжидаемая цена: {_text_price_with_sale}'
 
 
         if msg:
