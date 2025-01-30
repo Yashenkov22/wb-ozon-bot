@@ -36,7 +36,8 @@ from utils.handlers import (clear_state_and_redirect_to_start,
                             check_user,
                             show_item,
                             show_item_list,
-                            generate_sale_for_price)
+                            generate_sale_for_price,
+                            generate_pretty_amount)
 
 from db.base import OzonProduct as OzonProductModel, User, UserJob
 # from .base import start
@@ -298,9 +299,13 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
         waiting_price = float(product_price) - sale
 
+
+        _text_start_price = generate_pretty_amount(start_price)
+        _text_product_price = generate_pretty_amount(product_price)
+        _text_basic_price = generate_pretty_amount(_d.get("price", 0))
         # _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nУстановленная скидка: {sale}\nОжидаемая цена: {waiting_price}'
 
-        _text = f'Название: <a href="{link}">{_product_name}</a>\nМаркетплейс: Ozon\n\nОсновная цена(без Ozon карты): {_d.get("price", 0)}\nНачальная цена: {start_price}\nАктуальная цена: {start_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
+        _text = f'Название: <a href="{link}">{_product_name}</a>\nМаркетплейс: Ozon\n\nОсновная цена(без Ozon карты): {_text_basic_price}\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
 
 
         if msg:

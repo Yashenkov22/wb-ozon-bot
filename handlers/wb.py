@@ -33,7 +33,7 @@ from keyboards import (create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import save_data_to_storage, check_user, clear_state_and_redirect_to_start, show_item, show_item_list, generate_sale_for_price
+from utils.handlers import generate_pretty_amount, save_data_to_storage, check_user, clear_state_and_redirect_to_start, show_item, show_item_list, generate_sale_for_price
 
 from db.base import UserJob, WbProduct, WbPunkt, User
 
@@ -449,9 +449,14 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     waiting_price = float(product_price) - float(sale)
 
+
+    _text_start_price = generate_pretty_amount(start_price)
+    _text_product_price = generate_pretty_amount(product_price)
+    # _text_basic_price = generate_pretty_amount(_d.get("price", 0))
+
     # _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nСкидка: {sale}\nОжидаемая цена: {waiting_price}'
 
-    _text = f'Название: <a href="{link}">{product_name}</a>\nМаркетплейс: WB\n\nНачальная цена: {start_price}\nАктуальная цена: {start_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
+    _text = f'Название: <a href="{link}">{product_name}</a>\nМаркетплейс: WB\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
 
     if msg:
         try:

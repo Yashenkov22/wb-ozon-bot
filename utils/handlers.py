@@ -60,6 +60,15 @@ def generate_sale_for_price(price: float):
     return _sale
 
 
+def generate_pretty_amount(price: str | float):
+    _sign = '₽'
+    price = int(price)
+
+    pretty_price = f'{price:,}'.replace(',', ' ') + f' {_sign}'
+
+    return pretty_price
+
+
 async def check_user_last_message_time(user_id: int,
                                        now_time: datetime,
                                        message_text: str,

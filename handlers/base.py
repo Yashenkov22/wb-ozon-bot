@@ -34,7 +34,7 @@ from keyboards import (create_remove_kb, create_start_kb,
 from states import EditSale, SwiftSepaStates, ProductStates, OzonProduct
 
 from utils.handlers import (check_input_link,
-                            check_user_last_message_time,
+                            check_user_last_message_time, generate_pretty_amount,
                             save_data_to_storage,
                             check_user,
                             show_item,
@@ -751,9 +751,13 @@ async def view_product(callback: types.CallbackQuery,
     #     waiting_price = start_price - ((start_price * percent) / 100)
     waiting_price = start_price - sale
 
+    _text_start_price = generate_pretty_amount(start_price)
+    _text_product_price = generate_pretty_amount(actaul_price)
+    # _text_basic_price = generate_pretty_amount(_d.get("price", 0))
+
     # _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nУстановленная скидка: {sale}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
     
-    _text = f'Название: <a href="{link}">{name}</a>\nМаркетплейс: {product_marker}\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
+    _text = f'Название: <a href="{link}">{name}</a>\nМаркетплейс: {product_marker}\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
     # else:
     #     _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\n\nДата начала отслеживания: {moscow_time}'
 
