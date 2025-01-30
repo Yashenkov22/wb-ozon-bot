@@ -297,6 +297,10 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                                 y = p.get('offers')
 
                                 print(y)
+
+                                _p = y.get('price')
+
+                                print('Price', _p)
                             except Exception as ex:
                                 
                                 print('problem', ex)
