@@ -17,6 +17,8 @@ from keyboards import add_or_create_close_kb, create_remove_kb
 
 from bot22 import bot
 
+from utils.handlers import generate_pretty_amount
+
 
 timezone = pytz.timezone('Europe/Moscow')
 
@@ -134,10 +136,15 @@ async def push_check_wb_price(user_id: str,
                 # if _waiting_price == actual_price:
                 _waiting_price = start_price - sale
 
-                _text = f'WB товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                pretty_product_price = generate_pretty_amount(_product_price)
+                pretty_actual_price = generate_pretty_amount(actual_price)
+                pretty_sale = generate_pretty_amount(sale)
+                pretty_waiting_price = generate_pretty_amount(_waiting_price)
+
+                _text = f'WB товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
 
                 if _waiting_price >= _product_price:
-                    _text = f'WB товар\nНазвание: {name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена товара, которую(или ниже) Вы ждали ({_waiting_price})\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                    _text = f'WB товар\nНазвание: {name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\nЦена товара, которую(или ниже) Вы ждали ({pretty_waiting_price})\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
                     
                     _kb = create_remove_kb(user_id,
                                             product_id,
@@ -335,12 +342,17 @@ async def push_check_ozon_price(user_id: str,
                             await session.rollback()
                             print(ex)
                     # if _waiting_price == actual_price:
+
+                pretty_product_price = generate_pretty_amount(_product_price)
+                pretty_actual_price = generate_pretty_amount(actual_price)
+                pretty_sale = generate_pretty_amount(sale)
+                pretty_waiting_price = generate_pretty_amount(_waiting_price)
                 
-                _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена изменилась\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
                 
                 # if _waiting_price:
                 if _waiting_price >= _product_price:
-                    _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {sale}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {_product_price} (было {actual_price})'
+                    _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
                     
                     _kb = create_remove_kb(user_id,
                                             product_id,
