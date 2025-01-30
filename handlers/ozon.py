@@ -291,6 +291,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                         print('innerHTML', b)
 
                         if b:
+                            print(type(b))
                             y = b.get('offers')
 
                             print(y)
