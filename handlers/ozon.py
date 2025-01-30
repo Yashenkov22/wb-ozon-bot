@@ -266,9 +266,9 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
             print(_d)
             
-            start_price =  _d.get('cardPrice', 0)
-            actual_price = _d.get('cardPrice', 0)
-            basic_price = _d.get('price', 0)
+            start_price =  int(_d.get('cardPrice', 0))
+            actual_price = int(_d.get('cardPrice', 0))
+            basic_price = int(_d.get('price', 0))
             
             # price_dict = {
             #     'ozon_start_price': start_price,
@@ -313,9 +313,9 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
                             _price = offers.get('price')
 
-                            start_price = _price
-                            actual_price = _price
-                            basic_price = _price
+                            start_price = int(_price)
+                            actual_price = int(_price)
+                            basic_price = int(_price)
 
                             # price_dict = {
                             #     'ozon_start_price': 0,
