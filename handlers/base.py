@@ -152,9 +152,12 @@ async def add_any_product(message: types.Message | types.CallbackQuery,
     # else:
     #     await callback.message.answer(text=_text,
     #                          reply_markup=_kb.as_markup())
-    
-    # await callback.answer()
+    try:
+        await message.delete()
+    except Exception:
+        pass
 
+    
 @main_router.message(AnyProductStates.link)
 async def any_product_proccess(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
