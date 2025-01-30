@@ -286,9 +286,14 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
                     t = v.get('script')
 
                     if t:
-                        b = t.get('innerHTML').get('offers').get('price')
+                        b = t.get('innerHTML') #.get('offers').get('price')
 
-                        print('PRICE', b)
+                        print('innerHTML', b)
+
+                        if b:
+                            y = b.get('offers')
+
+                            print(y)
 
 
 
