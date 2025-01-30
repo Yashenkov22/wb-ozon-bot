@@ -61,6 +61,16 @@ def create_or_add_cancel_btn(_kb: InlineKeyboardBuilder = None):
     return _kb
 
 
+def create_or_add_exit_btn(_kb: InlineKeyboardBuilder = None):
+    if _kb is None:
+        _kb = InlineKeyboardBuilder()
+
+    _kb.row(types.InlineKeyboardButton(text='Закрыть',
+                                       callback_data='exit'))
+    
+    return _kb
+
+
 def add_back_btn(_kb: InlineKeyboardBuilder):
     _kb.row(types.InlineKeyboardButton(text='На главную',
                                        callback_data=f'to_main'))
@@ -186,4 +196,13 @@ def add_or_create_close_kb(_kb: InlineKeyboardBuilder = None):
     _kb.row(types.InlineKeyboardButton(text='Закрыть',
                                        callback_data='close'))
     
+    return _kb
+
+
+def create_reply_start_kb():
+    _kb = ReplyKeyboardBuilder()
+
+    _kb.add(types.KeyboardButton(text='Добавить товар'))
+    _kb.row(types.KeyboardButton(text='Посмотреть товары'))
+
     return _kb

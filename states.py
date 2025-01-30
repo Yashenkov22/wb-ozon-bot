@@ -17,6 +17,9 @@ class ProductStates(StatesGroup):
     percent = State()
 
 
+class AnyProductStates(StatesGroup):
+    link = State()
+
 
 class OzonProduct(StatesGroup):
     product = State()

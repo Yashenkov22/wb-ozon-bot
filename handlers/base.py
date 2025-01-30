@@ -23,15 +23,18 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config import BEARER_TOKEN, FEEDBACK_REASON_PREFIX, DEV_ID
 
-from keyboards import (create_remove_kb, create_start_kb,
+from keyboards import (create_or_add_exit_btn,
+                       create_remove_kb,
+                       create_start_kb,
                        create_or_add_cancel_btn,
                        create_done_kb,
                        create_wb_start_kb,
                        add_back_btn,
                        create_bot_start_kb,
-                       create_remove_and_edit_sale_kb)
+                       create_remove_and_edit_sale_kb,
+                       create_reply_start_kb)
 
-from states import EditSale, SwiftSepaStates, ProductStates, OzonProduct
+from states import AnyProductStates, EditSale, SwiftSepaStates, ProductStates, OzonProduct
 
 from utils.handlers import (check_input_link,
                             check_user_last_message_time, generate_pretty_amount,
@@ -64,27 +67,7 @@ async def start(message: types.Message | types.CallbackQuery,
     await check_user(message,
                      session)
     
-    # logger.info('hi')
-    # print(scheduler)
-    # print(type(scheduler))
-    scheduler.print_jobs()
-
-    # _product_name = 'wb'
-
-    # _product_id = 'test_product_id'
-
-    # job_name = f'{message.from_user.id}_{_product_name}_{_product_id}'
-
-    # try:
-    #     _job = scheduler.add_job(test_scheduler,
-    #                             'cron',
-    #                             second=30,
-    #                             args=(message.from_user.id, ),
-    #                             id=job_name)
-    # except Exception as ex:
-    #     print(ex)
-
-    scheduler.print_jobs()
+    # scheduler.print_jobs()
     
     await state.update_data(action=None)
 
@@ -98,17 +81,6 @@ async def start(message: types.Message | types.CallbackQuery,
     
     await state.update_data(msg=(msg.chat.id, msg.message_id))
 
-    # try:
-    #     await bot.unpin_all_chat_messages(chat_id=msg.chat.id)
-    # except Exception as ex:
-    #     print(ex)
-
-    # try:
-    #     await bot.pin_chat_message(chat_id=msg.chat.id,
-    #                             message_id=msg.message_id,
-    #                             disable_notification=True)
-    # except Exception as ex:
-    #     print(ex)
     try:
         await message.delete()
         
@@ -117,6 +89,112 @@ async def start(message: types.Message | types.CallbackQuery,
 
     except Exception as ex:
         print(ex)
+
+
+@main_router.message(Command('start1'))
+async def start1(message: types.Message | types.CallbackQuery,
+                state: FSMContext,
+                session: AsyncSession,
+                bot: Bot,
+                scheduler: AsyncIOScheduler):
+    _message = message
+    
+    await state.clear()
+    
+    await check_user(message,
+                     session)
+    
+    # scheduler.print_jobs()
+    
+    await state.update_data(action=None)
+
+    if isinstance(message, types.CallbackQuery):
+        message = message.message
+
+    _kb = create_reply_start_kb()
+    msg = await bot.send_message(text='Главное меню',
+                                chat_id=_message.from_user.id,
+                                reply_markup=_kb.as_markup(resize_keyboard=True))
+    
+    await state.update_data(msg=(msg.chat.id, msg.message_id))
+
+    try:
+        await message.delete()
+        
+        if isinstance(_message, types.CallbackQuery):
+            await _message.answer()
+
+    except Exception as ex:
+        print(ex)
+
+
+@main_router.message(F.text == 'Добавить товар')
+async def add_any_product(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    await state.set_state(AnyProductStates.link)
+    
+    data = await state.get_data()
+
+    # msg: tuple = data.get('msg')
+    _text = 'Отправьте ссылку на товар'
+
+    _kb = create_or_add_exit_btn()
+
+    # if msg:
+    add_msg = await bot.send_message(text=_text,
+                           chat_id=message.from_user.id,
+                           reply_markup=_kb.as_markup())
+    # else:
+    #     await callback.message.answer(text=_text,
+    #                          reply_markup=_kb.as_markup())
+    
+    # await callback.answer()
+
+@main_router.message(AnyProductStates.link)
+async def any_product_proccess(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    _message_text = message.text.strip().split()
+
+    _name = link = None
+
+    if len(_message_text) > 1:
+        *_name, link = _message_text
+        _name = ' '.join(_name)
+    else:
+        # if not message_text.isdigit():
+        link = message.text.strip()
+
+    check_link = check_input_link(link) # None or Literal['WB', 'OZON']
+
+    if check_link:
+
+        user_data = {
+            'msg': (message.chat.id, message.message_id),
+            'name': _name,
+            'link': link,
+        }
+        find_in_db = await save_product(user_data=user_data,
+                                        session=session,
+                                        scheduler=scheduler)
+        
+        if find_in_db:
+            _text = f'{check_link} Товар уже был в Вашем списке или ошибка'
+        else:
+            _text = f'{check_link} Товар успешно добавлен!'
+            
+            await message.answer(text=_text)
+    else:
+        await message.answer(text='Невалидная ссылка')
+    
+    await message.delete()
+    
+
 
 
 @main_router.message(Command('test_ozon_pr'))
@@ -900,42 +978,11 @@ async def any_input(message: types.Message,
     else:
         # if not message_text.isdigit():
         link = message.text.strip()
-        # _name = 'Отсутствует'
 
-    # moscow_tz = pytz.timezone('Europe/Moscow')
-    # _now = datetime.now()
-    # moscow_time = _now.astimezone(moscow_tz)
-
-    # data = await state.get_data()
-
-    # q = data.get('_time')
-
-    # if q:
-    #     if moscow_time > datetime.fromtimestamp(q).astimezone(moscow_tz) - timedelta(seconds=3):
-    #         print('FIRST')
-    #     else:
-    #         print('SECOND')
-
-    # await state.update_data(_time=moscow_time.timestamp())
-
-    # _time_delta = moscow_time - timedelta(seconds=20)
-    # if message.from_user.id == int(DEV_ID):
-    #     print(message.text, moscow_time)
-    
-    # await check_user_last_message_time(message.from_user.id,
-    #                                     moscow_time,
-    #                                     message.text,
-    #                                     session,
-    #                                     state,
-    #                                     scheduler)
     check_link = check_input_link(link)
 
     if check_link:
-        # add_msg = await message.answer(text='Товар добавляется...',
-        #                                disable_notification=True)
-    # msg = user_data.get('msg')
-    # _name = user_data.get('name')
-    # link: str = user_data.get('link')
+
         user_data = {
             'msg': (message.chat.id, message.message_id),
             'name': _name,
@@ -954,7 +1001,4 @@ async def any_input(message: types.Message,
     else:
         await message.answer(text='Невалидная ссылка')
     
-
-    # await message.answer(text=message.text)
-    # await state.set_state()
     await message.delete()
