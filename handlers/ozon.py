@@ -287,6 +287,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
             # await sub_msg.edit_text(text='Товар проверен')
         else:
+            print('22')
             try:
                 response_data = res.split('|')[-1]
 
