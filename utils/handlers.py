@@ -45,12 +45,11 @@ from utils.storage import redis_client
 
 
 def check_input_link(link: str):
-    if not (link.startswith('https://ozon')) or \
+    if (link.startswith('https://ozon')) or \
         (link.startswith('https://www.ozon')) or \
         (link.startswith('https://www.wildberries')):
-        return
-    
-    return 'WB' if link.startswith('https://www.wildberries') else 'OZON'
+        
+        return 'WB' if link.startswith('https://www.wildberries') else 'OZON'
 
 
 def generate_sale_for_price(price: float):
