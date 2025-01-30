@@ -280,15 +280,20 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
                 f: dict = json.loads(r)
 
-                v = f.get('trackingPayloads')
+                v = f.get('seo')
 
                 if v:
-                    t = v.get('scripts')
+                    t = v.get('script')
+
+                    if t:
+                        b = t.get('innerHTML').get('offers').get('price')
+
+                        print('PRICE', b)
 
 
 
-                    print('\nV', v)
-                    print('\nT', t)
+                    # print('\nV', v)
+                    # print('\nT', t)
                 else:
                     print('problem')
                     return
