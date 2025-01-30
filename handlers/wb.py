@@ -452,11 +452,14 @@ async def proccess_product_id(message: types.Message | types.CallbackQuery,
 
     _text_start_price = generate_pretty_amount(start_price)
     _text_product_price = generate_pretty_amount(product_price)
+
+    _text_sale = generate_pretty_amount(sale)
+    _text_price_with_sale = generate_pretty_amount((start_price - sale))
     # _text_basic_price = generate_pretty_amount(_d.get("price", 0))
 
     # _text = f'Ваш товар: {link}\nНачальная цена: {start_price}\nАктуальная цена: {product_price}\nСкидка: {sale}\nОжидаемая цена: {waiting_price}'
 
-    _text = f'Название: <a href="{link}">{product_name}</a>\nМаркетплейс: WB\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
+    _text = f'Название: <a href="{link}">{product_name}</a>\nМаркетплейс: WB\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {_text_sale}\nОжидаемая цена: {_text_price_with_sale}'
 
     if msg:
         try:

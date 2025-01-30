@@ -753,11 +753,14 @@ async def view_product(callback: types.CallbackQuery,
 
     _text_start_price = generate_pretty_amount(start_price)
     _text_product_price = generate_pretty_amount(actaul_price)
+
+    _text_sale = generate_pretty_amount(sale)
+    _text_price_with_sale = generate_pretty_amount((start_price - sale))
     # _text_basic_price = generate_pretty_amount(_d.get("price", 0))
 
     # _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nУстановленная скидка: {sale}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
     
-    _text = f'Название: <a href="{link}">{name}</a>\nМаркетплейс: {product_marker}\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {sale}\nОжидаемая цена: {start_price - sale}'
+    _text = f'Название: <a href="{link}">{name}</a>\nМаркетплейс: {product_marker}\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {_text_sale}\nОжидаемая цена: {_text_price_with_sale}'
     # else:
     #     _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\n\nДата начала отслеживания: {moscow_time}'
 
