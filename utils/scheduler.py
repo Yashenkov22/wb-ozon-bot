@@ -300,7 +300,7 @@ async def push_check_ozon_price(user_id: str,
                             print('Price', _price)
                         # except Exception as ex:
                         #     print('problem', ex)
-                            return
+                            # return
                 except Exception as ex:
                     print('scheduler parse inner html error', ex)
                     return
