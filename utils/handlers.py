@@ -442,7 +442,7 @@ async def save_product(user_data: dict,
 
                     json_data: dict = json.loads(response_data)
 
-                    _name = json_data.get('seo').get('title').split()[:4]
+                    _name = ' '.join(json_data.get('seo').get('title').split()[:4])
 
                     script_list = json_data.get('seo').get('script')
 
