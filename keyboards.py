@@ -203,6 +203,6 @@ def create_reply_start_kb():
     _kb = ReplyKeyboardBuilder()
 
     _kb.add(types.KeyboardButton(text='Добавить товар'))
-    _kb.row(types.KeyboardButton(text='Посмотреть товары'))
+    _kb.add(types.KeyboardButton(text='Посмотреть товары'))
 
     return _kb
