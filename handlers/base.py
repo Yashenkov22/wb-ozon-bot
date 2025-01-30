@@ -168,6 +168,8 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
 
     add_msg: tuple = data.get('add_msg')
 
+    print('add msg', add_msg)
+
     _message_text = message.text.strip().split()
 
     _name = link = None
