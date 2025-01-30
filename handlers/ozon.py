@@ -289,6 +289,9 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
                     print('\nV', v)
                     print('\nT', t)
+                else:
+                    print('problem')
+                    return
             except Exception as ex:
                 print(ex)
                 await clear_state_and_redirect_to_start(message,
