@@ -17,7 +17,7 @@ from keyboards import add_or_create_close_kb, create_remove_kb
 
 from bot22 import bot
 
-from utils.handlers import generate_pretty_amount
+from .handlers import generate_pretty_amount
 
 
 timezone = pytz.timezone('Europe/Moscow')
