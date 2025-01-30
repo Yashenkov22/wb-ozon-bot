@@ -148,7 +148,7 @@ async def add_any_product(message: types.Message | types.CallbackQuery,
                            chat_id=message.from_user.id,
                            reply_markup=_kb.as_markup())
     
-    await state.update_data(add_msg=(add_msg.from_user.id, add_msg.message_id))
+    await state.update_data(add_msg=(add_msg.chat.id, add_msg.message_id))
     # else:
     #     await callback.message.answer(text=_text,
     #                          reply_markup=_kb.as_markup())
