@@ -430,17 +430,68 @@ async def save_product(user_data: dict,
                         break
 
                 print(_d)
+                start_price = int(_d.get('cardPrice', 0))
+                actual_price = int(_d.get('cardPrice', 0))
+                basic_price = int(_d.get('price', 0))
 
                 _name = _name if _name else _product_name
+            else:
+                print('22')
+                try:
+                    response_data = res.split('|')[-1]
 
-                _sale = generate_sale_for_price(_d.get('cardPrice'))
+                    json_data: dict = json.loads(response_data)
+
+                    script_list = json_data.get('seo').get('script')
+
+                    # if v:
+                    #     t = v.get('script')
+
+                    if script_list:
+                        inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
+
+                        print('innerHTML', inner_html)
+
+                        if inner_html:
+                            # print(type(b))
+                            try:
+                                inner_html_json: dict = json.loads(inner_html)
+                                offers = inner_html_json.get('offers')
+
+                                # print(offers)
+
+                                _price = offers.get('price')
+
+                                start_price = int(_price)
+                                actual_price = int(_price)
+                                basic_price = int(_price)
+
+                                # price_dict = {
+                                #     'ozon_start_price': 0,
+                                #     'ozon_actual_price': float(_p),
+                                #     'ozon_basic_price': float(_p),
+                                # }
+
+                                # await state.update_data(data=price_dict)
+                                
+                                print('Price', _price)
+                            except Exception as ex:
+                                return True
+                                print('problem', ex)
+
+                    print('PRICE PARSE ERROR', user_data)
+                except Exception as ex:
+                    print(ex)
+                    return True
+#
+                _sale = generate_sale_for_price(start_price)
 
                 _data = {
                     'link': link,
                     'short_link': _new_short_link,
-                    'actual_price': _d.get('cardPrice'),
-                    'start_price': _d.get('cardPrice'),
-                    'basic_price': _d.get('price'),
+                    'actual_price': actual_price,
+                    'start_price': start_price,
+                    'basic_price': basic_price,
                     #
                     'sale': _sale,
                     #
@@ -499,8 +550,7 @@ async def save_product(user_data: dict,
                     await session.rollback()
                     _text = 'Ozon товар не был добавлен'
                     print(_text)
-            else:
-                print('PRICE PARSE ERROR', user_data)
+            # else:
 
         except Exception as ex:
             print(ex)
