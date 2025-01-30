@@ -270,34 +270,34 @@ async def push_check_ozon_price(user_id: str,
                     # if v:
                     #     t = v.get('script')
 
-                    if script_list:
-                        inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
+                    # if script_list:
+                    inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
 
-                        print('innerHTML', inner_html)
+                    print('innerHTML', inner_html)
 
-                        if inner_html:
-                            # print(type(b))
-                            # try:
-                            inner_html_json: dict = json.loads(inner_html)
-                            offers = inner_html_json.get('offers')
+                    # if inner_html:
+                        # print(type(b))
+                        # try:
+                    inner_html_json: dict = json.loads(inner_html)
+                    offers = inner_html_json.get('offers')
 
-                            # print(offers)
+                    # print(offers)
 
-                            _price = offers.get('price')
+                    _price = offers.get('price')
 
-                            # start_price = _price
-                            _product_price = _price
-                            # basic_price = _price
+                    # start_price = _price
+                    _product_price = _price
+                    # basic_price = _price
 
-                            # price_dict = {
-                            #     'ozon_start_price': 0,
-                            #     'ozon_actual_price': float(_p),
-                            #     'ozon_basic_price': float(_p),
-                            # }
+                    # price_dict = {
+                    #     'ozon_start_price': 0,
+                    #     'ozon_actual_price': float(_p),
+                    #     'ozon_basic_price': float(_p),
+                    # }
 
-                            # await state.update_data(data=price_dict)
-                            
-                            print('Price', _price)
+                    # await state.update_data(data=price_dict)
+                    
+                    print('Price', _price)
                         # except Exception as ex:
                         #     print('problem', ex)
                             # return
