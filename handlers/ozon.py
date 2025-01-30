@@ -198,7 +198,7 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
                 res = await response.text()
 
-        print('ОТВЕТ ОТ АПИ',res)
+        # print('ОТВЕТ ОТ АПИ',res)
 
         response_data = res.split('|')
 
