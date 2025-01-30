@@ -280,9 +280,15 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
                 f: dict = json.loads(r)
 
-                v = f.get('script')
+                v = f.get('trackingPayloads')
 
-                print('\nV', v)
+                if v:
+                    t = v.get('scripts')
+
+
+
+                    print('\nV', v)
+                    print('\nT', t)
             except Exception as ex:
                 print(ex)
                 await clear_state_and_redirect_to_start(message,
