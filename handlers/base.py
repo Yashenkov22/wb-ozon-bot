@@ -112,11 +112,11 @@ async def start1(message: types.Message | types.CallbackQuery,
         message = message.message
 
     _kb = create_reply_start_kb()
-    msg = await bot.send_message(text='Главное меню',
+    await bot.send_message(text='Главное меню',
                                 chat_id=_message.from_user.id,
                                 reply_markup=_kb.as_markup(resize_keyboard=True))
     
-    await state.update_data(msg=(msg.chat.id, msg.message_id))
+    # await state.update_data(msg=(msg.chat.id, msg.message_id))
 
     try:
         await message.delete()
