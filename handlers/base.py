@@ -188,7 +188,7 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
         else:
             _text = f'{check_link} Товар успешно добавлен!'
             
-            await message.answer(text=_text)
+        await message.answer(text=_text)
     else:
         await message.answer(text='Невалидная ссылка')
     
