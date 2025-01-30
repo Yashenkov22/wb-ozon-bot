@@ -292,9 +292,13 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
                         if b:
                             print(type(b))
-                            y = b.get('offers')
+                            try:
+                                p = json.loads(b)
+                                y = b.get('offers')
 
-                            print(y)
+                                print(y)
+                            except Exception as ex:
+                                print('problem')
 
 
 
