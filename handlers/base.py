@@ -147,6 +147,8 @@ async def add_any_product(message: types.Message | types.CallbackQuery,
     add_msg = await bot.send_message(text=_text,
                            chat_id=message.from_user.id,
                            reply_markup=_kb.as_markup())
+    
+    await state.update_data(add_msg=(add_msg.from_user.id, add_msg.message_id))
     # else:
     #     await callback.message.answer(text=_text,
     #                          reply_markup=_kb.as_markup())
@@ -159,6 +161,10 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
                             session: AsyncSession,
                             bot: Bot,
                             scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    add_msg: tuple = data.get('add_msg')
+
     _message_text = message.text.strip().split()
 
     _name = link = None
@@ -192,10 +198,13 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
     else:
         await message.answer(text='Невалидная ссылка')
     
-    await message.delete()
+    try:
+        await bot.delete_message(chat_id=add_msg[0],
+                                 message_id=add_msg[-1])
+        await message.delete()
+    except Exception:
+        pass
     
-
-
 
 @main_router.message(Command('test_ozon_pr'))
 async def test_db_ozon(message: types.Message,
@@ -327,6 +336,17 @@ async def callback_cancel(callback: types.Message | types.CallbackQuery,
                        bot,
                        scheduler,
                        marker=action)
+    
+@main_router.callback_query(F.data == 'exit')
+async def callback_to_main(callback: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
     
 
 @main_router.callback_query(F.data == 'to_main')
