@@ -210,14 +210,14 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
         w = re.findall(r'\"cardPrice.*currency?', res)
 
-        try:
-            r = res.split('|')[-1]
+        # try:
+        #     r = res.split('|')[-1]
 
-            f = json.loads(r)
-        except Exception as ex:
-            print(ex)
-        else:
-            print(f)
+        #     f = json.loads(r)
+        # except Exception as ex:
+        #     print(ex)
+        # else:
+        #     print(f)
         # print(w)
 
         _alt = re.findall(r'\"alt.*,?', res)
@@ -275,15 +275,33 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
             # await sub_msg.edit_text(text='Товар проверен')
         else:
-            _text = 'Возникли проблемы'
+            try:
+                r = res.split('|')[-1]
+
+                f: dict = json.loads(r)
+
+                v = f.get('script')
+
+                print('\nV', v)
+            except Exception as ex:
+                print(ex)
+                await clear_state_and_redirect_to_start(message,
+                                                        state,
+                                                        bot)
+                await message.delete()
+                return
+            else:
+                print(f)
+
+            # _text = 'Возникли проблемы'
             # proccess_msg.edit_text('marker товар не получилось добавить, link')
 
             # await sub_msg.edit_text(text=f'{_text}. Ожидается ссылка, передано {message.text}')
-            await clear_state_and_redirect_to_start(message,
-                                                    state,
-                                                    bot)
-            await message.delete()
-            return
+            # await clear_state_and_redirect_to_start(message,
+            #                                         state,
+            #                                         bot)
+            # await message.delete()
+            # return
         
         _product_price = _d.get('cardPrice')
         example_sale = 100
