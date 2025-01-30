@@ -449,109 +449,109 @@ async def save_product(user_data: dict,
                     # if v:
                     #     t = v.get('script')
 
-                    if script_list:
-                        inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
+                    # if script_list:
+                    inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
 
-                        print('innerHTML', inner_html)
+                    print('innerHTML', inner_html)
 
-                        if inner_html:
-                            # print(type(b))
-                            try:
-                                inner_html_json: dict = json.loads(inner_html)
-                                offers = inner_html_json.get('offers')
+                    # if inner_html:
+                        # print(type(b))
+                    try:
+                        inner_html_json: dict = json.loads(inner_html)
+                        offers = inner_html_json.get('offers')
 
-                                # print(offers)
+                        # print(offers)
 
-                                _price = offers.get('price')
+                        _price = offers.get('price')
 
-                                start_price = int(_price)
-                                actual_price = int(_price)
-                                basic_price = int(_price)
+                        start_price = int(_price)
+                        actual_price = int(_price)
+                        basic_price = int(_price)
 
-                                # price_dict = {
-                                #     'ozon_start_price': 0,
-                                #     'ozon_actual_price': float(_p),
-                                #     'ozon_basic_price': float(_p),
-                                # }
+                        # price_dict = {
+                        #     'ozon_start_price': 0,
+                        #     'ozon_actual_price': float(_p),
+                        #     'ozon_basic_price': float(_p),
+                        # }
 
-                                # await state.update_data(data=price_dict)
-                                
-                                print('Price', _price)
-                            except Exception as ex:
-                                return True
-                                print('problem', ex)
+                        # await state.update_data(data=price_dict)
+                        
+                        print('Price', _price)
+                    except Exception as ex:
+                        return True
+                        print('problem', ex)
 
                     print('PRICE PARSE ERROR', user_data)
                 except Exception as ex:
                     print(ex)
                     return True
 #
-                _sale = generate_sale_for_price(start_price)
+            _sale = generate_sale_for_price(start_price)
 
-                _data = {
-                    'link': link,
-                    'short_link': _new_short_link,
-                    'actual_price': actual_price,
-                    'start_price': start_price,
-                    'basic_price': basic_price,
-                    #
-                    'sale': _sale,
-                    #
-                    # 'percent': int(data.get('percent')),
-                    'name': _name,
-                    'time_create': datetime.now(),
-                    'user_id': msg[0],
-                }
+            _data = {
+                'link': link,
+                'short_link': _new_short_link,
+                'actual_price': actual_price,
+                'start_price': start_price,
+                'basic_price': basic_price,
+                #
+                'sale': _sale,
+                #
+                # 'percent': int(data.get('percent')),
+                'name': _name,
+                'time_create': datetime.now(),
+                'user_id': msg[0],
+            }
 
-                # if percent:
-                #     _data.update(percent=int(percent))
-                
-                # query = (
-                #     insert(OzonProduct)\
-                #     .values(**_data)
-                # )
+            # if percent:
+            #     _data.update(percent=int(percent))
+            
+            # query = (
+            #     insert(OzonProduct)\
+            #     .values(**_data)
+            # )
 
-                # await session.execute(query)
-                ozon_product = OzonProduct(**_data)
+            # await session.execute(query)
+            ozon_product = OzonProduct(**_data)
 
-                session.add(ozon_product)
+            session.add(ozon_product)
 
-                await session.flush()
+            await session.flush()
 
-                ozon_product_id = ozon_product.id
+            ozon_product_id = ozon_product.id
 
-                #          user_id | marker | product_id
-                job_id = f'{msg[0]}.ozon.{ozon_product_id}'
+            #          user_id | marker | product_id
+            job_id = f'{msg[0]}.ozon.{ozon_product_id}'
 
-                job = scheduler.add_job(push_check_ozon_price,
-                                trigger='interval',
-                                minutes=15,
-                                id=job_id,
-                                jobstore='sqlalchemy',
-                                coalesce=True,
-                                kwargs={'user_id': msg[0],
-                                        'product_id': ozon_product_id})
-                
-                _data = {
-                    'user_id': msg[0],
-                    'product_id': ozon_product_id,
-                    'product_marker': 'ozon_product',
-                    'job_id': job.id,
-                }
+            job = scheduler.add_job(push_check_ozon_price,
+                            trigger='interval',
+                            minutes=15,
+                            id=job_id,
+                            jobstore='sqlalchemy',
+                            coalesce=True,
+                            kwargs={'user_id': msg[0],
+                                    'product_id': ozon_product_id})
+            
+            _data = {
+                'user_id': msg[0],
+                'product_id': ozon_product_id,
+                'product_marker': 'ozon_product',
+                'job_id': job.id,
+            }
 
-                user_job = UserJob(**_data)
+            user_job = UserJob(**_data)
 
-                session.add(user_job)
+            session.add(user_job)
 
-                try:
-                    await session.commit()
-                    _text = 'Ozon товар успешно добавлен'
-                    print(_text)
-                except Exception as ex:
-                    print(ex)
-                    await session.rollback()
-                    _text = 'Ozon товар не был добавлен'
-                    print(_text)
+            try:
+                await session.commit()
+                _text = 'Ozon товар успешно добавлен'
+                print(_text)
+            except Exception as ex:
+                print(ex)
+                await session.rollback()
+                _text = 'Ozon товар не был добавлен'
+                print(_text)
             # else:
 
         except Exception as ex:
