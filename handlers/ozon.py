@@ -200,6 +200,8 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
         print('ОТВЕТ ОТ АПИ',res)
 
+        response_data = res.split('|')
+
         new_short_link = res.split('|')[0]
 
         await state.update_data(ozon_link=link,
@@ -207,6 +209,15 @@ async def proccess_product(message: types.Message | types.CallbackQuery,
 
 
         w = re.findall(r'\"cardPrice.*currency?', res)
+
+        try:
+            r = res.split('|')[-1]
+
+            f = json.loads(r)
+        except Exception as ex:
+            print(ex)
+        else:
+            print(f)
         # print(w)
 
         _alt = re.findall(r'\"alt.*,?', res)
