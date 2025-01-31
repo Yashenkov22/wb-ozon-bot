@@ -25,10 +25,11 @@ from aiogram.fsm.storage.redis import RedisStorage
 
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import select, and_
 
 from sqlalchemy.ext.automap import automap_base
 
-from db.base import engine, session, Base, db_url
+from db.base import UserJob, engine, session, Base, db_url
 
 from middlewares.db import DbSessionMiddleware
 
@@ -125,6 +126,23 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
 
 
+async def update_scheduler_jobs():
+    query = (
+        select(
+            UserJob.job_id
+        )
+    )
+
+    async with session() as _session:
+        async with _session as __session:
+            res = await __session.execute(query)
+
+    job_ids = res.scalars().all()
+
+    for job_id in job_ids:
+        if job_id.find('ozon'):
+            scheduler.modify_job()
+
 # #Set webhook and create database on start
 @app.on_event('startup')
 async def on_startup():
@@ -134,6 +152,8 @@ async def on_startup():
                         #   allowed_updates=['message', 'callback_query'])
     # await init_db()
     scheduler.start()
+
+    await update_scheduler_jobs()
 
 
 @app.on_event('shutdown')
