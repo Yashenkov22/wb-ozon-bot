@@ -2,6 +2,8 @@ import os
 import json
 import re
 
+from math import ceil
+
 import aiohttp
 
 import pytz
@@ -36,12 +38,15 @@ from keyboards import (create_or_add_exit_btn,
 
 from states import AnyProductStates, EditSale, SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import (check_input_link,
-                            check_user_last_message_time, generate_pretty_amount,
+from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
+                            check_input_link,
+                            check_user_last_message_time,
+                            generate_pretty_amount,
                             save_data_to_storage,
                             check_user,
                             show_item,
-                            save_product)
+                            save_product,
+                            show_product_list)
 from utils.scheduler import test_scheduler
 
 from db.base import OzonProduct as OzonProductModel, User, Base, UserJob, WbProduct
@@ -218,36 +223,112 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
                                 session: AsyncSession,
                                 bot: Bot,
                                 scheduler: AsyncIOScheduler):
+    # DEFAULT_PAGE_ELEMENT_COUNT = 5
     # await state.set_state(AnyProductStates.link)
     await state.update_data(view_product_dict=None)
     
     data = await state.get_data()
 
-    query_1 = (
-        select(
-            WbProduct.name,
-            WbProduct.link,
-            WbProduct.start_price,
-            WbProduct.actual_price,
-            WbProduct.sale,
-            
-        )
+    subquery_wb = (
+        select(UserJob.job_id,
+               UserJob.user_id,
+               UserJob.product_id)
+        .where(UserJob.user_id == message.from_user.id)
+    ).subquery()
+
+    wb_query = (
+        select(WbProduct.id,
+               WbProduct.link,
+               WbProduct.actual_price,
+               WbProduct.start_price,
+               WbProduct.user_id,
+            #    WbProduct.time_create,
+               func.extract('epoch', WbProduct.time_create).label('time_create'),
+               func.text('wb').label('product_marker'),
+               WbProduct.name,
+               WbProduct.sale,
+               subquery_wb.c.job_id)\
+        .select_from(WbProduct)\
+        .join(User,
+              WbProduct.user_id == User.tg_id)\
+        .join(UserJob,
+              UserJob.user_id == User.tg_id)\
+        .outerjoin(subquery_wb,
+                   subquery_wb.c.product_id == WbProduct.id)\
+        .where(User.tg_id == message.from_user.id)\
+        .distinct(WbProduct.id)
     )
 
+    subquery_ozon = (
+        select(UserJob.job_id,
+               UserJob.user_id,
+               UserJob.product_id)
+        .where(UserJob.user_id == message.from_user.id)
+    ).subquery()
+
+    ozon_query = (
+        select(
+            OzonProductModel.id,
+            OzonProductModel.link,
+            OzonProductModel.actual_price,
+            OzonProductModel.start_price,
+            OzonProductModel.user_id,
+            # OzonProductModel.time_create,
+            func.extract('epoch', OzonProductModel.time_create).label('time_create'),
+            func.text('ozon').label('product_marker'),
+            OzonProductModel.name,
+            OzonProductModel.sale,
+            subquery_ozon.c.job_id)\
+        .select_from(OzonProductModel)\
+        .join(User,
+              OzonProductModel.user_id == User.tg_id)\
+        .join(UserJob,
+              UserJob.user_id == User.tg_id)\
+        .outerjoin(subquery_ozon,
+                   subquery_ozon.c.product_id == OzonProductModel.id)\
+        .where(User.tg_id == subquery_ozon.from_user.id)\
+        .distinct(OzonProductModel.id)
+    )
+
+    async with session as _session:
+        res = await _session.execute(wb_query.union(ozon_query))
+
+    product_list = res.fetchall()
+
+    if not product_list:
+        await message.answer('Нет добавленных продуктов')
+        return
+
+    product_list = sorted(product_list,
+                          key=lambda el: el[5],   # sort by time_create field
+                          reverse=True)           # order by desc
+
+    len_product_list = len(product_list)
+    pages = ceil(len_product_list / DEFAULT_PAGE_ELEMENT_COUNT)
+    current_page = 1
+
+    view_product_dict = {
+        'len_product_list': len_product_list,
+        'pages': pages,
+        'current_page': current_page,
+        'product_list': product_list,
+    }
+
+    await show_product_list(view_product_dict)
     # msg: tuple = data.get('msg')
-    _text = 'Отправьте ссылку на товар'
+    # _text = 'Отправьте ссылку на товар'
 
-    _kb = create_or_add_exit_btn()
+    # _kb = create_or_add_exit_btn()
 
-    # if msg:
-    add_msg = await bot.send_message(text=_text,
-                           chat_id=message.from_user.id,
-                           reply_markup=_kb.as_markup())
+    # # if msg:
+    # add_msg = await bot.send_message(text=_text,
+    #                        chat_id=message.from_user.id,
+    #                        reply_markup=_kb.as_markup())
     
-    await state.update_data(add_msg=(add_msg.chat.id, add_msg.message_id))
-    # else:
-    #     await callback.message.answer(text=_text,
-    #                          reply_markup=_kb.as_markup())
+    # await state.update_data(add_msg=(add_msg.chat.id, add_msg.message_id))
+    # # else:
+    # #     await callback.message.answer(text=_text,
+    # #                          reply_markup=_kb.as_markup())
     try:
         await message.delete()
     except Exception:

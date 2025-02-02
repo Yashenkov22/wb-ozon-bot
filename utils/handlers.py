@@ -28,12 +28,14 @@ from utils.scheduler import push_check_ozon_price, push_check_wb_price, schedule
 
 from keyboards import (add_back_btn,
                        create_or_add_cancel_btn,
-                       create_photo_keyboard, create_product_list_kb,
+                       create_photo_keyboard, create_product_list_for_page_kb, create_product_list_kb,
                        create_remove_kb,
                        add_cancel_btn_to_photo_keyboard)
 
 from utils.storage import redis_client
 
+
+DEFAULT_PAGE_ELEMENT_COUNT = 5
 
 # lock = asyncio.Lock()
 
@@ -1357,3 +1359,35 @@ async def show_item_list(callback: types.CallbackQuery,
                                text=_text,
                                reply_markup=_kb.as_markup())
     
+
+
+
+async def show_product_list(product_dict: dict,
+                            user_id: int):
+    current_page = product_dict.get('current_page')
+    product_list = product_dict.get('product_list')
+    len_product_list = product_dict.get('len_product_list')
+
+    # view_product_dict = {
+    #     'len_product_list': len_product_list,
+    #     'pages': pages,
+    #     'current_page': current_page,
+    #     'product_list': product_list,
+    # }
+
+    start_idx = (current_page - 1) * DEFAULT_PAGE_ELEMENT_COUNT
+    end_idx = current_page * DEFAULT_PAGE_ELEMENT_COUNT
+
+    product_list_for_page = product_list[start_idx:end_idx]
+
+    _kb = create_product_list_for_page_kb(product_list_for_page)
+
+    product_on_current_page_count = len(product_list_for_page)
+
+    await bot.send_message(chat_id=user_id,
+                           text=f'Ваши товары\n\nВсего товаров: {len_product_list}\nПоказано {product_on_current_page_count} товар(a/ов)',
+                           reply_markup=_kb.as_markup())
+    # for product in product_list_for_page:
+    #     product_id, link, actual, start, user_id, _date, marker, name, sale, job_id = product
+    
+    pass
