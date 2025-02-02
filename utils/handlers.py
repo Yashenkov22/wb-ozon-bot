@@ -1363,7 +1363,8 @@ async def show_item_list(callback: types.CallbackQuery,
 
 
 async def show_product_list(product_dict: dict,
-                            user_id: int):
+                            user_id: int,
+                            state: FSMContext):
     current_page = product_dict.get('current_page')
     product_list = product_dict.get('product_list')
     len_product_list = product_dict.get('len_product_list')
@@ -1384,9 +1385,11 @@ async def show_product_list(product_dict: dict,
 
     product_on_current_page_count = len(product_list_for_page)
 
-    await bot.send_message(chat_id=user_id,
+    list_msg = await bot.send_message(chat_id=user_id,
                            text=f'Ваши товары\n\nВсего товаров: {len_product_list}\nПоказано {product_on_current_page_count} товар(a/ов)',
                            reply_markup=_kb.as_markup())
+    
+    await state.update_data(list_msg=(list_msg.chat.id, list_msg.message_id))
     # for product in product_list_for_page:
     #     product_id, link, actual, start, user_id, _date, marker, name, sale, job_id = product
     

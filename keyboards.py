@@ -214,7 +214,7 @@ def create_product_list_for_page_kb(product_list_for_page: list[tuple]):
     for product in product_list_for_page:
         product_id, link, actual, start, user_id, _date, marker, name, sale, job_id = product
         
-        _callback_data = f'view-product_{user_id}_{marker}_{product_id}'
+        _callback_data = f'view-product1_{user_id}_{marker}_{product_id}'
         
         _kb.row(types.InlineKeyboardButton(text=f'{marker.upper()} {name}',
                                            callback_data=_callback_data))

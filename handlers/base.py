@@ -315,7 +315,8 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
     }
 
     await show_product_list(view_product_dict,
-                            message.from_user.id)
+                            message.from_user.id,
+                            state)
     # msg: tuple = data.get('msg')
     # _text = 'Отправьте ссылку на товар'
 
@@ -861,6 +862,167 @@ async def init_current_item(callback: types.CallbackQuery,
             await state.update_data(data={f'{marker}_product_idx': product_idx-1})
     await show_item(callback, state)
             
+
+@main_router.callback_query(F.data.startswith('view-product1'))
+async def view_product(callback: types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot,
+                        scheduler: AsyncIOScheduler,
+                        marker: str = None):
+    data = await state.get_data()
+
+    list_msg: tuple = data.get('list_msg')
+
+    callback_data = callback.data.split('_')[1:]
+
+    user_id, marker, product_id = callback_data
+
+    match marker:
+        case 'wb':
+            # pass
+            subquery = (
+                select(UserJob.job_id,
+                    UserJob.user_id,
+                    UserJob.product_id)
+                .where(UserJob.user_id == callback.from_user.id)
+            ).subquery()
+
+            query = (
+                select(WbProduct.id,
+                    WbProduct.link,
+                    WbProduct.actual_price,
+                    WbProduct.start_price,
+                    WbProduct.user_id,
+                    WbProduct.time_create,
+                    WbProduct.name,
+                    WbProduct.sale,
+                    func.text('WB').label('product_marker'),
+                    subquery.c.job_id)\
+                .select_from(WbProduct)\
+                .join(User,
+                    WbProduct.user_id == User.tg_id)\
+                .join(UserJob,
+                    UserJob.user_id == User.tg_id)\
+                .outerjoin(subquery,
+                        subquery.c.product_id == WbProduct.id)\
+                .where(
+                    and_(
+                        User.tg_id == callback.from_user.id,
+                        WbProduct.id == int(product_id),
+                        )
+                    )\
+                .distinct(WbProduct.id)
+            )
+
+            async with session as _session:
+                res = await _session.execute(query)
+
+                _data = res.fetchall()
+            
+            if _data:
+                _product = _data[0]
+                product_id, link, actaul_price, start_price, user_id, time_create, name, sale, product_marker, job_id = _product
+
+        case 'ozon':
+            # pass
+            subquery = (
+                select(UserJob.job_id,
+                    UserJob.user_id,
+                    UserJob.product_id)
+                .where(UserJob.user_id == callback.from_user.id)
+            ).subquery()
+
+            query = (
+                select(
+                    OzonProductModel.id,
+                    OzonProductModel.link,
+                    OzonProductModel.actual_price,
+                    OzonProductModel.start_price,
+                    OzonProductModel.user_id,
+                    OzonProductModel.time_create,
+                    OzonProductModel.name,
+                    OzonProductModel.sale,
+                    func.text('OZON').label('product_marker'),
+                    subquery.c.job_id)\
+                .select_from(OzonProductModel)\
+                .join(User,
+                    OzonProductModel.user_id == User.tg_id)\
+                .join(UserJob,
+                    UserJob.user_id == User.tg_id)\
+                .outerjoin(subquery,
+                        subquery.c.product_id == OzonProductModel.id)\
+                .where(
+                    and_(
+                        User.tg_id == callback.from_user.id,
+                        OzonProductModel.id == int(product_id),
+                        )
+                    )\
+                .distinct(OzonProductModel.id)
+            )
+
+            async with session as _session:
+                res = await _session.execute(query)
+
+                _data = res.fetchall()
+
+            if _data:
+                len(_data)
+                _product = _data[0]
+                product_id, link, actaul_price, start_price, user_id, time_create, name, sale, product_marker, job_id = _product
+
+
+    time_create: datetime
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    moscow_time = time_create.astimezone(moscow_tz)
+    
+    # if percent:
+    #     waiting_price = start_price - ((start_price * percent) / 100)
+    waiting_price = start_price - sale
+
+    _text_start_price = generate_pretty_amount(start_price)
+    _text_product_price = generate_pretty_amount(actaul_price)
+
+    _text_sale = generate_pretty_amount(sale)
+    _text_price_with_sale = generate_pretty_amount((start_price - sale))
+    # _text_basic_price = generate_pretty_amount(_d.get("price", 0))
+
+    # _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nУстановленная скидка: {sale}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+    
+    _text = f'Название: <a href="{link}">{name}</a>\nМаркетплейс: {product_marker}\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {_text_sale}\nОжидаемая цена: {_text_price_with_sale}'
+    # else:
+    #     _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\n\nДата начала отслеживания: {moscow_time}'
+
+    # _kb = add_cancel_btn_to_photo_keyboard(photo_kb)
+
+    # _kb = create_remove_kb(user_id=callback.from_user.id,
+    #                     product_id=product_id,
+    #                     marker=marker,
+    #                     job_id=job_id)
+    # print(link)
+    await state.update_data(
+        sale_data={
+            'link': link,
+            'sale': sale,
+        }
+    )
+
+    _kb = create_remove_and_edit_sale_kb(user_id=callback.from_user.id,
+                                         product_id=product_id,
+                                         marker=marker,
+                                         job_id=job_id)
+    _kb = create_or_add_cancel_btn(_kb)
+
+    if list_msg:
+        await bot.edit_message_text(chat_id=list_msg[0],
+                                    message_id=list_msg[-1],
+                                    text=_text,
+                                    reply_markup=_kb.as_markup())
+    else:
+        await bot.send_message(chat_id=callback.from_user.id,
+                               text=_text,
+                               reply_markup=_kb.as_markup())
+
 
 @main_router.callback_query(F.data.startswith('view-product'))
 async def view_product(callback: types.CallbackQuery,
