@@ -864,7 +864,7 @@ async def init_current_item(callback: types.CallbackQuery,
             
 
 @main_router.callback_query(F.data.startswith('view-product1'))
-async def view_product(callback: types.CallbackQuery,
+async def view_product1(callback: types.CallbackQuery,
                         state: FSMContext,
                         session: AsyncSession,
                         bot: Bot,
@@ -1011,7 +1011,8 @@ async def view_product(callback: types.CallbackQuery,
                                          product_id=product_id,
                                          marker=marker,
                                          job_id=job_id)
-    _kb = create_or_add_cancel_btn(_kb)
+    # _kb = create_or_add_cancel_btn(_kb)
+    _kb = create_or_add_exit_btn(_kb)
 
     if list_msg:
         await bot.edit_message_text(chat_id=list_msg[0],
