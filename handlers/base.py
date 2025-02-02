@@ -474,6 +474,7 @@ async def callback_to_main(callback: types.Message | types.CallbackQuery,
                             session: AsyncSession,
                             bot: Bot,
                             scheduler: AsyncIOScheduler):
+    await state.set_state()
     try:
         await callback.message.delete()
     except Exception:

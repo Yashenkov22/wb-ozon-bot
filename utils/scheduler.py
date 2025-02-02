@@ -250,7 +250,8 @@ async def push_check_ozon_price(user_id: str,
                         return
 
                     res = await response.text()
-#
+
+# 
             # print('RES FROM OZON API', res)
             # __response_data = res.split('|')[-1]
 
