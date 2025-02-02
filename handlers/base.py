@@ -1315,4 +1315,5 @@ async def any_input(message: types.Message,
     else:
         await message.answer(text='Невалидная ссылка')
     
+    await state.set_state()
     await message.delete()
