@@ -251,12 +251,12 @@ async def push_check_ozon_price(user_id: str,
 
                     res = await response.text()
 
-            print('RES FROM OZON API', res)
-            __response_data = res.split('|')[-1]
+            # print('RES FROM OZON API', res)
+            # __response_data = res.split('|')[-1]
 
-            __json_data: dict = json.loads(__response_data)
+            # __json_data: dict = json.loads(__response_data)
 
-            print(__json_data)
+            # print(__json_data)
 
             w = re.findall(r'\"cardPrice.*currency?', res)
             # print(w)
