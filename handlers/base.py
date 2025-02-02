@@ -209,6 +209,7 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
         await message.answer(text='Невалидная ссылка')
     
     try:
+        await state.set_state()
         await bot.delete_message(chat_id=add_msg[0],
                                  message_id=add_msg[-1])
         await message.delete()
@@ -1315,5 +1316,5 @@ async def any_input(message: types.Message,
     else:
         await message.answer(text='Невалидная ссылка')
     
-    await state.set_state()
+    # await state.set_state()
     await message.delete()
