@@ -286,7 +286,7 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
               UserJob.user_id == User.tg_id)\
         .outerjoin(subquery_ozon,
                    subquery_ozon.c.product_id == OzonProductModel.id)\
-        .where(User.tg_id == subquery_ozon.from_user.id)\
+        .where(User.tg_id == message.from_user.id)\
         .distinct(OzonProductModel.id)
     )
 
