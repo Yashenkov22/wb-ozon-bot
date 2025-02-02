@@ -102,7 +102,7 @@ async def push_check_wb_price(user_id: str,
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
                 # response = await aiosession.get(url=_url)
-                    es = await response.json()
+                    res = await response.json()
 
             d = res.get('data')
 

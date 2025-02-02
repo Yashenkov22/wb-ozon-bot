@@ -212,6 +212,48 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
         pass
     
 
+@main_router.message(F.text == 'Посмотреть товары')
+async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
+                                state: FSMContext,
+                                session: AsyncSession,
+                                bot: Bot,
+                                scheduler: AsyncIOScheduler):
+    # await state.set_state(AnyProductStates.link)
+    await state.update_data(view_product_dict=None)
+    
+    data = await state.get_data()
+
+    query_1 = (
+        select(
+            WbProduct.name,
+            WbProduct.link,
+            WbProduct.start_price,
+            WbProduct.actual_price,
+            WbProduct.sale,
+            
+        )
+    )
+
+    # msg: tuple = data.get('msg')
+    _text = 'Отправьте ссылку на товар'
+
+    _kb = create_or_add_exit_btn()
+
+    # if msg:
+    add_msg = await bot.send_message(text=_text,
+                           chat_id=message.from_user.id,
+                           reply_markup=_kb.as_markup())
+    
+    await state.update_data(add_msg=(add_msg.chat.id, add_msg.message_id))
+    # else:
+    #     await callback.message.answer(text=_text,
+    #                          reply_markup=_kb.as_markup())
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
+
 @main_router.message(Command('test_ozon_pr'))
 async def test_db_ozon(message: types.Message,
                        state: FSMContext,
