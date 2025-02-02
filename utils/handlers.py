@@ -27,7 +27,7 @@ from db.base import User, WbProduct, WbPunkt, OzonProduct, UserJob
 from utils.scheduler import push_check_ozon_price, push_check_wb_price, scheduler_cron
 
 from keyboards import (add_back_btn,
-                       create_or_add_cancel_btn,
+                       create_or_add_cancel_btn, create_or_add_exit_btn,
                        create_photo_keyboard, create_product_list_for_page_kb, create_product_list_kb,
                        create_remove_kb,
                        add_cancel_btn_to_photo_keyboard)
@@ -1382,6 +1382,7 @@ async def show_product_list(product_dict: dict,
     product_list_for_page = product_list[start_idx:end_idx]
 
     _kb = create_product_list_for_page_kb(product_list_for_page)
+    _kb = create_or_add_exit_btn(_kb)
 
     product_on_current_page_count = len(product_list_for_page)
 
