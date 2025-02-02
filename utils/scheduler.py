@@ -6,6 +6,8 @@ import aiohttp
 from aiogram import types, Bot
 
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.job import Job
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,6 +26,20 @@ timezone = pytz.timezone('Europe/Moscow')
 
 scheduler_cron = CronTrigger(minute=1,
                              timezone=timezone)
+
+
+def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
+    jobs: list[Job] = scheduler.get_jobs(jobstore='sqlalchemy')
+
+    print('start up update scheduler jobs...')
+
+    for job in jobs:
+        if job.id.find('wb') > 0:
+            modify_func = push_check_wb_price
+        else:
+            modify_func = push_check_ozon_price
+        
+        job.modify(func=modify_func)
 
 
 async def push_check_wb_price(user_id: str,

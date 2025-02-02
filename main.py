@@ -48,6 +48,8 @@ from handlers.base import main_router
 from handlers.ozon import ozon_router
 from handlers.wb import wb_router
 
+from utils.scheduler import startup_update_scheduler_jobs
+
 from bot22 import bot
 
 
@@ -126,22 +128,19 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
 
 
-async def update_scheduler_jobs():
-    query = (
-        select(
-            UserJob.job_id
-        )
-    )
+# async def update_scheduler_jobs():
+#     query = (
+#         select(
+#             UserJob.job_id
+#         )
+#     )
 
-    async with session() as _session:
-        async with _session as __session:
-            res = await __session.execute(query)
+#     async with session() as _session:
+#         async with _session as __session:
+#             res = await __session.execute(query)
 
-    job_ids = res.scalars().all()
+#     job_ids = res.scalars().all()
 
-    for job_id in job_ids:
-        if job_id.find('ozon'):
-            scheduler.modify_job()
 
 # #Set webhook and create database on start
 @app.on_event('startup')
@@ -153,7 +152,7 @@ async def on_startup():
     # await init_db()
     scheduler.start()
 
-    await update_scheduler_jobs()
+    startup_update_scheduler_jobs(scheduler)
 
 
 @app.on_event('shutdown')
