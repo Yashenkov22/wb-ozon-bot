@@ -314,7 +314,8 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         'product_list': product_list,
     }
 
-    await show_product_list(view_product_dict)
+    await show_product_list(view_product_dict,
+                            message.from_user.id)
     # msg: tuple = data.get('msg')
     # _text = 'Отправьте ссылку на товар'
 
