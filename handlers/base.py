@@ -17,7 +17,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from sqlalchemy.orm import Session, joinedload, sessionmaker
-from sqlalchemy import and_, insert, select, update, or_, delete, func, Integer
+from sqlalchemy import and_, insert, select, update, or_, delete, func, Integer, Float
 from sqlalchemy.sql.expression import cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -247,7 +247,8 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
                cast(WbProduct.start_price, Integer).label('start_price'),
                WbProduct.user_id,
             #    WbProduct.time_create,
-               func.extract('epoch', WbProduct.time_create).label('time_create'),
+            #    func.extract('epoch', WbProduct.time_create).label('time_create'),
+               cast(func.extract('epoch', OzonProductModel.time_create), Float).label('time_create'),
                func.text('wb').label('product_marker'),
                WbProduct.name,
                WbProduct.sale,
@@ -280,7 +281,8 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
             cast(OzonProductModel.start_price, Integer).label('start_price'),
             OzonProductModel.user_id,
             # OzonProductModel.time_create,
-            func.extract('epoch', OzonProductModel.time_create).label('time_create'),
+            # func.extract('epoch', OzonProductModel.time_create).label('time_create'),
+            cast(func.extract('epoch', OzonProductModel.time_create), Float).label('time_create'),
             func.text('ozon').label('product_marker'),
             OzonProductModel.name,
             OzonProductModel.sale,
