@@ -26,7 +26,7 @@ from db.base import User, WbProduct, WbPunkt, OzonProduct, UserJob
 
 from utils.scheduler import push_check_ozon_price, push_check_wb_price, scheduler_cron
 
-from keyboards import (add_back_btn,
+from keyboards import (add_back_btn, add_pagination_btn,
                        create_or_add_cancel_btn, create_or_add_exit_btn,
                        create_photo_keyboard, create_product_list_for_page_kb, create_product_list_kb,
                        create_remove_kb,
@@ -1382,6 +1382,8 @@ async def show_product_list(product_dict: dict,
     product_list_for_page = product_list[start_idx:end_idx]
 
     _kb = create_product_list_for_page_kb(product_list_for_page)
+    _kb = add_pagination_btn(_kb,
+                             product_dict)
     _kb = create_or_add_exit_btn(_kb)
 
     product_on_current_page_count = len(product_list_for_page)
@@ -1390,7 +1392,8 @@ async def show_product_list(product_dict: dict,
                            text=f'Ваши товары\n\nВсего товаров: {len_product_list}\nПоказано {product_on_current_page_count} товар(a/ов)',
                            reply_markup=_kb.as_markup())
     
-    await state.update_data(list_msg=(list_msg.chat.id, list_msg.message_id))
+    await state.update_data(list_msg=(list_msg.chat.id, list_msg.message_id),
+                            view_product_dict=product_dict)
     # for product in product_list_for_page:
     #     product_id, link, actual, start, user_id, _date, marker, name, sale, job_id = product
     

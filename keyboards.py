@@ -219,3 +219,54 @@ def create_product_list_for_page_kb(product_list_for_page: list[tuple]):
         _kb.row(types.InlineKeyboardButton(text=f'{marker.upper()} {name}',
                                            callback_data=_callback_data))
     return _kb
+
+
+
+def add_pagination_btn(_kb: InlineKeyboardBuilder,
+                       product_dict: dict):
+    # view_product_dict = {
+    #     'len_product_list': len_product_list,
+    #     'pages': pages,
+    #     'current_page': current_page,
+    #     'product_list': product_list,
+    # }
+
+    pages = product_dict.get('pages')
+    len_product_list = product_dict.get('len_product_list')
+    current_page = product_dict.get('current_page')
+    product_list = product_dict.get('product_list')
+
+    # marker = data.get('action')
+
+    # product_idx = data.get(f'{marker}_product_idx')
+    # product_list = data.get(f'{marker}_product_list')
+
+    # product_idx = data['_idx_product']
+    # wb_product_list = data['wb_product_list']
+    # print(f'{marker}_product list', product_list, 'idx', product_idx)
+    kb_init: str
+    
+    if len_product_list == 1:
+        kb_init = 'one'
+    else:
+        if current_page == 1:
+            kb_init = 'start'
+        elif 1 < current_page < pages:
+            kb_init = 'mid'
+        else:
+            kb_init = 'end'
+
+    match kb_init:
+        case 'start':
+            _kb.add(types.InlineKeyboardButton(text='Следующая',
+                                                    callback_data='page_next'))
+        case 'mid':
+            _kb.add(types.InlineKeyboardButton(text='Предыдущая',
+                                                    callback_data='page_prev'))
+            _kb.add(types.InlineKeyboardButton(text='Следующая',
+                                                    callback_data='page_next'))
+        case 'end':
+            _kb.add(types.InlineKeyboardButton(text='Предыдущая',
+                                                    callback_data='page_prev'))
+    
+    return _kb
