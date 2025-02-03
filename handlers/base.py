@@ -1063,6 +1063,8 @@ async def view_product1(callback: types.CallbackQuery,
         await bot.send_message(chat_id=callback.from_user.id,
                                text=_text,
                                reply_markup=_kb.as_markup())
+        
+    await callback.answer()
 
 
 @main_router.callback_query(F.data.startswith('view-product'))
