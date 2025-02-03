@@ -1409,6 +1409,8 @@ async def show_product_list(product_dict: dict,
                                     message_id=list_msg[-1],
                                     text=_text,
                                     reply_markup=_kb.as_markup())
+        await state.update_data(list_msg=(list_msg[0], list_msg[-1]),
+                                view_product_dict=product_dict)
     # for product in product_list_for_page:
     #     product_id, link, actual, start, user_id, _date, marker, name, sale, job_id = product
     
