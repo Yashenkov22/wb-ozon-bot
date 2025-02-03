@@ -1392,8 +1392,8 @@ async def show_product_list(product_dict: dict,
                            text=f'Ваши товары\n\nВсего товаров: {len_product_list}\nПоказано {product_on_current_page_count} товар(a/ов)',
                            reply_markup=_kb.as_markup())
     
-    await state.update_data(list_msg=(list_msg.chat.id, list_msg.message_id))
-                            # view_product_dict=product_dict)
+    await state.update_data(list_msg=(list_msg.chat.id, list_msg.message_id),
+                            view_product_dict=product_dict)
     # for product in product_list_for_page:
     #     product_id, link, actual, start, user_id, _date, marker, name, sale, job_id = product
     
