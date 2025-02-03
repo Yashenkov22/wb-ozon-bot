@@ -1368,6 +1368,7 @@ async def show_product_list(product_dict: dict,
     data = await state.get_data()
 
     print('data' ,data)
+    print('product_dict', product_dict)
 
     current_page = product_dict.get('current_page')
     product_list = product_dict.get('product_list')
