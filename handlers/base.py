@@ -300,7 +300,7 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         await message.answer('Нет добавленных продуктов')
         return
 
-    product_list = sorted(product_list,
+    product_list = sorted(map(lambda el: tuple(el), product_list),
                           key=lambda el: el[5],   # sort by time_create field
                           reverse=True)           # order by desc
 
