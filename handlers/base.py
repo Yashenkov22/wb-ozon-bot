@@ -812,10 +812,12 @@ async def edit_sale_callback(callback: types.CallbackQuery,
 
     _kb = create_or_add_cancel_btn()
 
-    await bot.edit_message_text(text=f'<b>Установленная скидка на Ваш {marker.upper()} <a href="{link}">товар</a> {sale}</b>\n\nУкажите новую скидку <b>как число</b> в следующем сообщении',
+    msg = await bot.edit_message_text(text=f'<b>Установленная скидка на Ваш {marker.upper()} <a href="{link}">товар</a> {sale}</b>\n\nУкажите новую скидку <b>как число</b> в следующем сообщении',
                                 chat_id=callback.from_user.id,
                                 message_id=callback.message.message_id,
                                 reply_markup=_kb.as_markup())
+    
+    await state.update_data(msg=(msg.chat.id, msg.message_id))
     await callback.answer()
     pass
 
