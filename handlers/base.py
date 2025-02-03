@@ -356,6 +356,8 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
     callback_data = callback.data.split('_')[-1]
     
     data = await state.get_data()
+
+    # print(data)
     
     product_dict = data.get('view_product_dict')
     # await state.update_data(view_product_dict=None)

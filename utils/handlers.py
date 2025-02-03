@@ -1367,6 +1367,8 @@ async def show_product_list(product_dict: dict,
                             state: FSMContext):
     data = await state.get_data()
 
+    print('data' ,data)
+
     current_page = product_dict.get('current_page')
     product_list = product_dict.get('product_list')
     len_product_list = product_dict.get('len_product_list')
