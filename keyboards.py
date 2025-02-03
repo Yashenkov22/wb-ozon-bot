@@ -246,7 +246,7 @@ def add_pagination_btn(_kb: InlineKeyboardBuilder,
     # print(f'{marker}_product list', product_list, 'idx', product_idx)
     kb_init: str
     
-    if len_product_list == 1:
+    if len_product_list <= 5:
         kb_init = 'one'
     else:
         if current_page == 1:
