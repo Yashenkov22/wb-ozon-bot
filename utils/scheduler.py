@@ -174,9 +174,9 @@ async def push_check_wb_price(user_id: str,
                                             text=_text,
                                             reply_markup=_kb.as_markup())
                     return
-                if _product_price < actual_price:
-                    await bot.send_message(chat_id=user_id,
-                                            text=_text)
+                # if _product_price < actual_price:
+                #     await bot.send_message(chat_id=user_id,
+                #                             text=_text)
         except Exception as ex:
             print(ex)
             pass
