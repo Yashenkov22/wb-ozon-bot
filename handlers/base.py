@@ -347,6 +347,33 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         pass
 
 
+@main_router.callback_query(F.data.startswith('page'))
+async def callback_done(callback: types.Message | types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot,
+                        scheduler: AsyncIOScheduler):
+    callback_data = callback.data.split('_')[-1]
+    
+    data = await state.get_data()
+    
+    product_dict = data.get('view_product_dict')
+    # await state.update_data(view_product_dict=None)
+    if not product_dict:
+        await callback.answer(text='Ошибка',
+                              show_alert=True)
+    if callback == 'next':
+        product_dict['current_page'] += 1
+    else:
+        product_dict['current_page'] -= 1
+
+    await show_product_list(product_dict,
+                            callback.from_user.id,
+                            state)
+    
+    # pass
+
+
 @main_router.message(Command('test_ozon_pr'))
 async def test_db_ozon(message: types.Message,
                        state: FSMContext,
