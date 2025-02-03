@@ -364,7 +364,7 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
     if not product_dict:
         await callback.answer(text='Ошибка',
                               show_alert=True)
-    if callback == 'next':
+    if callback_data == 'next':
         product_dict['current_page'] += 1
     else:
         product_dict['current_page'] -= 1
