@@ -375,7 +375,9 @@ async def push_check_ozon_price(user_id: str,
                 
                 # if _waiting_price:
                 if _waiting_price >= _product_price:
-                    _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
+                    _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
+
+                    _text = f'🚨 Изменилась цена на <a href="{link}">{_name[:21]}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {actual_price - _product_price}₽)Начальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
                     
                     _kb = create_remove_kb(user_id,
                                             product_id,
