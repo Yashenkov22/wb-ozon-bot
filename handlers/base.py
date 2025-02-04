@@ -1346,6 +1346,8 @@ async def any_input(message: types.Message,
 
     if check_link:
 
+        _add_msg = await message.answer(text=f'{check_link} товар добавляется...\nМожете дальше взаимодействовать с ботом')
+
         user_data = {
             'msg': (message.chat.id, message.message_id),
             'name': _name,
@@ -1356,11 +1358,11 @@ async def any_input(message: types.Message,
                                         scheduler=scheduler)
         
         if find_in_db:
-            _text = 'Товар уже был в Вашем списке или ошибка'
+            _text = f'{check_link} товар уже был в Вашем списке или ошибка'
         else:
-            _text = 'Товар успешно добавлен!'
+            _text = f'{check_link} товар добавлен к отслеживанию✅'
             
-            await message.answer(text=_text)
+            await _add_msg.edit_text(text=_text)
     else:
         await message.answer(text='Невалидная ссылка')
     
