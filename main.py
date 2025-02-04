@@ -34,6 +34,7 @@ from db.base import UserJob, engine, session, Base, db_url
 from middlewares.db import DbSessionMiddleware
 
 from utils.storage import redis_client, storage
+from utils.scheduler import scheduler
 
 from config import (TOKEN,
                     db_url,
@@ -106,12 +107,12 @@ JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
 
 
 # Настройка хранилища задач
-jobstores = {
-    'sqlalchemy': SQLAlchemyJobStore(url=JOB_STORE_URL),
-}
+# jobstores = {
+#     'sqlalchemy': SQLAlchemyJobStore(url=JOB_STORE_URL),
+# }
 
 # Создание и настройка планировщика
-scheduler = AsyncIOScheduler(jobstores=jobstores)
+# scheduler = AsyncIOScheduler(jobstores=jobstores)
 
 # scheduler = AsyncIOScheduler()
 

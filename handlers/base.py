@@ -23,6 +23,7 @@ from sqlalchemy.sql.expression import cast
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.date import DateTrigger
 
 from config import BEARER_TOKEN, FEEDBACK_REASON_PREFIX, DEV_ID
 
@@ -48,7 +49,7 @@ from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
                             show_item,
                             save_product,
                             show_product_list)
-from utils.scheduler import test_scheduler
+from utils.scheduler import add_product_task, test_scheduler
 
 from db.base import OzonProduct as OzonProductModel, User, Base, UserJob, WbProduct
 
@@ -1352,17 +1353,21 @@ async def any_input(message: types.Message,
             'msg': (message.chat.id, message.message_id),
             'name': _name,
             'link': link,
+            '_add_msg_id': _add_msg.message_id,
+            'product_marker': check_link,
         }
-        find_in_db = await save_product(user_data=user_data,
-                                        session=session,
-                                        scheduler=scheduler)
+
+        scheduler.add_job(add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
+        # find_in_db = await save_product(user_data=user_data,
+        #                                 session=session,
+        #                                 scheduler=scheduler)
         
-        if find_in_db:
-            _text = f'{check_link} товар уже был в Вашем списке или ошибка'
-        else:
-            _text = f'{check_link} товар добавлен к отслеживанию✅'
+        # if find_in_db:
+        #     _text = f'{check_link} товар уже был в Вашем списке или ошибка'
+        # else:
+        #     _text = f'{check_link} товар добавлен к отслеживанию✅'
             
-            await _add_msg.edit_text(text=_text)
+        #     await _add_msg.edit_text(text=_text)
     else:
         await message.answer(text='Невалидная ссылка')
     

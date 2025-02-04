@@ -7,6 +7,7 @@ from aiogram import types, Bot
 
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.job import Job
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,8 +19,21 @@ from db.base import WbProduct, WbPunkt, User, get_session, UserJob, OzonProduct
 from keyboards import add_or_create_close_kb, create_remove_kb
 
 from bot22 import bot
+from utils.handlers import save_product
 
 from .any import generate_pretty_amount
+
+
+JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
+
+
+# Настройка хранилища задач
+jobstores = {
+    'sqlalchemy': SQLAlchemyJobStore(url=JOB_STORE_URL),
+}
+
+# Создание и настройка планировщика
+scheduler = AsyncIOScheduler(jobstores=jobstores)
 
 
 timezone = pytz.timezone('Europe/Moscow')
@@ -40,6 +54,30 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
             modify_func = push_check_ozon_price
         
         job.modify(func=modify_func)
+
+
+async def add_product_task(user_data: dict):
+        try:
+            product_marker: str = user_data.get('product_marker')
+            _add_msg_id: int = user_data.get('_add_msg_id')
+            msg: tuple = user_data.get('msg')
+
+
+            async for session in get_session():
+                find_in_db = await save_product(user_data=user_data,
+                                                session=session,
+                                                scheduler=scheduler)
+            
+            if find_in_db:
+                _text = f'{product_marker} товар уже был в Вашем списке или ошибка'
+            else:
+                _text = f'{product_marker} товар добавлен к отслеживанию✅'
+                
+                await bot.edit_message_text(text=_text,
+                                            chat_id=msg[0],
+                                            message_id=_add_msg_id)
+        except Exception as ex:
+            print('SCHEDULER ADD ERROR', ex)
 
 
 async def push_check_wb_price(user_id: str,
@@ -157,11 +195,13 @@ async def push_check_wb_price(user_id: str,
                 pretty_sale = generate_pretty_amount(sale)
                 pretty_waiting_price = generate_pretty_amount(_waiting_price)
                 pretty_start_price = generate_pretty_amount(start_price)
+                
                 _text = f'WB товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
 
                 if _waiting_price >= _product_price:
                     _text = f'WB товар\nНазвание: {name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена товара, которую(или ниже) Вы ждали ({pretty_waiting_price})\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
-                    
+                    _text = f'🚨 Изменилась цена на <a href="{link}">{_name[:21]}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {actual_price - _product_price}₽)Начальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
+
                     _kb = create_remove_kb(user_id,
                                             product_id,
                                             marker='wb',
