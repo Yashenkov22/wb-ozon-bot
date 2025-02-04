@@ -132,7 +132,7 @@ def create_remove_and_edit_sale_kb(user_id: int,
         # _text = 'Удалить товар'
     else:
         # _callback_data = f'delete.no.rd_{_callback_data}'
-        delete_callback_data = f'delete.no.rd{_callback_data}_{job_id}'
+        delete_callback_data = f'delete.no.rd_{_callback_data}_{job_id}'
         edit_sale_callback_data = f'edit.sale.no.rd_{_callback_data}'
     
     # _text = 'Перестать отслеживать'
