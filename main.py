@@ -152,7 +152,7 @@ async def on_startup():
     # await init_db()
     scheduler.start()
 
-    startup_update_scheduler_jobs(scheduler)
+    # startup_update_scheduler_jobs(scheduler)
 
 
 @app.on_event('shutdown')
