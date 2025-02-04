@@ -186,27 +186,38 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
         _name = ' '.join(_name)
     else:
         # if not message_text.isdigit():
+
         link = message.text.strip()
 
     check_link = check_input_link(link) # None or Literal['WB', 'OZON']
 
     if check_link:
+        _add_msg = await message.answer(text=f'{check_link} товар добавляется...\nМожете дальше взаимодействовать с ботом')
 
         user_data = {
             'msg': (message.chat.id, message.message_id),
             'name': _name,
             'link': link,
+            '_add_msg_id': _add_msg.message_id,
+            'product_marker': check_link,
         }
-        find_in_db = await save_product(user_data=user_data,
-                                        session=session,
-                                        scheduler=scheduler)
+
+        scheduler.add_job(add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
+        # user_data = {
+        #     'msg': (message.chat.id, message.message_id),
+        #     'name': _name,
+        #     'link': link,
+        # }
+        # find_in_db = await save_product(user_data=user_data,
+        #                                 session=session,
+        #                                 scheduler=scheduler)
         
-        if find_in_db:
-            _text = f'{check_link} Товар уже был в Вашем списке или ошибка'
-        else:
-            _text = f'{check_link} Товар успешно добавлен!'
+        # if find_in_db:
+        #     _text = f'{check_link} Товар уже был в Вашем списке или ошибка'
+        # else:
+        #     _text = f'{check_link} Товар успешно добавлен!'
             
-        await message.answer(text=_text)
+        # await message.answer(text=_text)
     else:
         await message.answer(text='Невалидная ссылка')
     
