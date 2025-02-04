@@ -536,7 +536,7 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
 async def add_product_task(user_data: dict):
         try:
             product_marker: str = user_data.get('product_marker')
-            # _add_msg_id: int = user_data.get('_add_msg_id')
+            _add_msg_id: int = user_data.get('_add_msg_id')
             msg: tuple = user_data.get('msg')
 
 
@@ -547,11 +547,13 @@ async def add_product_task(user_data: dict):
             
             if find_in_db:
                 _text = f'{product_marker} товар уже был в Вашем списке или ошибка'
+                await bot.edit_message_text(chat_id=msg[0],
+                                            message_id=_add_msg_id,
+                                            text=_text)
             else:
-                _text = f'{product_marker} товар добавлен к отслеживанию✅'
+                # _text = f'{product_marker} товар добавлен к отслеживанию✅'
+                pass
                 
-                await bot.send_message(chat_id=msg[0],
-                                       text=_text)
         except Exception as ex:
             print('SCHEDULER ADD ERROR', ex)
 
@@ -675,7 +677,7 @@ async def push_check_wb_price(user_id: str,
                 _text = f'WB товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
 
                 if _waiting_price >= _product_price:
-                    _text = f'WB товар\nНазвание: {name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена товара, которую(или ниже) Вы ждали ({pretty_waiting_price})\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
+                    _text = f'WB товар\nНазвание: {name}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена товара, которую(или ниже) Вы ждали ({pretty_waiting_price})\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
                     _text = f'🚨 Изменилась цена на <a href="{link}">{_name[:21]}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {actual_price - _product_price}₽)Начальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
 
                     _kb = create_remove_kb(user_id,
@@ -891,9 +893,9 @@ async def push_check_ozon_price(user_id: str,
                 
                 # if _waiting_price:
                 if _waiting_price >= _product_price:
-                    _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
+                    _text = f'Ozon товар\n{_name}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
 
-                    _text = f'🚨 Изменилась цена на <a href="{link}">{_name[:21]}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {actual_price - _product_price}₽)Начальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
+                    _text = f'🚨 Изменилась цена на <a href="{link}">{_name[:21]}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {actual_price - _product_price}₽)\nНачальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
                     
                     _kb = create_remove_kb(user_id,
                                             product_id,

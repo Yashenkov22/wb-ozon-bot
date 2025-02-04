@@ -192,13 +192,13 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
     check_link = check_input_link(link) # None or Literal['WB', 'OZON']
 
     if check_link:
-        # _add_msg = await message.answer(text=f'{check_link} товар добавляется...\nМожете дальше взаимодействовать с ботом')
+        _add_msg = await message.answer(text=f'{check_link} товар добавлен к отслеживанию✅')
 
         user_data = {
             'msg': (message.chat.id, message.message_id),
             'name': _name,
             'link': link,
-            # '_add_msg_id': _add_msg.message_id,
+            '_add_msg_id': _add_msg.message_id,
             'product_marker': check_link,
         }
 
@@ -1359,12 +1359,13 @@ async def any_input(message: types.Message,
     if check_link:
 
         # _add_msg = await message.answer(text=f'{check_link} товар добавляется...\nМожете дальше взаимодействовать с ботом')
+        _add_msg = await message.answer(text=f'{check_link} товар добавлен к отслеживанию✅')
 
         user_data = {
             'msg': (message.chat.id, message.message_id),
             'name': _name,
             'link': link,
-            # '_add_msg_id': _add_msg.message_id,
+            '_add_msg_id': _add_msg.message_id,
             'product_marker': check_link,
         }
 
