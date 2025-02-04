@@ -156,11 +156,11 @@ async def push_check_wb_price(user_id: str,
                 pretty_actual_price = generate_pretty_amount(actual_price)
                 pretty_sale = generate_pretty_amount(sale)
                 pretty_waiting_price = generate_pretty_amount(_waiting_price)
-
+                pretty_start_price = generate_pretty_amount(start_price)
                 _text = f'WB товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
 
                 if _waiting_price >= _product_price:
-                    _text = f'WB товар\nНазвание: {name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\nЦена товара, которую(или ниже) Вы ждали ({pretty_waiting_price})\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
+                    _text = f'WB товар\nНазвание: {name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена товара, которую(или ниже) Вы ждали ({pretty_waiting_price})\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
                     
                     _kb = create_remove_kb(user_id,
                                             product_id,
@@ -369,8 +369,9 @@ async def push_check_ozon_price(user_id: str,
                 pretty_actual_price = generate_pretty_amount(actual_price)
                 pretty_sale = generate_pretty_amount(sale)
                 pretty_waiting_price = generate_pretty_amount(_waiting_price)
+                pretty_start_price = generate_pretty_amount(start_price)
                 
-                _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
+                _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
                 
                 # if _waiting_price:
                 if _waiting_price >= _product_price:
