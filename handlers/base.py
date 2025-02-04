@@ -313,6 +313,8 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
                           key=lambda el: el[5],   # sort by time_create field
                           reverse=True)           # order by desc
 
+    for _product in product_list:
+        print(_product[5])
     # print('sorted product', product_list)
 
     len_product_list = len(product_list)
