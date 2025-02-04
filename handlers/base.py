@@ -1070,7 +1070,8 @@ async def view_product1(callback: types.CallbackQuery,
     _kb = create_remove_and_edit_sale_kb(user_id=callback.from_user.id,
                                          product_id=product_id,
                                          marker=marker,
-                                         job_id=job_id)
+                                         job_id=job_id,
+                                         with_redirect=False)
     # _kb = create_or_add_cancel_btn(_kb)
     _kb = create_or_add_exit_btn(_kb)
 
