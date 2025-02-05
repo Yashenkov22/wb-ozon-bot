@@ -879,7 +879,7 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
     if start_text <= new_sale:
         await message.answer(text=f'Невалидные данные\nСкидка не может быть больше или равной цене товара\nПередано {new_sale}, Начальная цена товара: {start_price}')
         return
-        
+
     product_model = OzonProductModel if marker == 'ozon' else WbProduct
 
     query = (
@@ -1353,7 +1353,7 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
             
 
 
-@main_router.message(content_types=types.ContentType.TEXT)
+@main_router.message()
 async def any_input(message: types.Message,
                     state: FSMContext,
                     session: AsyncSession,
