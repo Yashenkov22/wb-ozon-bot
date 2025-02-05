@@ -1353,7 +1353,7 @@ async def remove_all_ozon_product_by_user(callback: types.CallbackQuery,
             
 
 
-@main_router.message(F.conent_type == types.ContentType.TEXT)
+@main_router.message(F.content_type == types.ContentType.TEXT)
 async def any_input(message: types.Message,
                     state: FSMContext,
                     session: AsyncSession,
