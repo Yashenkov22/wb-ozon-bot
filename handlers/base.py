@@ -790,6 +790,7 @@ async def edit_sale_callback(callback: types.CallbackQuery,
 
     link = _sale_data.get('link')
     sale = _sale_data.get('sale')
+    start_price = _sale_data.get('start_price')
 
     with_redirect = True
 
@@ -832,6 +833,7 @@ async def edit_sale_callback(callback: types.CallbackQuery,
             'marker': marker,
             'link': link,
             'sale': sale,
+            'start_price': start_price,
         }
         )
     await state.set_state(EditSale.new_sale)
