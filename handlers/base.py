@@ -61,44 +61,44 @@ start_text = '💱<b>Добро пожаловать в MoneySwap!</b>\n\nНаш
 moscow_tz = pytz.timezone('Europe/Moscow')
 
 
-@main_router.message(Command('start'))
-async def start(message: types.Message | types.CallbackQuery,
-                state: FSMContext,
-                session: AsyncSession,
-                bot: Bot,
-                scheduler: AsyncIOScheduler):
-    _message = message
+# @main_router.message(Command('start'))
+# async def start(message: types.Message | types.CallbackQuery,
+#                 state: FSMContext,
+#                 session: AsyncSession,
+#                 bot: Bot,
+#                 scheduler: AsyncIOScheduler):
+#     _message = message
     
-    await state.clear()
+#     await state.clear()
     
-    await check_user(message,
-                     session)
+#     await check_user(message,
+#                      session)
     
-    # scheduler.print_jobs()
+#     # scheduler.print_jobs()
     
-    await state.update_data(action=None)
+#     await state.update_data(action=None)
 
-    if isinstance(message, types.CallbackQuery):
-        message = message.message
+#     if isinstance(message, types.CallbackQuery):
+#         message = message.message
 
-    _kb = create_start_kb()
-    msg = await bot.send_message(text='Привет.\nЭто тестовые WB и OZON боты.',
-                                chat_id=_message.from_user.id,
-                                reply_markup=_kb.as_markup())
+#     _kb = create_start_kb()
+#     msg = await bot.send_message(text='Привет.\nЭто тестовые WB и OZON боты.',
+#                                 chat_id=_message.from_user.id,
+#                                 reply_markup=_kb.as_markup())
     
-    await state.update_data(msg=(msg.chat.id, msg.message_id))
+#     await state.update_data(msg=(msg.chat.id, msg.message_id))
 
-    try:
-        await message.delete()
+#     try:
+#         await message.delete()
         
-        if isinstance(_message, types.CallbackQuery):
-            await _message.answer()
+#         if isinstance(_message, types.CallbackQuery):
+#             await _message.answer()
 
-    except Exception as ex:
-        print(ex)
+#     except Exception as ex:
+#         print(ex)
 
 
-@main_router.message(Command('start1'))
+@main_router.message(Command('start'))
 async def start1(message: types.Message | types.CallbackQuery,
                 state: FSMContext,
                 session: AsyncSession,
@@ -450,11 +450,12 @@ async def redirect_to_(callback: types.CallbackQuery,
         marker = callback.data.split('_')[-1]
 
         if marker == 'cancel':
-            await start(callback,
-                        state,
-                        session,
-                        bot,
-                        scheduler)
+            pass
+            # await start(callback,
+            #             state,
+            #             session,
+            #             bot,
+            #             scheduler)
             try:
                 await callback.message.delete()
             except Exception:
@@ -511,19 +512,25 @@ async def callback_cancel(callback: types.Message | types.CallbackQuery,
                             session: AsyncSession,
                             bot: Bot,
                             scheduler: AsyncIOScheduler):
+    await state.set_state()
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+
     # await start(callback,
     #             state,
     #             bot)
-    data = await state.get_data()
+    # data = await state.get_data()
 
-    action = data.get('action')
+    # action = data.get('action')
 
-    await redirect_to_(callback,
-                       state,
-                       session,
-                       bot,
-                       scheduler,
-                       marker=action)
+    # await redirect_to_(callback,
+    #                    state,
+    #                    session,
+    #                    bot,
+    #                    scheduler,
+    #                    marker=action)
     
 @main_router.callback_query(F.data == 'exit')
 async def callback_to_main(callback: types.Message | types.CallbackQuery,
@@ -544,17 +551,18 @@ async def callback_to_main(callback: types.Message | types.CallbackQuery,
                             session: AsyncSession,
                             bot: Bot,
                             scheduler: AsyncIOScheduler):
+    pass
     # callback_data = callback.data.split('_')[-1]
 
     # await redirect_to_(callback,
     #               state,
     #               bot,
     #               marker='wb')
-    await start(callback,
-                state,
-                session,
-                bot,
-                scheduler)
+    # await start(callback,
+    #             state,
+    #             session,
+    #             bot,
+    #             scheduler)
     
 
 @main_router.callback_query(F.data.startswith('done'))
@@ -891,7 +899,7 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
             await message.answer('Не удалось обновить скидку')
         else:
             # await message.answer('Скидка обновлена')
-            _kb = create_or_add_cancel_btn()
+            _kb = create_or_add_exit_btn()
             await bot.edit_message_text(text='Скидка обновлена',
                                         chat_id=msg[0],
                                         message_id=msg[-1],
