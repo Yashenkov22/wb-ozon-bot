@@ -876,7 +876,7 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
     marker = sale_data.get('marker')
     start_price = sale_data.get('start_price')
 
-    if start_text <= new_sale:
+    if start_price <= float(new_sale):
         await message.answer(text=f'Невалидные данные\nСкидка не может быть больше или равной цене товара\nПередано {new_sale}, Начальная цена товара: {start_price}')
         return
 
