@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from aiogram import Router, types, Bot, F
 from aiogram.types import BufferedInputFile, URLInputFile
 from aiogram.utils.media_group import MediaGroupBuilder
-from aiogram.filters import Command
+from aiogram.filters import Command, or_f, and_f
 from aiogram.fsm.context import FSMContext
 
 from sqlalchemy.orm import Session, joinedload, sessionmaker
@@ -165,7 +165,7 @@ async def add_any_product(message: types.Message | types.CallbackQuery,
         pass
 
 
-@main_router.message(AnyProductStates.link)
+@main_router.message(and_f(AnyProductStates.link, F.content_type == types.ContentType.TEXT))
 async def any_product_proccess(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
                             session: AsyncSession,
@@ -850,7 +850,7 @@ async def edit_sale_callback(callback: types.CallbackQuery,
     pass
 
 
-@main_router.message(EditSale.new_sale)
+@main_router.message(and_f(EditSale.new_sale), F.content_type == types.ContentType.TEXT)
 async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
                             session: AsyncSession,
