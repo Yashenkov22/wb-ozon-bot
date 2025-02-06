@@ -320,6 +320,7 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         return
     
     # print('sql product', product_list)
+    len_product_list = len(product_list)
     
     product_list = sorted(list(map(lambda el: tuple(el), product_list)),
                           key=lambda el: el[5],   # sort by time_create field
@@ -336,7 +337,6 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
     #     print(_product[5])
     # print('sorted product', product_list)
 
-    len_product_list = len(product_list)
     pages = ceil(len_product_list / DEFAULT_PAGE_ELEMENT_COUNT)
     current_page = 1
 
