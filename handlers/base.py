@@ -320,13 +320,20 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         return
     
     # print('sql product', product_list)
-
+    
     product_list = sorted(list(map(lambda el: tuple(el), product_list)),
                           key=lambda el: el[5],   # sort by time_create field
                           reverse=True)           # order by desc
+    try:
+        wb_product_count = sum(1 for product in product_list if product[6] == 'wb')
+        ozon_product_count = len_product_list - wb_product_count
+    except Exception as ex:
+        print('sum eror', ex)
+        wb_product_count = 0
+        ozon_product_count = len_product_list
 
-    for _product in product_list:
-        print(_product[5])
+    # for _product in product_list:
+    #     print(_product[5])
     # print('sorted product', product_list)
 
     len_product_list = len(product_list)
@@ -338,6 +345,8 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         'pages': pages,
         'current_page': current_page,
         'product_list': product_list,
+        'ozon_product_count': ozon_product_count,
+        'wb_product_count': wb_product_count,
     }
 
     print(view_product_dict)

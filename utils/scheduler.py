@@ -668,6 +668,10 @@ async def push_check_wb_price(user_id: str,
                 # if _waiting_price == actual_price:
                 _waiting_price = start_price - sale
 
+                if actual_price < _product_price:
+                    return
+
+
                 pretty_product_price = generate_pretty_amount(_product_price)
                 pretty_actual_price = generate_pretty_amount(actual_price)
                 pretty_sale = generate_pretty_amount(sale)
@@ -678,7 +682,7 @@ async def push_check_wb_price(user_id: str,
 
                 if _waiting_price >= _product_price:
                     # _text = f'WB товар\nНазвание: {name}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена товара, которую(или ниже) Вы ждали ({pretty_waiting_price})\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
-                    _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {actual_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
+                    _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
 
                     _kb = create_remove_kb(user_id,
                                             product_id,
@@ -888,6 +892,9 @@ async def push_check_ozon_price(user_id: str,
                 pretty_sale = generate_pretty_amount(sale)
                 pretty_waiting_price = generate_pretty_amount(_waiting_price)
                 pretty_start_price = generate_pretty_amount(start_price)
+
+                if actual_price < _product_price:
+                    return
                 
                 # _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
                 
@@ -895,7 +902,7 @@ async def push_check_ozon_price(user_id: str,
                 if _waiting_price >= _product_price:
                     # _text = f'Ozon товар\n{_name}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
 
-                    _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {actual_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nЦена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
+                    _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
                     
                     _kb = create_remove_kb(user_id,
                                             product_id,
