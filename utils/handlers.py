@@ -1399,7 +1399,7 @@ async def show_product_list(product_dict: dict,
 
     _text = f'Ваши товары\n\nВсего товаров: {len_product_list}\nПоказано {product_on_current_page_count} товар(a/ов)'
 
-    _text = f'📝 Список ваших товаров:\n🔽 Всего товаров: {len_product_list}\n🔵 Товаров с Ozon: {ozon_product_count}\n🟣 Товаров с Wildberries: {wb_product_count}\nПоказано {product_on_current_page_count} товаров на странице, нажмите ▶, чтобы листать список'
+    _text = f'📝 Список ваших товаров:\n\n🔽 Всего товаров: {len_product_list}\n\n🔵 Товаров с Ozon: {ozon_product_count}\n🟣 Товаров с Wildberries: {wb_product_count}\n\nПоказано {product_on_current_page_count} товаров на странице, нажмите ▶, чтобы листать список'
 
     if not list_msg:
         list_msg = await bot.send_message(chat_id=user_id,
