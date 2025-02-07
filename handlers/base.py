@@ -770,6 +770,8 @@ async def delete_callback(callback: types.CallbackQuery,
                 #         break
                 for idx, product in enumerate(product_list):
                     print(product)
+                    print(product[0], product_id)
+                    print(product[6], marker)
                     if product[0] == product_id and product[6] == marker:
                         del product_list[idx]
 
