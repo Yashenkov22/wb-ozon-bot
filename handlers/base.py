@@ -27,7 +27,7 @@ from apscheduler.triggers.date import DateTrigger
 
 from config import BEARER_TOKEN, FEEDBACK_REASON_PREFIX, DEV_ID
 
-from keyboards import (create_or_add_exit_btn,
+from keyboards import (create_or_add_exit_btn, create_or_add_return_to_product_list_btn,
                        create_remove_kb,
                        create_start_kb,
                        create_or_add_cancel_btn,
@@ -657,6 +657,27 @@ async def callback_close(callback: types.Message | types.CallbackQuery,
     #             bot,
     #             scheduler)
 
+
+@main_router.callback_query(F.data == 'return_to_product_list')
+async def back_to_product_list(callback: types.Message | types.CallbackQuery,
+                               state: FSMContext):
+    data = await state.get_data()
+
+    product_dict: dict = data.get('view_prdouct_dict')
+    
+    if product_dict:
+        # list_msg: tuple = product_dict.get('list_msg')
+        
+        # if list_msg:
+    #         await bot.edit_message_text()
+            await show_product_list(product_dict=product_dict,
+                                    user_id=callback.from_user.id,
+                                    state=state)
+    else:
+        await callback.answer(text='Что то пошло не так',
+                              show_alert=True)
+
+
 @main_router.callback_query(F.data.startswith('delete'))
 async def delete_callback(callback: types.CallbackQuery,
                         state: FSMContext,
@@ -664,6 +685,8 @@ async def delete_callback(callback: types.CallbackQuery,
                         bot: Bot,
                         scheduler: AsyncIOScheduler):
     with_redirect = True
+
+    data = await state.get_data()
     
     _callback_data = callback.data.split('_')
 
@@ -719,12 +742,51 @@ async def delete_callback(callback: types.CallbackQuery,
                                           show_alert=True)
             
             if with_redirect:
-                await redirect_to_(callback,
-                                state,
-                                session,
-                                bot,
-                                scheduler,
-                                marker=marker)
+                product_dict: dict = data.get('view_product_dict')
+
+                len_product_list: int = product_dict.get('len_product_list')
+                pages: int = product_dict.get('pages')
+                current_page: int = product_dict.get('current_page')
+                product_list: list = product_dict.get('product_list')
+                ozon_product_count: int = product_dict.get('ozon_product_count')
+                wb_product_count: int = product_dict.get('wb_product_count')
+
+                for idx, product in enumerate(product_list):
+                    if product[0] == product_id and product[6] == marker:
+                        del product_list[idx]
+                        break
+                
+                if marker == 'wb':
+                    wb_product_count -= 1
+                else:
+                    ozon_product_count -= 1
+                
+                len_product_list = len(product_list)
+
+                pages = ceil(len_product_list / DEFAULT_PAGE_ELEMENT_COUNT)
+
+                if current_page > pages:
+                    current_page -= 1
+
+                view_product_dict = {
+                    'len_product_list': len_product_list,
+                    'pages': pages,
+                    'current_page': current_page,
+                    'product_list': product_list,
+                    'ozon_product_count': ozon_product_count,
+                    'wb_product_count': wb_product_count,
+                }
+
+                await state.update_data(view_product_dict=view_product_dict)
+
+                # await redirect_to_(callback,
+                #                 state,
+                #                 session,
+                #                 bot,
+                #                 scheduler,
+                #                 marker=marker)
+                await back_to_product_list(callback,
+                                           state)
             else:
                 try:
                     await callback.message.delete()
@@ -1097,9 +1159,10 @@ async def view_product1(callback: types.CallbackQuery,
                                          product_id=product_id,
                                          marker=marker,
                                          job_id=job_id,
-                                         with_redirect=False)
+                                         with_redirect=True)
     # _kb = create_or_add_cancel_btn(_kb)
-    _kb = create_or_add_exit_btn(_kb)
+    # _kb = create_or_add_exit_btn(_kb)
+    _kb = create_or_add_return_to_product_list_btn(_kb)
 
     if list_msg:
         await bot.edit_message_text(chat_id=list_msg[0],

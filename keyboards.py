@@ -271,3 +271,13 @@ def add_pagination_btn(_kb: InlineKeyboardBuilder,
                                                     callback_data='page_prev'))
     
     return _kb
+
+
+def create_or_add_return_to_product_list_btn(_kb: InlineKeyboardBuilder = None):
+    if not _kb:
+        _kb = InlineKeyboardBuilder()
+    
+    _kb.row(types.InlineKeyboardButton(text='Вернуться к списку товаров',
+                                       callback_data='return_to_product_list'))
+    
+    return _kb

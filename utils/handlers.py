@@ -1379,6 +1379,11 @@ async def show_product_list(product_dict: dict,
 
     list_msg: tuple = product_dict.get('list_msg')
 
+    if not product_list:
+        await bot.send_message(chat_id=user_id,
+                               text='Нет добавленных товаров')
+        return
+
     # view_product_dict = {
     #     'len_product_list': len_product_list,
     #     'pages': pages,
@@ -1409,13 +1414,14 @@ async def show_product_list(product_dict: dict,
         
         product_dict['list_msg'] = (list_msg.chat.id, list_msg.message_id)
         
-        await state.update_data(view_product_dict=product_dict)
+        # await state.update_data(view_product_dict=product_dict)
     else:
         await bot.edit_message_text(chat_id=user_id,
                                     message_id=list_msg[-1],
                                     text=_text,
                                     reply_markup=_kb.as_markup())
-        await state.update_data(view_product_dict=product_dict)
+    
+    await state.update_data(view_product_dict=product_dict)
     # for product in product_list_for_page:
     #     product_id, link, actual, start, user_id, _date, marker, name, sale, job_id = product
     
