@@ -752,7 +752,7 @@ async def delete_callback(callback: types.CallbackQuery,
                 wb_product_count: int = product_dict.get('wb_product_count')
                 list_msg: tuple = product_dict.get('list_msg')
 
-                print('22', product_list)
+                print(type(product_list))
 
                 # for idx, product in enumerate(product_list):
                 #     print('PRODUCT', product)
@@ -760,14 +760,18 @@ async def delete_callback(callback: types.CallbackQuery,
                 #         # product_list.pop(idx)
                 #         product_list = product_list[:idx] + product_list[idx+1:]
                 #         break
-                for i in range(len(product_list)):
-                    # print('PRODUCT', product)
-                    if product_list[i][0] == product_id and product_list[i][6] == marker:
-                        print('удаляю...')
-                        # product_list.pop(idx)
-                        # product_list = product_list[:idx] + product_list[idx+1:]
-                        product_list.pop(i)
-                        break
+                # for i in range(len(product_list)):
+                #     # print('PRODUCT', product)
+                #     if product_list[i][0] == product_id and product_list[i][6] == marker:
+                #         print('удаляю...')
+                #         # product_list.pop(idx)
+                #         # product_list = product_list[:idx] + product_list[idx+1:]
+                #         product_list.pop(i)
+                #         break
+                for idx, product in enumerate(product_list):
+                    print(product)
+                    if product[0] == product_id and product[6] == marker:
+                        del product_list[idx]
 
                 print('33',product_list)
                 
@@ -861,16 +865,21 @@ async def delete_callback(callback: types.CallbackQuery,
                 wb_product_count: int = product_dict.get('wb_product_count')
                 list_msg: tuple = product_dict.get('list_msg')
 
-                print(len(product_list))
+                print(type(product_list))
 
-                for i in range(len(product_list)):
-                    # print('PRODUCT', product)
-                    if product_list[i][0] == product_id and product_list[i][6] == marker:
-                        print('удаляю...')
-                        # product_list.pop(idx)
-                        # product_list = product_list[:idx] + product_list[idx+1:]
-                        product_list.pop(i)
-                        break
+                # for i in range(len(product_list)):
+                #     # print('PRODUCT', product)
+                #     if product_list[i][0] == product_id and product_list[i][6] == marker:
+                #         print('удаляю...')
+                #         # product_list.pop(idx)
+                #         # product_list = product_list[:idx] + product_list[idx+1:]
+                #         product_list.pop(i)
+                #         break
+                for idx, product in enumerate(product_list):
+                    print(product)
+                    if product[0] == product_id and product[6] == marker:
+                        del product_list[idx]
+
 
                 print(len(product_list))
 
