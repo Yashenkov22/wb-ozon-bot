@@ -773,6 +773,7 @@ async def delete_callback(callback: types.CallbackQuery,
                     'product_list': product_list,
                     'ozon_product_count': ozon_product_count,
                     'wb_product_count': wb_product_count,
+                    'list_msg': list_msg,
                 }
 
                 await state.update_data(view_product_dict=view_product_dict)
