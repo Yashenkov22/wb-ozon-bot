@@ -756,7 +756,8 @@ async def delete_callback(callback: types.CallbackQuery,
 
                 for idx, product in enumerate(product_list):
                     if product[0] == product_id and product[6] == marker:
-                        product_list.pop(idx)
+                        # product_list.pop(idx)
+                        product_list = product_list[:idx] + product_list[idx:]
                         break
 
                 print('33',product_list)
@@ -853,7 +854,8 @@ async def delete_callback(callback: types.CallbackQuery,
 
                 for idx, product in enumerate(product_list):
                     if product[0] == product_id and product[6] == marker:
-                        product_list.pop(idx)
+                        # product_list.pop(idx)
+                        product_list = product_list[:idx] + product_list[idx:]
                         break
 
                 ozon_product_count -= 1
