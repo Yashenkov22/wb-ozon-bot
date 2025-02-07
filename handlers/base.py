@@ -752,7 +752,7 @@ async def delete_callback(callback: types.CallbackQuery,
                 wb_product_count: int = product_dict.get('wb_product_count')
                 list_msg: tuple = product_dict.get('list_msg')
 
-                print(type(product_list))
+                # print(type(product_list))
 
                 # for idx, product in enumerate(product_list):
                 #     print('PRODUCT', product)
@@ -772,10 +772,10 @@ async def delete_callback(callback: types.CallbackQuery,
                     print(product)
                     print(product[0], product_id)
                     print(product[6], marker)
-                    if product[0] == product_id and product[6] == marker:
+                    if product[0] == int(product_id) and product[6] == marker:
                         del product_list[idx]
 
-                print('33',product_list)
+                # print('33',product_list)
                 
                 wb_product_count -= 1
                 
@@ -867,7 +867,7 @@ async def delete_callback(callback: types.CallbackQuery,
                 wb_product_count: int = product_dict.get('wb_product_count')
                 list_msg: tuple = product_dict.get('list_msg')
 
-                print(type(product_list))
+                # print(type(product_list))
 
                 # for i in range(len(product_list)):
                 #     # print('PRODUCT', product)
@@ -878,12 +878,12 @@ async def delete_callback(callback: types.CallbackQuery,
                 #         product_list.pop(i)
                 #         break
                 for idx, product in enumerate(product_list):
-                    print(product)
-                    if product[0] == product_id and product[6] == marker:
+                    # print(product)
+                    if product[0] == int(product_id) and product[6] == marker:
                         del product_list[idx]
 
 
-                print(len(product_list))
+                # print(len(product_list))
 
                 ozon_product_count -= 1
                 
