@@ -861,6 +861,8 @@ async def delete_callback(callback: types.CallbackQuery,
                 wb_product_count: int = product_dict.get('wb_product_count')
                 list_msg: tuple = product_dict.get('list_msg')
 
+                print(len(product_list))
+
                 for i in range(len(product_list)):
                     # print('PRODUCT', product)
                     if product_list[i][0] == product_id and product_list[i][6] == marker:
@@ -869,6 +871,8 @@ async def delete_callback(callback: types.CallbackQuery,
                         # product_list = product_list[:idx] + product_list[idx+1:]
                         product_list.pop(i)
                         break
+
+                print(len(product_list))
 
                 ozon_product_count -= 1
                 
