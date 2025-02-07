@@ -744,7 +744,7 @@ async def delete_callback(callback: types.CallbackQuery,
             if with_redirect:
                 product_dict: dict = data.get('view_product_dict')
 
-                len_product_list: int = product_dict.get('len_product_list')
+                # len_product_list: int = product_dict.get('len_product_list')
                 pages: int = product_dict.get('pages')
                 current_page: int = product_dict.get('current_page')
                 product_list: list = product_dict.get('product_list')
@@ -765,6 +765,8 @@ async def delete_callback(callback: types.CallbackQuery,
 
                 if current_page > pages:
                     current_page -= 1
+
+                len_product_list = len(product_list)
 
                 view_product_dict = {
                     'len_product_list': len_product_list,
@@ -837,12 +839,13 @@ async def delete_callback(callback: types.CallbackQuery,
             if with_redirect:
                 product_dict: dict = data.get('view_product_dict')
 
-                len_product_list: int = product_dict.get('len_product_list')
+                # len_product_list: int = product_dict.get('len_product_list')
                 pages: int = product_dict.get('pages')
                 current_page: int = product_dict.get('current_page')
                 product_list: list = product_dict.get('product_list')
                 ozon_product_count: int = product_dict.get('ozon_product_count')
                 wb_product_count: int = product_dict.get('wb_product_count')
+                list_msg: tuple = product_dict.get('list_msg')
 
                 for idx, product in enumerate(product_list):
                     if product[0] == product_id and product[6] == marker:
@@ -858,6 +861,8 @@ async def delete_callback(callback: types.CallbackQuery,
                 if current_page > pages:
                     current_page -= 1
 
+                len_product_list = len(product_list)
+
                 view_product_dict = {
                     'len_product_list': len_product_list,
                     'pages': pages,
@@ -865,6 +870,7 @@ async def delete_callback(callback: types.CallbackQuery,
                     'product_list': product_list,
                     'ozon_product_count': ozon_product_count,
                     'wb_product_count': wb_product_count,
+                    'list_msg': list_msg,
                 }
 
                 await state.update_data(view_product_dict=view_product_dict)
