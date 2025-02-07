@@ -49,9 +49,10 @@ DEFAULT_PAGE_ELEMENT_COUNT = 5
 def check_input_link(link: str):
     if (link.startswith('https://ozon')) or \
         (link.startswith('https://www.ozon')) or \
-        (link.startswith('https://www.wildberries')):
+        (link.startswith('https://www.wildberries')) or\
+        (link.startswith('https://wildberries')):
         
-        return 'WB' if link.startswith('https://www.wildberries') else 'OZON'
+        return 'WB' if link.find('wildberries') > 0 else 'OZON'
 
 
 def generate_sale_for_price(price: float):
