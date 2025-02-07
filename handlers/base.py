@@ -854,6 +854,7 @@ async def delete_callback(callback: types.CallbackQuery,
                 list_msg: tuple = product_dict.get('list_msg')
 
                 for idx, product in enumerate(product_list):
+                    print('PRODUCT', product)
                     if product[0] == product_id and product[6] == marker:
                         # product_list.pop(idx)
                         product_list = product_list[:idx] + product_list[idx:]

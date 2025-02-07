@@ -216,7 +216,7 @@ def create_product_list_for_page_kb(product_list_for_page: list[tuple]):
         
         _callback_data = f'view-product1_{user_id}_{marker}_{product_id}'
         
-        _kb.row(types.InlineKeyboardButton(text=f'{marker.upper()} {name}',
+        _kb.row(types.InlineKeyboardButton(text=f'{marker.upper()} || {name}',
                                            callback_data=_callback_data))
     return _kb
 
