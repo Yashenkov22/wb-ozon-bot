@@ -1019,7 +1019,9 @@ async def view_product1(callback: types.CallbackQuery,
                         marker: str = None):
     data = await state.get_data()
 
-    list_msg: tuple = data.get('list_msg')
+    product_dict: dict = data.get('view_product_dict')
+
+    list_msg: tuple = data.get('product_dict')
 
     callback_data = callback.data.split('_')[1:]
 
