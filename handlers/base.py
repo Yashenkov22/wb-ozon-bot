@@ -756,10 +756,7 @@ async def delete_callback(callback: types.CallbackQuery,
                         del product_list[idx]
                         break
                 
-                if marker == 'wb':
-                    wb_product_count -= 1
-                else:
-                    ozon_product_count -= 1
+                wb_product_count -= 1
                 
                 len_product_list = len(product_list)
 
@@ -836,12 +833,47 @@ async def delete_callback(callback: types.CallbackQuery,
                                           show_alert=True)
             
             if with_redirect:
-                await redirect_to_(callback,
-                                state,
-                                session,
-                                bot,
-                                scheduler,
-                                marker=marker)
+                product_dict: dict = data.get('view_product_dict')
+
+                len_product_list: int = product_dict.get('len_product_list')
+                pages: int = product_dict.get('pages')
+                current_page: int = product_dict.get('current_page')
+                product_list: list = product_dict.get('product_list')
+                ozon_product_count: int = product_dict.get('ozon_product_count')
+                wb_product_count: int = product_dict.get('wb_product_count')
+
+                for idx, product in enumerate(product_list):
+                    if product[0] == product_id and product[6] == marker:
+                        del product_list[idx]
+                        break
+
+                ozon_product_count -= 1
+                
+                len_product_list = len(product_list)
+
+                pages = ceil(len_product_list / DEFAULT_PAGE_ELEMENT_COUNT)
+
+                if current_page > pages:
+                    current_page -= 1
+
+                view_product_dict = {
+                    'len_product_list': len_product_list,
+                    'pages': pages,
+                    'current_page': current_page,
+                    'product_list': product_list,
+                    'ozon_product_count': ozon_product_count,
+                    'wb_product_count': wb_product_count,
+                }
+
+                await state.update_data(view_product_dict=view_product_dict)
+                # await redirect_to_(callback,
+                #                 state,
+                #                 session,
+                #                 bot,
+                #                 scheduler,
+                #                 marker=marker)
+                await back_to_product_list(callback,
+                                           state)
             else:
                 try:
                     await callback.message.delete()
