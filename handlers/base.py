@@ -663,7 +663,7 @@ async def back_to_product_list(callback: types.Message | types.CallbackQuery,
                                state: FSMContext):
     data = await state.get_data()
 
-    product_dict: dict = data.get('view_prdouct_dict')
+    product_dict: dict = data.get('view_product_dict')
     
     if product_dict:
         # list_msg: tuple = product_dict.get('list_msg')
