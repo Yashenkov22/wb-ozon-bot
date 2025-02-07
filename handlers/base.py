@@ -752,10 +752,14 @@ async def delete_callback(callback: types.CallbackQuery,
                 wb_product_count: int = product_dict.get('wb_product_count')
                 list_msg: tuple = product_dict.get('list_msg')
 
+                print('22', product_list)
+
                 for idx, product in enumerate(product_list):
                     if product[0] == product_id and product[6] == marker:
                         del product_list[idx]
                         break
+
+                print('33',product_list)
                 
                 wb_product_count -= 1
                 
