@@ -1021,7 +1021,7 @@ async def view_product1(callback: types.CallbackQuery,
 
     product_dict: dict = data.get('view_product_dict')
 
-    list_msg: tuple = data.get('product_dict')
+    list_msg: tuple = product_dict.get('list_msg')
 
     callback_data = callback.data.split('_')[1:]
 
