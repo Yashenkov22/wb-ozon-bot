@@ -754,11 +754,19 @@ async def delete_callback(callback: types.CallbackQuery,
 
                 print('22', product_list)
 
-                for idx, product in enumerate(product_list):
-                    print('PRODUCT', product)
-                    if product[0] == product_id and product[6] == marker:
+                # for idx, product in enumerate(product_list):
+                #     print('PRODUCT', product)
+                #     if product[0] == product_id and product[6] == marker:
+                #         # product_list.pop(idx)
+                #         product_list = product_list[:idx] + product_list[idx+1:]
+                #         break
+                for i in range(len(product_list)):
+                    # print('PRODUCT', product)
+                    if product_list[i][0] == product_id and product_list[i][6] == marker:
+                        print('удаляю...')
                         # product_list.pop(idx)
-                        product_list = product_list[:idx] + product_list[idx+1:]
+                        # product_list = product_list[:idx] + product_list[idx+1:]
+                        product_list.pop(i)
                         break
 
                 print('33',product_list)
@@ -853,12 +861,13 @@ async def delete_callback(callback: types.CallbackQuery,
                 wb_product_count: int = product_dict.get('wb_product_count')
                 list_msg: tuple = product_dict.get('list_msg')
 
-                for idx, product in enumerate(product_list):
-                    print('PRODUCT', product)
-                    if product[0] == product_id and product[6] == marker:
+                for i in range(len(product_list)):
+                    # print('PRODUCT', product)
+                    if product_list[i][0] == product_id and product_list[i][6] == marker:
                         print('удаляю...')
                         # product_list.pop(idx)
-                        product_list = product_list[:idx] + product_list[idx+1:]
+                        # product_list = product_list[:idx] + product_list[idx+1:]
+                        product_list.pop(i)
                         break
 
                 ozon_product_count -= 1
