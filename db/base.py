@@ -44,7 +44,7 @@ class WbPunkt(Base):
     # first_name = Column(String, nullable=True)
     # last_name = Column(String, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
-    user_id = Column(Integer, ForeignKey('users.tg_id'))
+    user_id = Column(BigInteger, ForeignKey('users.tg_id'))
     
     # Связь с пользователем
     user = relationship(User, back_populates="wb_punkts")
@@ -114,7 +114,7 @@ class UserJob(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     job_id = Column(String)
-    user_id = Column(Integer, ForeignKey('users.tg_id'))
+    user_id = Column(BigInteger, ForeignKey('users.tg_id'))
     product_id = Column(Integer)
     product_marker = Column(String)
 
