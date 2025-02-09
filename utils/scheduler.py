@@ -14,7 +14,7 @@ from apscheduler.job import Job
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy import select, and_, update
+from sqlalchemy import insert, select, and_, update
 
 from db.base import WbProduct, WbPunkt, User, get_session, UserJob, OzonProduct
 
@@ -372,10 +372,46 @@ async def save_product(user_data: dict,
 
             del_zone = res.scalar_one_or_none()
 
-        if not res:
-            await bot.send_message(chat_id=msg[0],
-                                   text='Не получилось найти пункт выдачи')
-            return
+        if not del_zone:
+            lat, lon = ('55.707106', '37.572854')
+
+            async with aiohttp.ClientSession() as aiosession:
+                _url = f"http://172.18.0.2:8080/pickUpPoint/{lat}/{lon}"
+                response = await aiosession.get(url=_url)
+
+                res = await response.json()
+
+                deliveryRegions = res.get('deliveryRegions')
+
+                print(deliveryRegions)
+
+                del_zone = deliveryRegions[-1]
+            
+                _data = {
+                    'lat': float(lat),
+                    'lon': float(lon),
+                    'zone': del_zone,
+                    'user_id': msg[0],
+                    'time_create': datetime.now(tz=pytz.timezone('Europe/Moscow')),
+                }
+
+                query = (
+                    insert(WbPunkt)\
+                    .values(**_data)
+                )
+                async with session as session:
+                    await session.execute(query)
+
+                    try:
+                        await session.commit()
+                        _text = 'Wb пукнт успешно добавлен'
+                    except Exception:
+                        await session.rollback()
+                        _text = 'Wb пукнт не удалось добавить'
+
+                        await bot.send_message(chat_id=msg[0],
+                                            text='Не получилось найти пункт выдачи')
+                        return
         
         # query = (
         #     select(
