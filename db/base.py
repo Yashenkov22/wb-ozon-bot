@@ -7,7 +7,7 @@ from config import db_url, _db_url
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
-from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, DateTime, TIMESTAMP, BLOB, JSON
+from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, DateTime, TIMESTAMP, BLOB, JSON, BigInteger
 
 # Определяем базовый класс для моделей
 # Base = declarative_base()
@@ -17,7 +17,7 @@ Base = automap_base()
 class User(Base):
     __tablename__ = 'users'
     
-    tg_id = Column(Integer, primary_key=True, index=True)
+    tg_id = Column(BigInteger, primary_key=True, index=True)
     # tg_id = Column(Integer)
     username = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
