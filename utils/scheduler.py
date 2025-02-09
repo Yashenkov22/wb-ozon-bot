@@ -44,7 +44,7 @@ scheduler_cron = CronTrigger(minute=1,
 
 
 async def check_product_by_user_in_db(user_id: int,
-                                      link: str,
+                                      short_link: str,
                                       marker: Literal['wb', 'ozon'],
                                       session: AsyncSession):
     product_model = OzonProduct if marker == 'ozon' else WbProduct
@@ -55,7 +55,7 @@ async def check_product_by_user_in_db(user_id: int,
         )\
         .where(
             and_(
-                product_model.link == link,
+                product_model.short_link == short_link,
                 product_model.user_id == user_id,
             )
         )
@@ -72,11 +72,6 @@ async def save_product(user_data: dict,
                        session: AsyncSession,
                        scheduler: AsyncIOScheduler,
                        percent: str = None):
-    check_product_by_user =  await check_product_by_user_in_db()
-
-    if check_product_by_user:
-        return True
-
     msg = user_data.get('msg')
     _name = user_data.get('name')
     link: str = user_data.get('link')
@@ -151,6 +146,14 @@ async def save_product(user_data: dict,
                 return True
             
             _new_short_link = res.split('|')[0]
+
+            check_product_by_user =  await check_product_by_user_in_db(user_id=msg[0],
+                                                                       short_link=_new_short_link,
+                                                                       marker='ozon',
+                                                                       session=session)
+
+            if check_product_by_user:
+                return True
 
             w = re.findall(r'\"cardPrice.*currency?', res)
             # print(w)
@@ -399,6 +402,14 @@ async def save_product(user_data: dict,
             #                             reply_markup=_kb.as_markup())
             # await message.delete()
             # return
+        check_product_by_user =  await check_product_by_user_in_db(user_id=msg[0],
+                                                                    short_link=short_link,
+                                                                    marker='wb',
+                                                                    session=session)
+
+        if check_product_by_user:
+            return True
+
         try:
             timeout = aiohttp.ClientTimeout(total=15)
             async with aiohttp.ClientSession() as aiosession:
