@@ -547,15 +547,18 @@ async def add_product_task(user_data: dict):
             
             if find_in_db:
                 _text = f'{product_marker} товар уже был в Вашем списке или ошибка'
-                await bot.edit_message_text(chat_id=msg[0],
-                                            message_id=_add_msg_id,
-                                            text=_text)
             else:
-                # _text = f'{product_marker} товар добавлен к отслеживанию✅'
-                pass
+                _text = f'{product_marker} товар добавлен к отслеживанию✅'
+                # pass
+            await bot.edit_message_text(chat_id=msg[0],
+                                        message_id=_add_msg_id,
+                                        text=_text)
                 
         except Exception as ex:
             print('SCHEDULER ADD ERROR', ex)
+            await bot.edit_message_text(chat_id=msg[0],
+                                        message_id=_add_msg_id,
+                                        text=f'{product_marker.upper()} не удалось добавить')
 
 
 async def push_check_wb_price(user_id: str,

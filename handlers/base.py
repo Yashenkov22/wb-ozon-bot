@@ -1541,7 +1541,8 @@ async def any_input(message: types.Message,
     if check_link:
 
         # _add_msg = await message.answer(text=f'{check_link} товар добавляется...\nМожете дальше взаимодействовать с ботом')
-        _add_msg = await message.answer(text=f'{check_link} товар добавлен к отслеживанию✅')
+        # _add_msg = await message.answer(text=f'{check_link} товар добавлен к отслеживанию✅')
+        _add_msg = await message.answer(text=f'{check_link} товар добавляется...')
 
         user_data = {
             'msg': (message.chat.id, message.message_id),
