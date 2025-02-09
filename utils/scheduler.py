@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import re
+from typing import Literal
 import pytz
 import aiohttp
 
@@ -42,10 +43,40 @@ scheduler_cron = CronTrigger(minute=1,
                              timezone=timezone)
 
 
+async def check_product_by_user_in_db(user_id: int,
+                                      link: str,
+                                      marker: Literal['wb', 'ozon'],
+                                      session: AsyncSession):
+    product_model = OzonProduct if marker == 'ozon' else WbProduct
+
+    query = (
+        select(
+            product_model.id
+        )\
+        .where(
+            and_(
+                product_model.link == link,
+                product_model.user_id == user_id,
+            )
+        )
+    )
+    async with session as _session:
+        res = await _session.execute(query)
+    
+    _check_product = res.scalar_one_or_none()
+
+    return bool(_check_product)
+
+
 async def save_product(user_data: dict,
                        session: AsyncSession,
                        scheduler: AsyncIOScheduler,
                        percent: str = None):
+    check_product_by_user =  await check_product_by_user_in_db()
+
+    if check_product_by_user:
+        return True
+
     msg = user_data.get('msg')
     _name = user_data.get('name')
     link: str = user_data.get('link')
