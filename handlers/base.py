@@ -1070,7 +1070,7 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
             #                             message_id=list_msg[-1],
             #                             reply_markup=_kb.as_markup())
             await state.update_data(sale_data=None)
-
+            await state.set_state()
             await show_product_list(product_dict=product_dict,
                                     user_id=message.from_user.id,
                                     state=state)
