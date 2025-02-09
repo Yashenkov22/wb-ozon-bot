@@ -75,6 +75,7 @@ async def save_product(user_data: dict,
     msg = user_data.get('msg')
     _name = user_data.get('name')
     link: str = user_data.get('link')
+    link = link.split('?')[0]
     # percent: int = user_data.get('percent')
 
     if link.find('ozon') > 0:

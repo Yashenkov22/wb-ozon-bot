@@ -201,7 +201,7 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
     check_link = check_input_link(link) # None or Literal['WB', 'OZON']
 
     if check_link:
-        _add_msg = await message.answer(text=f'{check_link} товар добавлен к отслеживанию✅')
+        _add_msg = await message.answer(text=f'{check_link} товар добавляется...')
 
         user_data = {
             'msg': (message.chat.id, message.message_id),
