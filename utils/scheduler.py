@@ -577,7 +577,7 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
 
 
 async def add_product_task(user_data: dict):
-        # try:
+        try:
             product_marker: str = user_data.get('product_marker')
             _add_msg_id: int = user_data.get('_add_msg_id')
             msg: tuple = user_data.get('msg')
@@ -597,11 +597,11 @@ async def add_product_task(user_data: dict):
                                         message_id=_add_msg_id,
                                         text=_text)
                 
-        # except Exception as ex:
-        #     print('SCHEDULER ADD ERROR', ex)
-        #     await bot.edit_message_text(chat_id=msg[0],
-        #                                 message_id=_add_msg_id,
-        #                                 text=f'{product_marker.upper()} не удалось добавить')
+        except Exception as ex:
+            print('SCHEDULER ADD ERROR', ex)
+            await bot.edit_message_text(chat_id=msg[0],
+                                        message_id=_add_msg_id,
+                                        text=f'{product_marker.upper()} не удалось добавить')
 
 
 async def push_check_wb_price(user_id: str,
