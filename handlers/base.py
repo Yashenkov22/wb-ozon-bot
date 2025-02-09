@@ -171,6 +171,15 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
                             session: AsyncSession,
                             bot: Bot,
                             scheduler: AsyncIOScheduler):
+    if message.text == 'Посмотреть товары':
+        await state.set_state()
+        await get_all_products_by_user(message,
+                                       state,
+                                       session,
+                                       bot,
+                                       scheduler)
+        return
+
     data = await state.get_data()
 
     add_msg: tuple = data.get('add_msg')
@@ -1009,7 +1018,11 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
     
     data = await state.get_data()
 
-    msg: tuple = data.get('msg')
+    product_dict: dict = data.get('view_product_dict')
+
+    list_msg: tuple = product_dict.get('list_msg')
+
+    # msg: tuple = data.get('msg')
 
     sale_data: dict = data.get('sale_data')
 
@@ -1050,14 +1063,18 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
             await session.rollback()
             await message.answer('Не удалось обновить скидку')
         else:
-            # await message.answer('Скидка обновлена')
-            _kb = create_or_add_exit_btn()
-            await bot.edit_message_text(text='Скидка обновлена',
-                                        chat_id=msg[0],
-                                        message_id=msg[-1],
-                                        reply_markup=_kb.as_markup())
-            
+            await message.answer('Скидка обновлена')
+            # _kb = create_or_add_exit_btn()
+            # await bot.edit_message_text(text='Скидка обновлена',
+            #                             chat_id=list_msg[0],
+            #                             message_id=list_msg[-1],
+            #                             reply_markup=_kb.as_markup())
             await state.update_data(sale_data=None)
+
+            await show_product_list(product_dict=product_dict,
+                                    user_id=message.from_user.id,
+                                    state=state)
+            
     try:
         await message.delete()
     except Exception:
