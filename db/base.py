@@ -72,7 +72,7 @@ class OzonProduct(Base):
     # first_name = Column(String, nullable=True)
     # last_name = Column(String, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
-    user_id = Column(Integer, ForeignKey('users.tg_id'))
+    user_id = Column(BigInteger, ForeignKey('users.tg_id'))
     
     # Связь с пользователем
     user = relationship(User, back_populates="ozon_products")
@@ -101,7 +101,7 @@ class WbProduct(Base):
     # first_name = Column(String, nullable=True)
     # last_name = Column(String, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
-    user_id = Column(Integer, ForeignKey('users.tg_id'))
+    user_id = Column(BigInteger, ForeignKey('users.tg_id'))
     wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'))
 
     user = relationship(User, back_populates="wb_products")
