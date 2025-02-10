@@ -48,7 +48,7 @@ from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
                             check_user,
                             show_item,
                             save_product,
-                            show_product_list)
+                            show_product_list, try_delete_prev_list_msgs)
 from utils.scheduler import add_product_task, test_scheduler
 
 from db.base import OzonProduct as OzonProductModel, User, Base, UserJob, WbProduct
@@ -105,6 +105,9 @@ async def start1(message: types.Message | types.CallbackQuery,
                 bot: Bot,
                 scheduler: AsyncIOScheduler):
     _message = message
+
+    await try_delete_prev_list_msgs(message.chat.id,
+                                    state)
     
     await state.clear()
     
@@ -246,6 +249,8 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
                                 session: AsyncSession,
                                 bot: Bot,
                                 scheduler: AsyncIOScheduler):
+    await try_delete_prev_list_msgs(message.chat.id,
+                                    state)
     # DEFAULT_PAGE_ELEMENT_COUNT = 5
     # await state.set_state(AnyProductStates.link)
     await state.update_data(view_product_dict=None)

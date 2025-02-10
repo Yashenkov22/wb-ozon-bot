@@ -1408,11 +1408,17 @@ async def show_product_list(product_dict: dict,
     _text = f'📝 Список ваших товаров:\n\n🔽 Всего товаров: {len_product_list}\n\n🔵 Товаров с Ozon: {ozon_product_count}\n🟣 Товаров с Wildberries: {wb_product_count}\n\nПоказано {product_on_current_page_count} товаров на странице, нажмите ▶, чтобы листать список'
 
     if not list_msg:
-        list_msg = await bot.send_message(chat_id=user_id,
+        list_msg: types.Message = await bot.send_message(chat_id=user_id,
                             text=_text,
                             reply_markup=_kb.as_markup())
         
         product_dict['list_msg'] = (list_msg.chat.id, list_msg.message_id)
+
+        list_msg_on_delete: list = data.get('list_msg_on_delete', list())
+
+        list_msg_on_delete.append(list_msg.message_id)
+
+        await state.update_data(list_msg_on_delete=list_msg_on_delete)
         
         # await state.update_data(view_product_dict=product_dict)
     else:
@@ -1426,3 +1432,22 @@ async def show_product_list(product_dict: dict,
     #     product_id, link, actual, start, user_id, _date, marker, name, sale, job_id = product
     
     pass
+
+
+
+async def try_delete_prev_list_msgs(chat_id: int,
+                                    state: FSMContext):
+    data = await state.get_data()
+
+    list_msg_on_delete: list = data.get('list_msg_on_delete')
+
+    if list_msg_on_delete:
+            for msg_id in list_msg_on_delete:
+                try:
+                    await bot.delete_message(chat_id=chat_id,
+                                            message_id=msg_id)
+                except Exception as ex:
+                    print(ex)
+                    continue
+    
+    await state.update_data(list_msg_on_delete=None)
