@@ -319,6 +319,28 @@ async def save_product(user_data: dict,
     link: str = user_data.get('link')
     # percent: int = user_data.get('percent')
 
+    ozon_query = (
+        select(OzonProduct.id)\
+        .where(OzonProduct.user_id == msg[0])
+    )
+
+    wb_query = (
+        select(
+            WbProduct.id
+        )\
+        .where(WbProduct.user_id == msg[0])
+    )
+
+    async with session as _session:
+        res = await _session.execute(ozon_query.union(wb_query))
+
+    products_by_user = res.scalars().all()
+
+    product_count_by_user = len(products_by_user)
+
+    if product_count_by_user >= 100:
+        return True
+
     if link.find('ozon') > 0:
         # save ozon product
         if link.startswith('https://ozon.ru/t/'):
