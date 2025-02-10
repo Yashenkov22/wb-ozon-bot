@@ -338,6 +338,8 @@ async def save_product(user_data: dict,
 
     product_count_by_user = len(products_by_user)
 
+    print(f'PRODUCT COUNT BY USER {msg[0]} {product_count_by_user}')
+
     if product_count_by_user >= 100:
         return True
 
