@@ -156,23 +156,26 @@ async def save_product(user_data: dict,
             if check_product_by_user:
                 return True
 
+            response_data = res.split('|')[-1]
+            json_data: dict = json.loads(response_data)
+
             w = re.findall(r'\"cardPrice.*currency?', res)
             # print(w)
 
-            _alt = re.findall(r'\"alt.*,?', res)
+            # _alt = re.findall(r'\"alt.*,?', res)
             _product_name = None
             _product_name_limit = 21
             
-            if _alt:
-                _product_name = _alt[0].split('//')[0]
-                _prefix = f'\"alt\":\"'
+            # if _alt:
+            #     _product_name = _alt[0].split('//')[0]
+            #     _prefix = f'\"alt\":\"'
                 
-                # if _product_name.startswith(_prefix):
-                # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
-                _product_name = _product_name[len(_prefix)+2:]
-                _product_name = ' '.join(_product_name.split()[:4])
+            #     # if _product_name.startswith(_prefix):
+            #     # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
+            #     _product_name = _product_name[len(_prefix)+2:]
+            #     _product_name = ' '.join(_product_name.split()[:4])
 
-            print(_product_name)
+            # print(_product_name)
 
             # await state.update_data(ozon_product_name=_product_name)
             # print('NAME   ',_alt[0].split('//')[0])
@@ -208,11 +211,11 @@ async def save_product(user_data: dict,
             else:
                 print('22')
                 try:
-                    response_data = res.split('|')[-1]
+                    # response_data = res.split('|')[-1]
 
-                    json_data: dict = json.loads(response_data)
+                    # json_data: dict = json.loads(response_data)
 
-                    _name = ' '.join(json_data.get('seo').get('title').split()[:4])
+                    # _name = ' '.join(json_data.get('seo').get('title').split()[:4])
 
                     script_list = json_data.get('seo').get('script')
 
@@ -248,13 +251,15 @@ async def save_product(user_data: dict,
                         
                         print('Price', _price)
                     except Exception as ex:
-                        return True
                         print('problem', ex)
+                        return True
 
                     print('PRICE PARSE ERROR', user_data)
                 except Exception as ex:
                     print(ex)
                     return True
+                
+            _name = ' '.join(json_data.get('seo').get('title').split()[:4])
 #
             _sale = generate_sale_for_price(start_price)
 
