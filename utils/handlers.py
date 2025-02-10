@@ -1414,7 +1414,10 @@ async def show_product_list(product_dict: dict,
         
         product_dict['list_msg'] = (list_msg.chat.id, list_msg.message_id)
 
-        list_msg_on_delete: list = data.get('list_msg_on_delete', list())
+        list_msg_on_delete: list = data.get('list_msg_on_delete')
+
+        if not list_msg_on_delete:
+            list_msg_on_delete = list()
 
         list_msg_on_delete.append(list_msg.message_id)
 
