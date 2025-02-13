@@ -271,10 +271,10 @@ def add_pagination_btn(_kb: InlineKeyboardBuilder,
             _kb.add(types.InlineKeyboardButton(text='▶',
                                                callback_data='page_next'))
         case 'end':
-            _kb.row(types.InlineKeyboardButton(text=f'{current_page}/{pages}',
-                                               callback_data='pagination_page'))
             _kb.add(types.InlineKeyboardButton(text='◀',
                                                callback_data='page_prev'))
+            _kb.row(types.InlineKeyboardButton(text=f'{current_page}/{pages}',
+                                               callback_data='pagination_page'))
     
     return _kb
 
