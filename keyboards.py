@@ -259,16 +259,22 @@ def add_pagination_btn(_kb: InlineKeyboardBuilder,
 
     match kb_init:
         case 'start':
-            _kb.row(types.InlineKeyboardButton(text='▶',
-                                                    callback_data='page_next'))
+            _kb.row(types.InlineKeyboardButton(text=f'{current_page}/{pages}',
+                                               callback_data='pagination_page'))
+            _kb.add(types.InlineKeyboardButton(text='▶',
+                                               callback_data='page_next'))
         case 'mid':
             _kb.row(types.InlineKeyboardButton(text='◀',
-                                                    callback_data='page_prev'))
+                                               callback_data='page_prev'))
+            _kb.add(types.InlineKeyboardButton(text=f'{current_page}/{pages}',
+                                               callback_data='pagination_page'))
             _kb.add(types.InlineKeyboardButton(text='▶',
-                                                    callback_data='page_next'))
+                                               callback_data='page_next'))
         case 'end':
-            _kb.row(types.InlineKeyboardButton(text='◀',
-                                                    callback_data='page_prev'))
+            _kb.row(types.InlineKeyboardButton(text=f'{current_page}/{pages}',
+                                               callback_data='pagination_page'))
+            _kb.add(types.InlineKeyboardButton(text='◀',
+                                               callback_data='page_prev'))
     
     return _kb
 
@@ -281,3 +287,26 @@ def create_or_add_return_to_product_list_btn(_kb: InlineKeyboardBuilder = None):
                                        callback_data='return_to_product_list'))
     
     return _kb
+
+
+def create_pagination_page_kb(product_dict: dict):
+    _kb = InlineKeyboardBuilder()
+
+    current_page = product_dict.get('current_page')
+    pages = product_dict.get('pages')
+
+    for page_num in range(1, pages+1):
+        _text = f'Страница {page_num}'
+
+        if page_num == current_page:
+            _text = _text + ('(выбранная)')
+
+        _kb.row(types.InlineKeyboardButton(text=_text,
+                                           callback_data=f'go_to_page_{page_num}'))
+    
+    return _kb
+
+
+# def add_back_to_current_page(_kb: InlineKeyboardBuilder):
+#     _kb.row(types.InlineKeyboardButton(text='Вернуться',
+#                                        callback_data=''))

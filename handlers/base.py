@@ -27,7 +27,7 @@ from apscheduler.triggers.date import DateTrigger
 
 from config import BEARER_TOKEN, FEEDBACK_REASON_PREFIX, DEV_ID
 
-from keyboards import (create_or_add_exit_btn, create_or_add_return_to_product_list_btn,
+from keyboards import (create_or_add_exit_btn, create_or_add_return_to_product_list_btn, create_pagination_page_kb,
                        create_remove_kb,
                        create_start_kb,
                        create_or_add_cancel_btn,
@@ -388,8 +388,51 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         pass
 
 
+@main_router.callback_query(F.data == 'pagination_page')
+async def pagination_page(callback: types.Message | types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot,
+                        scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    product_dict: dict = data.get('view_product_dict')
+
+    list_msg: tuple = product_dict.get('list_msg')
+
+    _kb = create_pagination_page_kb(product_dict)
+    _kb = create_or_add_return_to_product_list_btn(_kb)
+
+    await bot.edit_message_text(chat_id=list_msg[0],
+                                message_id=list_msg[-1],
+                                text='Выберите страницу, на которую хотите перейти',
+                                reply_markup=_kb.as_markup())
+    pass
+
+
+@main_router.callback_query(F.data.startswith('go_to_page'))
+async def go_to_selected_page(callback: types.Message | types.CallbackQuery,
+                              state: FSMContext,
+                              session: AsyncSession,
+                              bot: Bot,
+                              scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    selected_page = callback.data.split('_')[-1]
+    
+    product_dict: dict = data.get('view_product_dict')
+
+    product_dict['current_page'] = int(selected_page)
+
+    await show_product_list(product_dict,
+                            callback.from_user.id,
+                            state)
+
+    pass
+
+
 @main_router.callback_query(F.data.startswith('page'))
-async def callback_done(callback: types.Message | types.CallbackQuery,
+async def switch_page(callback: types.Message | types.CallbackQuery,
                         state: FSMContext,
                         session: AsyncSession,
                         bot: Bot,
@@ -405,6 +448,8 @@ async def callback_done(callback: types.Message | types.CallbackQuery,
     if not product_dict:
         await callback.answer(text='Ошибка',
                               show_alert=True)
+        return
+    
     if callback_data == 'next':
         product_dict['current_page'] += 1
     else:
