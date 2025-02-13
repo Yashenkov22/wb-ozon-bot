@@ -363,7 +363,7 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         'wb_product_count': wb_product_count,
     }
 
-    print(view_product_dict)
+    # print(view_product_dict)
 
     await show_product_list(view_product_dict,
                             message.from_user.id,

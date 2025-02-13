@@ -296,7 +296,7 @@ async def save_product(user_data: dict,
 
                 _name = _name if _name else _product_name
             else:
-                print('22')
+                # print('22')
                 try:
                     # response_data = res.split('|')[-1]
 
@@ -312,7 +312,7 @@ async def save_product(user_data: dict,
                     # if script_list:
                     inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
 
-                    print('innerHTML', inner_html)
+                    # print('innerHTML', inner_html)
 
                     # if inner_html:
                         # print(type(b))
@@ -341,7 +341,7 @@ async def save_product(user_data: dict,
                         print('problem', ex)
                         return True
 
-                    print('PRICE PARSE ERROR', user_data)
+                    # print('PRICE PARSE ERROR', user_data)
                 except Exception as ex:
                     print(ex)
                     return True
@@ -549,7 +549,7 @@ async def save_product(user_data: dict,
 
                     try:
                         res = await response.json()
-                        print(res)
+                        # print(res)
                     except Exception as ex:
                         print('API RESPONSE ERROR', ex)
                         # await message.answer('ошибка при запросе к апи\n/start')
@@ -1006,7 +1006,7 @@ async def push_check_ozon_price(user_id: str,
                     # if script_list:
                     inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
 
-                    print('innerHTML', inner_html)
+                    # print('innerHTML', inner_html)
 
                     # if inner_html:
                         # print(type(b))

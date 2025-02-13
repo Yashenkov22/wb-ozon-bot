@@ -111,12 +111,12 @@ async def check_user_last_message_time(user_id: int,
             # results = await pipe.execute()
             # Извлекаем результат из выполненного pipeline
             # print(results)
-            print(user_data)
+            # print(user_data)
 
             # user_data: dict = json.loads(results[0])
 
             if last_action_time := user_data.get('last_action_time'):
-                print(user_data)
+                # print(user_data)
                 moscow_tz = pytz.timezone('Europe/Moscow')
                 _last_action_time = datetime.fromtimestamp(last_action_time).astimezone(moscow_tz)
 
