@@ -706,8 +706,9 @@ async def add_product_task(user_data: dict):
             _add_msg_id: int = user_data.get('_add_msg_id')
             msg: tuple = user_data.get('msg')
 
-            check_product_limit = await check_subscription_limit(user_id=msg[0],
-                                                                 session=session)
+            async for session in get_session():
+                check_product_limit = await check_subscription_limit(user_id=msg[0],
+                                                                     session=session)
             if check_product_limit:
                 await bot.edit_message_text(chat_id=msg[0],
                                             text=f'Достугнут лимит {product_marker.upper()} товаров по Вашей подписке\nЛимит: {check_product_limit}')
