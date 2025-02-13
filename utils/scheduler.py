@@ -18,7 +18,7 @@ from sqlalchemy import insert, select, and_, update, func
 
 from db.base import Subscription, WbProduct, WbPunkt, User, get_session, UserJob, OzonProduct
 
-from keyboards import add_or_create_close_kb, create_remove_kb
+from keyboards import add_or_create_close_kb, create_remove_and_edit_sale_kb, create_remove_kb
 
 from bot22 import bot
 
@@ -866,11 +866,17 @@ async def push_check_wb_price(user_id: str,
                     # _text = f'WB товар\nНазвание: {name}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена товара, которую(или ниже) Вы ждали ({pretty_waiting_price})\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
                     _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
 
-                    _kb = create_remove_kb(user_id,
-                                            product_id,
-                                            marker='wb',
-                                            job_id=job_id,
-                                            with_redirect=False)
+                    _kb = create_remove_and_edit_sale_kb(user_id=user_id,
+                                                        product_id=product_id,
+                                                        marker='wb',
+                                                        job_id=job_id,
+                                                        with_redirect=False)
+
+                    # _kb = create_remove_kb(user_id,
+                    #                         product_id,
+                    #                         marker='wb',
+                    #                         job_id=job_id,
+                    #                         with_redirect=False)
                     
                     _kb = add_or_create_close_kb(_kb)
 
@@ -1086,11 +1092,17 @@ async def push_check_ozon_price(user_id: str,
 
                     _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
                     
-                    _kb = create_remove_kb(user_id,
-                                            product_id,
-                                            marker='ozon',
-                                            job_id=job_id,
-                                            with_redirect=False)
+                    # _kb = create_remove_kb(user_id,
+                    #                         product_id,
+                    #                         marker='ozon',
+                    #                         job_id=job_id,
+                    #                         with_redirect=False)
+                    _kb = create_remove_and_edit_sale_kb(user_id=user_id,
+                                                        product_id=product_id,
+                                                        marker='ozon',
+                                                        job_id=job_id,
+                                                        with_redirect=False)
+
                     
                     _kb = add_or_create_close_kb(_kb)
 

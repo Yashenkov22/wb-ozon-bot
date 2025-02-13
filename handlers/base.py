@@ -1037,6 +1037,7 @@ async def edit_sale_callback(callback: types.CallbackQuery,
             'link': link,
             'sale': sale,
             'start_price': start_price,
+            'with_redirect': with_redirect,
         }
         )
     await state.set_state(EditSale.new_sale)
@@ -1084,6 +1085,7 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
     product_id = sale_data.get('product_id')
     marker = sale_data.get('marker')
     start_price = sale_data.get('start_price')
+    with_redirect = sale_data.get('with_redirect')
 
     if start_price <= float(new_sale):
         await message.answer(text=f'Невалидные данные\nСкидка не может быть больше или равной цене товара\nПередано {new_sale}, Начальная цена товара: {start_price}')
@@ -1121,9 +1123,11 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
             #                             reply_markup=_kb.as_markup())
             await state.update_data(sale_data=None)
             await state.set_state()
-            await show_product_list(product_dict=product_dict,
-                                    user_id=message.from_user.id,
-                                    state=state)
+
+            if with_redirect:
+                await show_product_list(product_dict=product_dict,
+                                        user_id=message.from_user.id,
+                                        state=state)
             
     try:
         await message.delete()
