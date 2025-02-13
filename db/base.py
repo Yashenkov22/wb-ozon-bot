@@ -13,19 +13,30 @@ from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, Dat
 # Base = declarative_base()
 Base = automap_base()
 
-# Определяем модель
+
+class Subscription(Base):
+    __tablename__ = 'subscriptions'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    wb_product_limit = Column(Integer)
+    ozon_product_limit = Column(Integer)
+    users = relationship('User', back_populates="subscription")
+
+
 class User(Base):
     __tablename__ = 'users'
     
     tg_id = Column(BigInteger, primary_key=True, index=True)
-    # tg_id = Column(Integer)
     username = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
     last_action = Column(String, nullable=True, default=None)
     last_action_time = Column(TIMESTAMP(timezone=True), nullable=True, default=None)
+    subscription_id = Column(BigInteger, ForeignKey('subscriptions.id'), nullable=True, default=None)
 
+    subscription = relationship(Subscription, back_populates="users")
     ozon_products = relationship("OzonProduct", back_populates="user")
     wb_punkts = relationship("WbPunkt", back_populates="user")
     wb_products = relationship("WbProduct", back_populates="user")
@@ -39,10 +50,6 @@ class WbPunkt(Base):
     lat = Column(Float)
     lon = Column(Float)
     zone = Column(Integer, default=None, nullable=True)
-    # expected_price = Column(Float)
-    # username = Column(String, nullable=True)
-    # first_name = Column(String, nullable=True)
-    # last_name = Column(String, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
     user_id = Column(BigInteger, ForeignKey('users.tg_id'))
     

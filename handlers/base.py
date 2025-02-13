@@ -122,7 +122,7 @@ async def start1(message: types.Message | types.CallbackQuery,
         message = message.message
 
     _kb = create_reply_start_kb()
-    await bot.send_message(text='Главное меню',
+    await bot.send_message(text=f'🖐Здравствуйте, {message.from_user.username}\n\nС помощью этого бота вы сможете отследить изменение цены на понравившиеся товары в маркетплейсах Wildberries и Ozon.',
                                 chat_id=_message.from_user.id,
                                 reply_markup=_kb.as_markup(resize_keyboard=True))
     
