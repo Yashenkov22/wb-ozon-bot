@@ -708,6 +708,7 @@ async def add_product_task(user_data: dict):
 
             async for session in get_session():
                 check_product_limit = await check_subscription_limit(user_id=msg[0],
+                                                                     marker=product_marker,
                                                                      session=session)
             if check_product_limit:
                 await bot.edit_message_text(chat_id=msg[0],
