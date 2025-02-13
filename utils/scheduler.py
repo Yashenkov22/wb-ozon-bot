@@ -72,6 +72,8 @@ async def check_subscription_limit(user_id: int,
                                    marker: Literal['wb', 'ozon'],
                                    session: AsyncSession):
     # product_model = OzonProduct if marker == 'ozon' else WbProduct
+    print(marker)
+    marker = marker.lower()
 
     if marker == 'ozon':
         product_model = OzonProduct
@@ -90,7 +92,8 @@ async def check_subscription_limit(user_id: int,
                     # product_model.short_link == short_link,
                     product_model.user_id == user_id,
                 )
-            )
+            )\
+            .group_by(Subscription.ozon_product_limit)
         )
     else:
         product_model = WbProduct
@@ -108,7 +111,8 @@ async def check_subscription_limit(user_id: int,
                     # product_model.short_link == short_link,
                     product_model.user_id == user_id,
                 )
-            )
+            )\
+            .group_by(Subscription.wb_product_limit)
         )
 
     async with session as _session:
