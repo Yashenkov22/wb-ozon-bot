@@ -22,7 +22,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from bot22 import bot
 
-from db.base import User, WbProduct, WbPunkt, OzonProduct, UserJob
+from db.base import Subscription, User, WbProduct, WbPunkt, OzonProduct, UserJob
 
 from utils.scheduler import push_check_ozon_price, push_check_wb_price, scheduler_cron
 
@@ -1225,30 +1225,47 @@ async def save_data_to_storage(callback: types.CallbackQuery,
 
 async def add_user(message: types.Message,
                    session: AsyncSession):
-    data = {
-        'tg_id': message.from_user.id,
-        'username': message.from_user.username,
-        'first_name': message.from_user.first_name,
-        'last_name': message.from_user.last_name,
-        'time_create': datetime.now(),
-    }
-
-    query = (
-        insert(
-            User
+    free_subscribtion_query = (
+        select(
+            Subscription.id
         )\
-        .values(**data)
+        .where(Subscription.name == 'Free')
     )
+
     async with session as _session:
-        try:
-            await _session.execute(query)
-            await _session.commit()
-        except Exception as ex:
-            print(ex)
-            await _session.rollback()
-        else:
-            print('user added')
-            return True
+        res = await _session.execute(free_subscribtion_query)
+    
+    free_subscribtion_id = res.scalar_one_or_none()
+
+    if free_subscribtion_id:
+
+        data = {
+            'tg_id': message.from_user.id,
+            'username': message.from_user.username,
+            'first_name': message.from_user.first_name,
+            'last_name': message.from_user.last_name,
+            'time_create': datetime.now(),
+            'subscription_id': free_subscribtion_id,
+        }
+
+        query = (
+            insert(
+                User
+            )\
+            .values(**data)
+        )
+        async with session as _session:
+            try:
+                await _session.execute(query)
+                await _session.commit()
+            except Exception as ex:
+                print(ex)
+                await _session.rollback()
+            else:
+                print('user added')
+                return True
+    else:
+        pass
 
 
 async def check_user(message: types.Message,

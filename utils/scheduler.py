@@ -14,9 +14,9 @@ from apscheduler.job import Job
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy import insert, select, and_, update
+from sqlalchemy import insert, select, and_, update, func
 
-from db.base import WbProduct, WbPunkt, User, get_session, UserJob, OzonProduct
+from db.base import Subscription, WbProduct, WbPunkt, User, get_session, UserJob, OzonProduct
 
 from keyboards import add_or_create_close_kb, create_remove_kb
 
@@ -66,6 +66,65 @@ async def check_product_by_user_in_db(user_id: int,
     _check_product = res.scalar_one_or_none()
 
     return bool(_check_product)
+
+
+async def check_subscription_limit(user_id: int,
+                                   marker: Literal['wb', 'ozon'],
+                                   session: AsyncSession):
+    # product_model = OzonProduct if marker == 'ozon' else WbProduct
+
+    if marker == 'ozon':
+        product_model = OzonProduct
+
+        query = (
+            select(
+                func.count(product_model.id),
+                Subscription.ozon_product_limit,
+            )\
+            .join(User,
+                product_model.user_id == User.tg_id)\
+            .join(Subscription,
+                User.subscription_id == Subscription.id)
+            .where(
+                and_(
+                    # product_model.short_link == short_link,
+                    product_model.user_id == user_id,
+                )
+            )
+        )
+    else:
+        product_model = WbProduct
+        query = (
+            select(
+                func.count(product_model.id),
+                Subscription.wb_product_limit,
+            )\
+            .join(User,
+                product_model.user_id == User.tg_id)\
+            .join(Subscription,
+                User.subscription_id == Subscription.id)
+            .where(
+                and_(
+                    # product_model.short_link == short_link,
+                    product_model.user_id == user_id,
+                )
+            )
+        )
+
+    async with session as _session:
+        res = await _session.execute(query)
+    
+    _check_limit = res.fetchall()
+
+    if _check_limit:
+        _check_limit = _check_limit[0]
+
+        product_count, subscription_limit = _check_limit
+
+        print('SUBSCRIPTION TEST', product_count, subscription_limit)
+
+        if product_count >= subscription_limit:
+            return True
 
 
 async def save_product(user_data: dict,
@@ -647,6 +706,12 @@ async def add_product_task(user_data: dict):
             _add_msg_id: int = user_data.get('_add_msg_id')
             msg: tuple = user_data.get('msg')
 
+            check_product_limit = await check_subscription_limit(user_id=msg[0],
+                                                                 session=session)
+            if check_product_limit:
+                await bot.edit_message_text(chat_id=msg[0],
+                                            text=f'Достугнут лимит {product_marker.upper()} товаров по Вашей подписке\nЛимит: {check_product_limit}')
+                return
 
             async for session in get_session():
                 find_in_db = await save_product(user_data=user_data,
