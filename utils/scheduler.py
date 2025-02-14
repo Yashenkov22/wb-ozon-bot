@@ -797,14 +797,13 @@ async def push_check_wb_price(user_id: str,
             timeout = aiohttp.ClientTimeout(total=15)
             async with aiohttp.ClientSession() as aiosession:
                 _url = f"http://172.18.0.2:8080/product/{zone}/{short_link}"
+                
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
-                # response = await aiosession.get(url=_url)
                     res = await response.json()
 
             d = res.get('data')
 
-            # print(d.get('products')[0].get('sizes'))
 
             sizes = d.get('products')[0].get('sizes')
 
@@ -828,10 +827,9 @@ async def push_check_wb_price(user_id: str,
 
             if check_price:
                 _text = 'цена не изменилась'
+                print(f'{_text} user {user_id} product {_name}')
+                return
             else:
-                # _waiting_price = None
-                # if percent:
-                #     _waiting_price = start_price - ((start_price * percent) / 100)
 
                 query = (
                     update(
@@ -847,12 +845,8 @@ async def push_check_wb_price(user_id: str,
                     except Exception as ex:
                         await session.rollback()
                         print(ex)
-                # if _waiting_price == actual_price:
+
                 _waiting_price = start_price - sale
-
-                if actual_price < _product_price:
-                    return
-
 
                 pretty_product_price = generate_pretty_amount(_product_price)
                 pretty_actual_price = generate_pretty_amount(actual_price)
@@ -860,11 +854,12 @@ async def push_check_wb_price(user_id: str,
                 pretty_waiting_price = generate_pretty_amount(_waiting_price)
                 pretty_start_price = generate_pretty_amount(start_price)
                 
-                # _text = f'WB товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
-
                 if _waiting_price >= _product_price:
-                    # _text = f'WB товар\nНазвание: {name}\n<a href="{link}">Ссылка на товар</a>\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена товара, которую(или ниже) Вы ждали ({pretty_waiting_price})\nОбновленная цена товара: {pretty_product_price} (было {pretty_actual_price})'
-                    _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+
+                    if actual_price < _product_price:
+                        _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n(Увеличилась по сравнению с предыдущей, но входит в диапазон выставленной скидки)\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                    else:
+                        _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
 
                     _kb = create_remove_and_edit_sale_kb(user_id=user_id,
                                                         product_id=product_id,
@@ -872,21 +867,13 @@ async def push_check_wb_price(user_id: str,
                                                         job_id=job_id,
                                                         with_redirect=False)
 
-                    # _kb = create_remove_kb(user_id,
-                    #                         product_id,
-                    #                         marker='wb',
-                    #                         job_id=job_id,
-                    #                         with_redirect=False)
-                    
                     _kb = add_or_create_close_kb(_kb)
 
                     await bot.send_message(chat_id=user_id,
                                             text=_text,
                                             reply_markup=_kb.as_markup())
                     return
-                # if _product_price < actual_price:
-                #     await bot.send_message(chat_id=user_id,
-                #                             text=_text)
+
         except Exception as ex:
             print(ex)
             pass
@@ -1081,35 +1068,58 @@ async def push_check_ozon_price(user_id: str,
                 pretty_waiting_price = generate_pretty_amount(_waiting_price)
                 pretty_start_price = generate_pretty_amount(start_price)
 
-                if actual_price < _product_price:
-                    return
-                
-                # _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
-                
-                # if _waiting_price:
                 if _waiting_price >= _product_price:
-                    # _text = f'Ozon товар\n{_name}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
 
-                    _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
-                    
-                    # _kb = create_remove_kb(user_id,
-                    #                         product_id,
-                    #                         marker='ozon',
-                    #                         job_id=job_id,
-                    #                         with_redirect=False)
+                    if actual_price < _product_price:
+                        _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n(Увеличилась по сравнению с предыдущей, но входит в диапазон выставленной скидки)\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                    else:
+                        _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+
                     _kb = create_remove_and_edit_sale_kb(user_id=user_id,
                                                         product_id=product_id,
-                                                        marker='ozon',
+                                                        marker='wb',
                                                         job_id=job_id,
                                                         with_redirect=False)
 
-                    
                     _kb = add_or_create_close_kb(_kb)
 
                     await bot.send_message(chat_id=user_id,
                                             text=_text,
                                             reply_markup=_kb.as_markup())
                     return
+
+
+#
+
+                # if actual_price < _product_price:
+                #     return
+                
+                # # _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
+                
+                # # if _waiting_price:
+                # if _waiting_price >= _product_price:
+                #     # _text = f'Ozon товар\n{_name}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
+
+                #     _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                    
+                #     # _kb = create_remove_kb(user_id,
+                #     #                         product_id,
+                #     #                         marker='ozon',
+                #     #                         job_id=job_id,
+                #     #                         with_redirect=False)
+                #     _kb = create_remove_and_edit_sale_kb(user_id=user_id,
+                #                                         product_id=product_id,
+                #                                         marker='ozon',
+                #                                         job_id=job_id,
+                #                                         with_redirect=False)
+
+                    
+                #     _kb = add_or_create_close_kb(_kb)
+
+                #     await bot.send_message(chat_id=user_id,
+                #                             text=_text,
+                #                             reply_markup=_kb.as_markup())
+                #     return
                     
                     # if _product_price < actual_price:
                     #     await bot.send_message(chat_id=user_id,
