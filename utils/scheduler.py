@@ -162,8 +162,8 @@ async def save_product(user_data: dict,
 
     print(f'PRODUCT COUNT BY USER {msg[0]} {product_count_by_user}')
 
-    if product_count_by_user >= 100:
-        return True
+    # if product_count_by_user >= 100:
+    #     return True
 
     if link.find('ozon') > 0:
         # save ozon product
@@ -503,7 +503,7 @@ async def save_product(user_data: dict,
 
                         await bot.send_message(chat_id=msg[0],
                                             text='Не получилось найти пункт выдачи')
-                        return
+                        return True
         
         # query = (
         #     select(
@@ -553,7 +553,7 @@ async def save_product(user_data: dict,
                     except Exception as ex:
                         print('API RESPONSE ERROR', ex)
                         # await message.answer('ошибка при запросе к апи\n/start')
-                        return
+                        return True
         except Exception as ex:
             print(ex)
             return True
@@ -670,12 +670,14 @@ async def save_product(user_data: dict,
                 except Exception as ex:
                     print(ex)
                     _text = 'Что то пошло не так'
+                    return True
                 else:
                     _text = 'Wb товар успешно добавлен'
                     print(_text)
             else:
                 _text = 'Что то пошло не так'
                 print(_text)
+                return True
 
 
                     # await state.update_data(wb_product_link=wb_product_link,
@@ -716,6 +718,7 @@ async def add_product_task(user_data: dict):
                                                                      session=session)
             if check_product_limit:
                 await bot.edit_message_text(chat_id=msg[0],
+                                            message_id=_add_msg_id,
                                             text=f'Достугнут лимит {product_marker.upper()} товаров по Вашей подписке\nЛимит: {check_product_limit}')
                 return
 
@@ -857,9 +860,9 @@ async def push_check_wb_price(user_id: str,
                 if _waiting_price >= _product_price:
 
                     if actual_price < _product_price:
-                        _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
                     else:
-                        _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
 
                     _kb = create_remove_and_edit_sale_kb(user_id=user_id,
                                                         product_id=product_id,
@@ -1071,9 +1074,9 @@ async def push_check_ozon_price(user_id: str,
                 if _waiting_price >= _product_price:
 
                     if actual_price < _product_price:
-                        _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
                     else:
-                        _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
 
                     _kb = create_remove_and_edit_sale_kb(user_id=user_id,
                                                         product_id=product_id,
