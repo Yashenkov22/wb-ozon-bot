@@ -1495,3 +1495,12 @@ async def try_delete_prev_list_msgs(chat_id: int,
                     continue
     
     await state.update_data(list_msg_on_delete=None)
+
+
+async def delete_prev_subactive_msg(data: dict):
+    subactive_msg: tuple = data.get('_add_msg')
+    try:
+        await bot.delete_message(chat_id=subactive_msg[0],
+                                 message_id=subactive_msg[-1])
+    except Exception as ex:
+        print(ex)
