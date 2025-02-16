@@ -33,7 +33,10 @@ from keyboards import (create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 
-from utils.handlers import generate_pretty_amount, save_data_to_storage, check_user, clear_state_and_redirect_to_start, show_item, show_item_list, generate_sale_for_price
+from utils.handlers import (generate_pretty_amount,
+                            save_data_to_storage,check_user,
+                            clear_state_and_redirect_to_start,
+                            generate_sale_for_price)
 
 from db.base import UserJob, WbProduct, WbPunkt, User
 
@@ -49,7 +52,6 @@ async def add_punkt(callback: types.Message | types.CallbackQuery,
     
     lat, lon = ('55.707106', '37.572854')
 
-    # await state.set_state(SwiftSepaStates.coords)
     data = await state.get_data()
 
     query = (
@@ -543,83 +545,83 @@ async def proccess_push_price(message: types.Message | types.CallbackQuery,
         pass
 
 
-@wb_router.callback_query(F.data == 'view_price')
-async def view_price_wb(callback: types.Message | types.CallbackQuery,
-                        state: FSMContext,
-                        session: AsyncSession,
-                        bot: Bot):
-    data = await state.get_data()
-    msg: tuple = data.get('msg')
+# @wb_router.callback_query(F.data == 'view_price')
+# async def view_price_wb(callback: types.Message | types.CallbackQuery,
+#                         state: FSMContext,
+#                         session: AsyncSession,
+#                         bot: Bot):
+#     data = await state.get_data()
+#     msg: tuple = data.get('msg')
 
-    marker = data.get('action')
+#     marker = data.get('action')
 
-    subquery = (
-        select(UserJob.job_id,
-               UserJob.user_id,
-               UserJob.product_id)
-        .where(UserJob.user_id == callback.from_user.id)
-    ).subquery()
+#     subquery = (
+#         select(UserJob.job_id,
+#                UserJob.user_id,
+#                UserJob.product_id)
+#         .where(UserJob.user_id == callback.from_user.id)
+#     ).subquery()
 
-    query = (
-        select(WbProduct.id,
-               WbProduct.link,
-               WbProduct.actual_price,
-               WbProduct.start_price,
-               WbProduct.user_id,
-               WbProduct.time_create,
-               WbProduct.name,
-               WbProduct.sale,
-               subquery.c.job_id)\
-        .select_from(WbProduct)\
-        .join(User,
-              WbProduct.user_id == User.tg_id)\
-        .join(UserJob,
-              UserJob.user_id == User.tg_id)\
-        .outerjoin(subquery,
-                   subquery.c.product_id == WbProduct.id)\
-        .where(User.tg_id == callback.from_user.id)\
-        .distinct(WbProduct.id)
-    )
+#     query = (
+#         select(WbProduct.id,
+#                WbProduct.link,
+#                WbProduct.actual_price,
+#                WbProduct.start_price,
+#                WbProduct.user_id,
+#                WbProduct.time_create,
+#                WbProduct.name,
+#                WbProduct.sale,
+#                subquery.c.job_id)\
+#         .select_from(WbProduct)\
+#         .join(User,
+#               WbProduct.user_id == User.tg_id)\
+#         .join(UserJob,
+#               UserJob.user_id == User.tg_id)\
+#         .outerjoin(subquery,
+#                    subquery.c.product_id == WbProduct.id)\
+#         .where(User.tg_id == callback.from_user.id)\
+#         .distinct(WbProduct.id)
+#     )
 
 
-    async with session as _session:
-        res = await _session.execute(query)
+#     async with session as _session:
+#         res = await _session.execute(query)
 
-        _data = res.fetchall()
-        _new_data = []
-        for _d in _data:
-            product_id, link, actual, start, user_id, _date, name, sale, job_id = _d
-            moscow_tz = pytz.timezone('Europe/Moscow')
+#         _data = res.fetchall()
+#         _new_data = []
+#         for _d in _data:
+#             product_id, link, actual, start, user_id, _date, name, sale, job_id = _d
+#             moscow_tz = pytz.timezone('Europe/Moscow')
             
-            date = _date.astimezone(moscow_tz).timestamp()
-            _new_data.append((product_id, link, actual, start, user_id, date, name, sale, job_id))
-                    # _now = datetime.now()
-                    # moscow_time = _now.astimezone(moscow_tz)
+#             date = _date.astimezone(moscow_tz).timestamp()
+#             _new_data.append((product_id, link, actual, start, user_id, date, name, sale, job_id))
+#                     # _now = datetime.now()
+#                     # moscow_time = _now.astimezone(moscow_tz)
 
-                    # if time_delta >= datetime.fromtimestamp(last_action_time).astimezone(moscow_tz):
-    print(type(_new_data))
-    print('wb products22',(_new_data))
+#                     # if time_delta >= datetime.fromtimestamp(last_action_time).astimezone(moscow_tz):
+#     print(type(_new_data))
+#     print('wb products22',(_new_data))
 
-    if not _data:
-        await callback.answer(text='Сначала добавьте товар',
-                              show_alert=True)
-        return
+#     if not _data:
+#         await callback.answer(text='Сначала добавьте товар',
+#                               show_alert=True)
+#         return
 
-#
-    await state.update_data(wb_product_idx=0,
-                            wb_product_list=_new_data)
+# #
+#     await state.update_data(wb_product_idx=0,
+#                             wb_product_list=_new_data)
     
-    # await show_item(callback,
-    #                 state)
+#     # await show_item(callback,
+#     #                 state)
     
-    await show_item_list(callback,
-                         state,
-                         bot)
-    return
-#
-    wb_product_detail = _data[0]
+#     await show_item_list(callback,
+#                          state,
+#                          bot)
+#     return
+# #
+#     wb_product_detail = _data[0]
 
-    product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id = wb_product_detail
+#     product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id = wb_product_detail
 
 
     # job_id_query = (
@@ -647,28 +649,28 @@ async def view_price_wb(callback: types.Message | types.CallbackQuery,
     #     return
 
     # Преобразование времени в московскую временную зону
-    time_create: datetime
-    moscow_tz = pytz.timezone('Europe/Moscow')
-    moscow_time = time_create.astimezone(moscow_tz)
+    # time_create: datetime
+    # moscow_tz = pytz.timezone('Europe/Moscow')
+    # moscow_time = time_create.astimezone(moscow_tz)
 
-    waiting_price = actaul_price - ((actaul_price * percent) / 100)
+    # waiting_price = actaul_price - ((actaul_price * percent) / 100)
 
-    _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+    # _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
 
-    # _kb = create_remove_kb(user_id=callback.from_user.id,
-    #                        product_id=product_id,
-    #                        marker='wb',
-    #                        job_id=job_id)
-    # _kb = create_or_add_cancel_btn(_kb)
+    # # _kb = create_remove_kb(user_id=callback.from_user.id,
+    # #                        product_id=product_id,
+    # #                        marker='wb',
+    # #                        job_id=job_id)
+    # # _kb = create_or_add_cancel_btn(_kb)
 
-    if msg:
-        await bot.edit_message_text(text=_text,
-                                    chat_id=msg.chat.id,
-                                    message_id=msg.message_id,
-                                    reply_markup=_kb.as_markup())
-    else:
-        await callback.message.answer(text=_text,
-                             reply_markup=_kb.as_markup())
+    # if msg:
+    #     await bot.edit_message_text(text=_text,
+    #                                 chat_id=msg.chat.id,
+    #                                 message_id=msg.message_id,
+    #                                 reply_markup=_kb.as_markup())
+    # else:
+    #     await callback.message.answer(text=_text,
+    #                          reply_markup=_kb.as_markup())
         
 
 # @wb_router.callback_query(F.data.startswith('product'))
