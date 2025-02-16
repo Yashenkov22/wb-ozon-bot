@@ -32,10 +32,6 @@ from keyboards import (create_remove_kb, create_start_kb,
 
 from states import SwiftSepaStates, ProductStates, OzonProduct
 from utils.handlers import (clear_state_and_redirect_to_start,
-                            save_data_to_storage,
-                            check_user,
-                            show_item,
-                            show_item_list,
                             generate_sale_for_price,
                             generate_pretty_amount)
 
@@ -486,153 +482,153 @@ async def proccess_ozon_percent(message: types.Message | types.CallbackQuery,
     await message.delete()
 
 
-@ozon_router.callback_query(F.data == 'list_product')
-async def list_product(callback: types.Message | types.CallbackQuery,
-                        state: FSMContext,
-                        session: AsyncSession,
-                        bot: Bot):
-    data = await state.get_data()
+# @ozon_router.callback_query(F.data == 'list_product')
+# async def list_product(callback: types.Message | types.CallbackQuery,
+#                         state: FSMContext,
+#                         session: AsyncSession,
+#                         bot: Bot):
+#     data = await state.get_data()
 
-    marker = data.get('action')
-    user_id = callback.from_user.id
+#     marker = data.get('action')
+#     user_id = callback.from_user.id
 
-    subquery = (
-        select(UserJob.job_id,
-               UserJob.user_id,
-               UserJob.product_id)
-        .where(UserJob.user_id == callback.from_user.id)
-    ).subquery()
+#     subquery = (
+#         select(UserJob.job_id,
+#                UserJob.user_id,
+#                UserJob.product_id)
+#         .where(UserJob.user_id == callback.from_user.id)
+#     ).subquery()
 
-    query = (
-        select(
-            OzonProductModel.id,
-            OzonProductModel.link,
-            OzonProductModel.actual_price,
-            OzonProductModel.start_price,
-            OzonProductModel.user_id,
-            OzonProductModel.time_create,
-            OzonProductModel.name,
-            OzonProductModel.sale,
-            subquery.c.job_id)\
-        .select_from(OzonProductModel)\
-        .join(User,
-              OzonProductModel.user_id == User.tg_id)\
-        .join(UserJob,
-              UserJob.user_id == User.tg_id)\
-        .outerjoin(subquery,
-                   subquery.c.product_id == OzonProductModel.id)\
-        .where(User.tg_id == callback.from_user.id)\
-        .distinct(OzonProductModel.id)
-    )
+#     query = (
+#         select(
+#             OzonProductModel.id,
+#             OzonProductModel.link,
+#             OzonProductModel.actual_price,
+#             OzonProductModel.start_price,
+#             OzonProductModel.user_id,
+#             OzonProductModel.time_create,
+#             OzonProductModel.name,
+#             OzonProductModel.sale,
+#             subquery.c.job_id)\
+#         .select_from(OzonProductModel)\
+#         .join(User,
+#               OzonProductModel.user_id == User.tg_id)\
+#         .join(UserJob,
+#               UserJob.user_id == User.tg_id)\
+#         .outerjoin(subquery,
+#                    subquery.c.product_id == OzonProductModel.id)\
+#         .where(User.tg_id == callback.from_user.id)\
+#         .distinct(OzonProductModel.id)
+#     )
 
-    async with session as _session:
-        res = await _session.execute(query)
+#     async with session as _session:
+#         res = await _session.execute(query)
 
-        _data = res.fetchall()
+#         _data = res.fetchall()
 
-        _new_data = []
-        for _d in _data:
-            product_id, link, actual, start, user_id, _date, name, sale, job_id = _d
-            moscow_tz = pytz.timezone('Europe/Moscow')
+#         _new_data = []
+#         for _d in _data:
+#             product_id, link, actual, start, user_id, _date, name, sale, job_id = _d
+#             moscow_tz = pytz.timezone('Europe/Moscow')
             
-            date = _date.astimezone(moscow_tz).timestamp()
-            _new_data.append((product_id, link, actual, start, user_id, date, name, sale, job_id))
+#             date = _date.astimezone(moscow_tz).timestamp()
+#             _new_data.append((product_id, link, actual, start, user_id, date, name, sale, job_id))
 
 
-    print('ozon products22',_data)
+#     print('ozon products22',_data)
 
-    if not _new_data:
-        await callback.answer(text='Сначала добавьте товар',
-                              show_alert=True)
-        return
+#     if not _new_data:
+#         await callback.answer(text='Сначала добавьте товар',
+#                               show_alert=True)
+#         return
 
-#
-    await state.update_data(ozon_product_idx=0,
-                            ozon_product_list=_new_data)
+# #
+#     await state.update_data(ozon_product_idx=0,
+#                             ozon_product_list=_new_data)
     
-    # await show_item(callback,
-    #                 state)
-    await show_item_list(callback,
-                         state,
-                         bot)
-    return
+#     # await show_item(callback,
+#     #                 state)
+#     await show_item_list(callback,
+#                          state,
+#                          bot)
+#     return
 
-#
-    query = (
-        select(
-            OzonProductModel.id,
-            OzonProductModel.link,
-            OzonProductModel.actual_price,
-            OzonProductModel.start_price,
-            OzonProductModel.percent,
-            OzonProductModel.time_create,
-            OzonProductModel.user_id)\
-        .join(User,
-              OzonProductModel.user_id == User.tg_id)\
-        .where(User.tg_id == user_id)
-    )
-    # async with session as session:
-    async with session as session:
-        ozon_product = await session.execute(query)
+# #
+#     query = (
+#         select(
+#             OzonProductModel.id,
+#             OzonProductModel.link,
+#             OzonProductModel.actual_price,
+#             OzonProductModel.start_price,
+#             OzonProductModel.percent,
+#             OzonProductModel.time_create,
+#             OzonProductModel.user_id)\
+#         .join(User,
+#               OzonProductModel.user_id == User.tg_id)\
+#         .where(User.tg_id == user_id)
+#     )
+#     # async with session as session:
+#     async with session as session:
+#         ozon_product = await session.execute(query)
 
-        ozon_product = ozon_product.fetchall()
+#         ozon_product = ozon_product.fetchall()
 
-    if not ozon_product:
-        await callback.answer(text='Нет добавленных Ozon товаров',
-                              show_alert=True)
-        return
+#     if not ozon_product:
+#         await callback.answer(text='Нет добавленных Ozon товаров',
+#                               show_alert=True)
+#         return
 
-    ozon_product = ozon_product[0]
+#     ozon_product = ozon_product[0]
 
-    _id, link, actual_price, start_price, percent, time_create, _user_id = ozon_product
+#     _id, link, actual_price, start_price, percent, time_create, _user_id = ozon_product
 
-    # Преобразование времени в московскую временную зону
-    time_create: datetime
-    moscow_tz = pytz.timezone('Europe/Moscow')
-    moscow_time = time_create.astimezone(moscow_tz)
+#     # Преобразование времени в московскую временную зону
+#     time_create: datetime
+#     moscow_tz = pytz.timezone('Europe/Moscow')
+#     moscow_time = time_create.astimezone(moscow_tz)
 
-    job_id_query = (
-        select(
-            UserJob.job_id,
-        )\
-        .join(User,
-              UserJob.user_id == User.tg_id)
-        .where(
-            and_(
-                User.tg_id == callback.from_user.id,
-                UserJob.product_marker == f"{marker}_product",
-                UserJob.product_id == _id,
-            )
-        )
-    )
+#     job_id_query = (
+#         select(
+#             UserJob.job_id,
+#         )\
+#         .join(User,
+#               UserJob.user_id == User.tg_id)
+#         .where(
+#             and_(
+#                 User.tg_id == callback.from_user.id,
+#                 UserJob.product_marker == f"{marker}_product",
+#                 UserJob.product_id == _id,
+#             )
+#         )
+#     )
 
-    async with session as session:
-        res = await session.execute(job_id_query)
+#     async with session as session:
+#         res = await session.execute(job_id_query)
 
-        job_id = res.scalar_one_or_none()
+#         job_id = res.scalar_one_or_none()
 
-    if not job_id:
-        await callback.answer('error', show_alert=True)
-        return
+#     if not job_id:
+#         await callback.answer('error', show_alert=True)
+#         return
 
-    # ozon_product = ozon_product[0]
+#     # ozon_product = ozon_product[0]
 
-    # print('ozon product', ozon_product.user_id, ozon_product.user, ozon_product.link)
+#     # print('ozon product', ozon_product.user_id, ozon_product.user, ozon_product.link)
 
-    if ozon_product:
-        _kb = create_remove_kb(user_id=callback.from_user.id,
-                            product_id=_id,
-                            marker='ozon',
-                            job_id=job_id)
-        _kb = create_or_add_cancel_btn(_kb)
-        waiting_price = actual_price - ((actual_price * percent) / 100)
+#     if ozon_product:
+#         _kb = create_remove_kb(user_id=callback.from_user.id,
+#                             product_id=_id,
+#                             marker='ozon',
+#                             job_id=job_id)
+#         _kb = create_or_add_cancel_btn(_kb)
+#         waiting_price = actual_price - ((actual_price * percent) / 100)
 
-        _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\nНачальная цена: {start_price}\nАктуальная цена: {actual_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+#         _text = f'Привет {user_id}\nТвой WB <a href="{link}">товар</a>\nНачальная цена: {start_price}\nАктуальная цена: {actual_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
 
-        await callback.message.edit_text(text=_text,
-                                         reply_markup=_kb.as_markup())
-    else:
-        await callback.answer('не получилось')
+#         await callback.message.edit_text(text=_text,
+#                                          reply_markup=_kb.as_markup())
+#     else:
+#         await callback.answer('не получилось')
 
     # data = await state.get_data()
 

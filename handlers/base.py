@@ -20,8 +20,6 @@ from keyboards import (create_or_add_exit_btn,
                        create_or_add_return_to_product_list_btn,
                        create_pagination_page_kb,
                        create_or_add_cancel_btn,
-                       add_back_btn,
-                       create_bot_start_kb,
                        create_remove_and_edit_sale_kb,
                        create_reply_start_kb)
 
@@ -31,9 +29,7 @@ from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
                             check_input_link,
                             delete_prev_subactive_msg,
                             generate_pretty_amount,
-                            save_data_to_storage,
                             check_user,
-                            show_item,
                             show_product_list,
                             try_delete_prev_list_msgs)
 from utils.scheduler import add_product_task
@@ -383,6 +379,8 @@ async def callback_cancel(callback: types.Message | types.CallbackQuery,
         await callback.message.delete()
     except Exception:
         pass
+    finally:
+        await callback.answer()
 
     
 @main_router.callback_query(F.data == 'exit')
@@ -396,6 +394,8 @@ async def callback_to_main(callback: types.Message | types.CallbackQuery,
         await callback.message.delete()
     except Exception:
         pass
+    finally:
+        await callback.answer()
         
 
 @main_router.callback_query(F.data == 'close')
@@ -408,6 +408,8 @@ async def callback_close(callback: types.Message | types.CallbackQuery,
         await callback.message.delete()
     except Exception as ex:
         print(ex)
+    finally:
+        await callback.answer()
 
 
 @main_router.callback_query(F.data == 'return_to_product_list')
@@ -678,6 +680,12 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
     if not new_sale.isdigit():
         sub_active_msg = await message.answer(text=f'Невалидные данные\nОжидается число, передано: {new_sale}')
         await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+    
+        try:
+            await message.delete()
+        except Exception:
+            pass
+
         return
 
     product_dict: dict = data.get('view_product_dict')
@@ -689,6 +697,12 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
     if not sale_data:
         sub_active_msg = await message.answer('Ошибка')
         await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+
+        try:
+            await message.delete()
+        except Exception:
+            pass
+
         return
     
     user_id = sale_data.get('user_id')
@@ -700,6 +714,12 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
     if start_price <= float(new_sale):
         sub_active_msg = await message.answer(text=f'Невалидные данные\nСкидка не может быть больше или равной цене товара\nПередано {new_sale}, Начальная цена товара: {start_price}')
         await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+
+        try:
+            await message.delete()
+        except Exception:
+            pass
+
         return
 
     product_model = OzonProductModel if marker == 'ozon' else WbProduct

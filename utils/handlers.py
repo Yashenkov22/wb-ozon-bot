@@ -1288,118 +1288,115 @@ async def check_user(message: types.Message,
 
 
 
-async def show_item(callback: types.CallbackQuery,
-                    state: FSMContext):
-    data = await state.get_data()
+# async def show_item(callback: types.CallbackQuery,
+#                     state: FSMContext):
+#     data = await state.get_data()
 
-    marker = data.get('action')
+#     marker = data.get('action')
 
-    msg: types.Message = data.get('msg')
-    product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id, photo_kb = item_constructor(data)
+#     msg: types.Message = data.get('msg')
+#     product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id, photo_kb = item_constructor(data)
 
-    # if not data.get('visited'):
-    #     await state.update_data(visited=True)
-    time_create: datetime
-    moscow_tz = pytz.timezone('Europe/Moscow')
-    moscow_time = time_create.astimezone(moscow_tz)
+#     # if not data.get('visited'):
+#     #     await state.update_data(visited=True)
+#     time_create: datetime
+#     moscow_tz = pytz.timezone('Europe/Moscow')
+#     moscow_time = time_create.astimezone(moscow_tz)
 
-    waiting_price = actaul_price - ((actaul_price * percent) / 100)
+#     waiting_price = actaul_price - ((actaul_price * percent) / 100)
 
-    _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
+#     _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
 
-    _kb = add_cancel_btn_to_photo_keyboard(photo_kb)
+#     _kb = add_cancel_btn_to_photo_keyboard(photo_kb)
 
-    _kb = create_remove_kb(user_id=callback.from_user.id,
-                           product_id=product_id,
-                           marker=marker,
-                           job_id=job_id,
-                           _kb=_kb)
-    # _kb = create_or_add_cancel_btn(_kb)
+#     _kb = create_remove_kb(user_id=callback.from_user.id,
+#                            product_id=product_id,
+#                            marker=marker,
+#                            job_id=job_id,
+#                            _kb=_kb)
+#     # _kb = create_or_add_cancel_btn(_kb)
 
-    if msg:
-        await msg.edit_text(text=_text,
-                            reply_markup=_kb.as_markup())
+#     if msg:
+#         await msg.edit_text(text=_text,
+#                             reply_markup=_kb.as_markup())
 
-    # await callback.message.answer_photo(photo,
-    #                                     caption=f'Товар: {name}\nЦена: {price}',
-    #                                     reply_markup=photo_kb.as_markup())
+#     # await callback.message.answer_photo(photo,
+#     #                                     caption=f'Товар: {name}\nЦена: {price}',
+#     #                                     reply_markup=photo_kb.as_markup())
         
-    # else:
-    #     await callback.message.edit_media(InputMediaPhoto(media=photo,
-    #                                                       type='photo',
-    #                                                       caption=f'Товар: {name}\nЦена: {price}'),
-    #                                       reply_markup=photo_kb.as_markup())
+#     # else:
+#     #     await callback.message.edit_media(InputMediaPhoto(media=photo,
+#     #                                                       type='photo',
+#     #                                                       caption=f'Товар: {name}\nЦена: {price}'),
+#     #                                       reply_markup=photo_kb.as_markup())
         
 
-def item_constructor(data: dict[str, Any]):
-    marker = data.get('action')
+# def item_constructor(data: dict[str, Any]):
+#     marker = data.get('action')
 
-    product_idx = data.get(f'{marker}_product_idx')
-    product_list = data.get(f'{marker}_product_list')
+#     product_idx = data.get(f'{marker}_product_idx')
+#     product_list = data.get(f'{marker}_product_list')
 
-    # product_idx = data['_idx_product']
-    # wb_product_list = data['wb_product_list']
-    print(f'{marker}_product list', product_list, 'idx', product_idx)
-    kb_init: str
+#     print(f'{marker}_product list', product_list, 'idx', product_idx)
+#     kb_init: str
     
-    if len(product_list) == 1:
-        kb_init = 'one'
-    else:
-        if product_idx == 0:
-            kb_init = 'start'
-        elif product_idx < len(product_list)-1:
-            kb_init = 'mid'
-        else:
-            kb_init = 'end'
+#     if len(product_list) == 1:
+#         kb_init = 'one'
+#     else:
+#         if product_idx == 0:
+#             kb_init = 'start'
+#         elif product_idx < len(product_list)-1:
+#             kb_init = 'mid'
+#         else:
+#             kb_init = 'end'
 
-    photo_kb = create_photo_keyboard(kb_init)
-    _product = product_list[product_idx]
-    # name = data['name']
-    # price = data['price']
-    product_id, link, actaul_price, start_price, user_id, time_create, sale, job_id = _product
+#     photo_kb = create_photo_keyboard(kb_init)
+#     _product = product_list[product_idx]
 
-    return (
-        product_id,
-        link,
-        actaul_price,
-        start_price,
-        user_id,
-        time_create,
-        sale,
-        job_id,
-        photo_kb,
-    )
+#     product_id, link, actaul_price, start_price, user_id, time_create, sale, job_id = _product
 
+#     return (
+#         product_id,
+#         link,
+#         actaul_price,
+#         start_price,
+#         user_id,
+#         time_create,
+#         sale,
+#         job_id,
+#         photo_kb,
+#     )
 
 
-async def show_item_list(callback: types.CallbackQuery,
-                         state: FSMContext,
-                         bot: Bot):
-    data = await state.get_data()
 
-    marker = data.get('action')
+# async def show_item_list(callback: types.CallbackQuery,
+#                          state: FSMContext,
+#                          bot: Bot):
+#     data = await state.get_data()
 
-    msg: tuple = data.get('msg')
+#     marker = data.get('action')
 
-    # product_idx = data.get(f'{marker}_product_idx')
-    product_list = data.get(f'{marker}_product_list')
+#     msg: tuple = data.get('msg')
 
-    _kb = create_product_list_kb(callback.from_user.id,
-                                 product_list,
-                                 marker)
-    _kb = create_or_add_cancel_btn(_kb)
+#     # product_idx = data.get(f'{marker}_product_idx')
+#     product_list = data.get(f'{marker}_product_list')
+
+#     _kb = create_product_list_kb(callback.from_user.id,
+#                                  product_list,
+#                                  marker)
+#     _kb = create_or_add_cancel_btn(_kb)
     
-    _text = f'Ваши {marker} товары'
+#     _text = f'Ваши {marker} товары'
     
-    if msg:
-        await bot.edit_message_text(chat_id=msg[0],
-                                    message_id=msg[-1],
-                                    text=_text,
-                                    reply_markup=_kb.as_markup())
-    else:
-        await bot.send_message(chat_id=callback.from_user.id,
-                               text=_text,
-                               reply_markup=_kb.as_markup())
+#     if msg:
+#         await bot.edit_message_text(chat_id=msg[0],
+#                                     message_id=msg[-1],
+#                                     text=_text,
+#                                     reply_markup=_kb.as_markup())
+#     else:
+#         await bot.send_message(chat_id=callback.from_user.id,
+#                                text=_text,
+#                                reply_markup=_kb.as_markup())
     
 
 
@@ -1421,16 +1418,11 @@ async def show_product_list(product_dict: dict,
     list_msg: tuple = product_dict.get('list_msg')
 
     if not product_list:
-        await bot.send_message(chat_id=user_id,
-                               text='Нет добавленных товаров')
+        await delete_prev_subactive_msg(data)
+        sub_active_msg = await bot.send_message(chat_id=user_id,
+                                                text='Нет добавленных товаров')
+        await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
         return
-
-    # view_product_dict = {
-    #     'len_product_list': len_product_list,
-    #     'pages': pages,
-    #     'current_page': current_page,
-    #     'product_list': product_list,
-    # }
 
     start_idx = (current_page - 1) * DEFAULT_PAGE_ELEMENT_COUNT
     end_idx = current_page * DEFAULT_PAGE_ELEMENT_COUNT
@@ -1464,7 +1456,6 @@ async def show_product_list(product_dict: dict,
 
         await state.update_data(list_msg_on_delete=list_msg_on_delete)
         
-        # await state.update_data(view_product_dict=product_dict)
     else:
         await bot.edit_message_text(chat_id=user_id,
                                     message_id=list_msg[-1],
@@ -1472,11 +1463,6 @@ async def show_product_list(product_dict: dict,
                                     reply_markup=_kb.as_markup())
     
     await state.update_data(view_product_dict=product_dict)
-    # for product in product_list_for_page:
-    #     product_id, link, actual, start, user_id, _date, marker, name, sale, job_id = product
-    
-    pass
-
 
 
 async def try_delete_prev_list_msgs(chat_id: int,
