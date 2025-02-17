@@ -664,6 +664,8 @@ async def edit_sale_callback(callback: types.CallbackQuery,
         
         _sale_data = res.fetchall()
 
+        print(_sale_data)
+
         link, sale, start_price = _sale_data[0]
 
     await state.update_data(
