@@ -627,22 +627,44 @@ async def edit_sale_callback(callback: types.CallbackQuery,
                           bot: Bot,
                           scheduler: AsyncIOScheduler):
     data = await state.get_data()
-
-    _sale_data = data.get('sale_data')
-
-    link = _sale_data.get('link')
-    sale = _sale_data.get('sale')
-    start_price = _sale_data.get('start_price')
-
-    with_redirect = True
-
+    
     callback_data = callback.data.split('_')
     callback_prefix = callback_data[0]
 
     marker, user_id, product_id = callback_data[1:]
 
+    with_redirect = True
+
     if callback_prefix.endswith('rd'):
         with_redirect = False
+
+    if not with_redirect:
+        _sale_data: dict = data.get('sale_data')
+
+        link = _sale_data.get('link')
+        sale = _sale_data.get('sale')
+        start_price = _sale_data.get('start_price')
+    else:
+        product_model = WbProduct if marker == 'wb' else OzonProductModel
+        query = (
+            select(
+                product_model.link,
+                product_model.sale,
+                product_model.start_price,
+            )\
+            .where(
+                and_(
+                    product_model.id == product_id,
+                    product_model.user_id == callback.from_user.id,
+                    )
+                )
+        )
+        async with session as _session:
+            res = await _session.execute(query)
+        
+        _sale_data = res.fetchall()
+
+        link, sale, start_price = _sale_data[0]
 
     await state.update_data(
         sale_data={
