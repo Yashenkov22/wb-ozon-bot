@@ -209,7 +209,7 @@ async def save_product(user_data: dict,
             timeout = aiohttp.ClientTimeout(total=30)
             async with aiohttp.ClientSession() as aiosession:
                 # _url = f"http://5.61.53.235:1441/product/{message.text}"
-                _url = f"http://172.18.0.7:8080/product/{ozon_short_link}"
+                _url = f"http://172.18.0.6:8080/product/{ozon_short_link}"
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
 
@@ -468,7 +468,7 @@ async def save_product(user_data: dict,
             lat, lon = ('55.707106', '37.572854')
 
             async with aiohttp.ClientSession() as aiosession:
-                _url = f"http://172.18.0.2:8080/pickUpPoint/{lat}/{lon}"
+                _url = f"http://172.18.0.7:8080/pickUpPoint/{lat}/{lon}"
                 response = await aiosession.get(url=_url)
 
                 res = await response.json()
