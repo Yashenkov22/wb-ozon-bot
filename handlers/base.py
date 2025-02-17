@@ -638,7 +638,7 @@ async def edit_sale_callback(callback: types.CallbackQuery,
     if callback_prefix.endswith('rd'):
         with_redirect = False
 
-    if not with_redirect:
+    if with_redirect:
         _sale_data: dict = data.get('sale_data')
 
         link = _sale_data.get('link')
