@@ -654,7 +654,7 @@ async def edit_sale_callback(callback: types.CallbackQuery,
             )\
             .where(
                 and_(
-                    product_model.id == product_id,
+                    product_model.id == int(product_id),
                     product_model.user_id == callback.from_user.id,
                     )
                 )
