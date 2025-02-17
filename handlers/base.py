@@ -320,6 +320,7 @@ async def pagination_page(callback: types.Message | types.CallbackQuery,
                                 message_id=list_msg[-1],
                                 text='Выберите страницу, на которую хотите перейти',
                                 reply_markup=_kb.as_markup())
+    await callback.answer()
 
 
 @main_router.callback_query(F.data.startswith('go_to_page'))
@@ -339,6 +340,7 @@ async def go_to_selected_page(callback: types.Message | types.CallbackQuery,
     await show_product_list(product_dict,
                             callback.from_user.id,
                             state)
+    await callback.answer()
 
 
 @main_router.callback_query(F.data.startswith('page'))
@@ -366,6 +368,7 @@ async def switch_page(callback: types.Message | types.CallbackQuery,
     await show_product_list(product_dict,
                             callback.from_user.id,
                             state)
+    await callback.answer()
     
 
 @main_router.callback_query(F.data == 'cancel')
@@ -423,6 +426,7 @@ async def back_to_product_list(callback: types.Message | types.CallbackQuery,
             await show_product_list(product_dict=product_dict,
                                     user_id=callback.from_user.id,
                                     state=state)
+            await callback.answer()
     else:
         await callback.answer(text='Что то пошло не так',
                               show_alert=True)
@@ -662,7 +666,6 @@ async def edit_sale_callback(callback: types.CallbackQuery,
     
     await state.update_data(msg=(msg.chat.id, msg.message_id))
     await callback.answer()
-    pass
 
 
 @main_router.message(and_f(EditSale.new_sale), F.content_type == types.ContentType.TEXT)
@@ -690,7 +693,7 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
 
     product_dict: dict = data.get('view_product_dict')
 
-    list_msg: tuple = product_dict.get('list_msg')
+    msg: tuple = product_dict.get('msg')
 
     sale_data: dict = data.get('sale_data')
 
@@ -756,6 +759,12 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
                 await show_product_list(product_dict=product_dict,
                                         user_id=message.from_user.id,
                                         state=state)
+            else:
+                try:
+                    await bot.delete_message(chat_id=msg[0],
+                                             message_id=msg[-1])
+                except Exception as ex:
+                    print(ex)
             
     try:
         await message.delete()
