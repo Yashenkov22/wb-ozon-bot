@@ -799,7 +799,7 @@ async def push_check_wb_price(user_id: str,
         try:
             timeout = aiohttp.ClientTimeout(total=15)
             async with aiohttp.ClientSession() as aiosession:
-                _url = f"http://172.18.0.2:8080/product/{zone}/{short_link}"
+                _url = f"http://172.18.0.7:8080/product/{zone}/{short_link}"
                 
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
@@ -937,7 +937,7 @@ async def push_check_ozon_price(user_id: str,
             timeout = aiohttp.ClientTimeout(total=30)
             async with aiohttp.ClientSession() as aiosession:
                 # _url = f"http://5.61.53.235:1441/product/{message.text}"
-                _url = f"http://172.18.0.7:8080/product/{short_link}"
+                _url = f"http://172.18.0.6:8080/product/{short_link}"
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
 
