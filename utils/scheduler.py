@@ -542,7 +542,7 @@ async def save_product(user_data: dict,
         try:
             timeout = aiohttp.ClientTimeout(total=15)
             async with aiohttp.ClientSession() as aiosession:
-                _url = f"http://172.18.0.2:8080/product/{del_zone}/{short_link}"
+                _url = f"http://172.18.0.7:8080/product/{del_zone}/{short_link}"
                 async with aiosession.get(url=_url,
                                 timeout=timeout) as response:
                 # response = await aiosession.get(url=_url)
