@@ -633,6 +633,9 @@ async def edit_sale_callback(callback: types.CallbackQuery,
 
     marker, user_id, product_id = callback_data[1:]
 
+    print(marker, user_id, product_id)
+    print(callback.from_user.id)
+
     with_redirect = True
 
     if callback_prefix.endswith('rd'):
