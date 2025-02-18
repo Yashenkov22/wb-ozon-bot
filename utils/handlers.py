@@ -34,6 +34,8 @@ from keyboards import (add_back_btn, add_pagination_btn,
 
 from utils.storage import redis_client
 
+from config import DEV_ID
+
 
 DEFAULT_PAGE_ELEMENT_COUNT = 5
 
@@ -44,6 +46,36 @@ DEFAULT_PAGE_ELEMENT_COUNT = 5
 #     return (link.startswith('https://ozon')) or \
 #         (link.startswith('https://www.ozon')) or \
 #         (link.startswith('https://www.wildberries'))
+
+async def state_clear(state: FSMContext):
+    data = await state.get_data()
+
+    dict_msg_on_delete: dict = data.get('dict_msg_on_delete')
+
+    await state.clear()
+
+    if dict_msg_on_delete:
+        await state.update_data(dict_msg_on_delete=dict_msg_on_delete)
+
+
+async def add_message_to_delete_dict(message: types.Message,
+                                     state: FSMContext):
+    chat_id = message.chat.id
+    message_date = message.date.timestamp()
+    message_id = message.message_id
+
+    # test on myself
+    if chat_id == int(DEV_ID):
+        data = await state.get_data()
+
+        dict_msg_on_delete: dict = data.get('dict_msg_on_delete')
+
+        if not dict_msg_on_delete:
+            dict_msg_on_delete = dict()
+
+        dict_msg_on_delete[message_date] = (chat_id, message_id)
+
+        await state.update_data(dict_msg_on_delete=dict_msg_on_delete)
 
 
 def check_input_link(link: str):
@@ -1444,6 +1476,9 @@ async def show_product_list(product_dict: dict,
         list_msg: types.Message = await bot.send_message(chat_id=user_id,
                             text=_text,
                             reply_markup=_kb.as_markup())
+        
+        await add_message_to_delete_dict(list_msg,
+                                         state)
         
         product_dict['list_msg'] = (list_msg.chat.id, list_msg.message_id)
 

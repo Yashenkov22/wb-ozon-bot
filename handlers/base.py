@@ -1,6 +1,7 @@
 from math import ceil
 
 import pytz
+import json
 
 from datetime import datetime, timedelta
 
@@ -31,10 +32,14 @@ from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
                             generate_pretty_amount,
                             check_user,
                             show_product_list,
-                            try_delete_prev_list_msgs)
+                            try_delete_prev_list_msgs,
+                            state_clear,
+                            add_message_to_delete_dict)
 from utils.scheduler import add_product_task
 
 from db.base import OzonProduct as OzonProductModel, User, Base, UserJob, WbProduct
+
+from utils.storage import redis_client
 
 
 main_router = Router()
@@ -55,10 +60,10 @@ async def start(message: types.Message | types.CallbackQuery,
     await try_delete_prev_list_msgs(message.chat.id,
                                     state)
     
-    await state.clear()
+    await state_clear(state)
 
-    if message.from_user.id == 686339126:
-        await state.update_data(test_state=(message.chat.id, message.date.timestamp(), message.message_id))
+    # if message.from_user.id == 686339126:
+    #     await state.update_data(test_state=(message.chat.id, message.date.timestamp(), message.message_id))
     
     await check_user(message,
                      session)
@@ -97,6 +102,28 @@ async def start(message: types.Message | types.CallbackQuery,
         print(ex)
 
 
+@main_router.message(Command('test_redis'))
+async def start(message: types.Message | types.CallbackQuery,
+                state: FSMContext,
+                session: AsyncSession,
+                bot: Bot,
+                scheduler: AsyncIOScheduler):
+    user_id = message.chat.id
+    key = f'fsm:{user_id}:{user_id}:data'
+
+    async with redis_client.pipeline(transaction=True) as pipe:
+        user_data: bytes = await pipe.get(key)
+        results = await pipe.execute()
+        #Извлекаем результат из выполненного pipeline
+    print(results)
+    print(user_data)
+
+    json_user_data: dict = json.loads(results[0])
+    print(json_user_data)
+    await message.delete()
+    pass
+
+
 @main_router.message(F.text == 'Добавить товар')
 async def add_any_product(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
@@ -112,6 +139,9 @@ async def add_any_product(message: types.Message | types.CallbackQuery,
     add_msg = await bot.send_message(text=_text,
                            chat_id=message.from_user.id,
                            reply_markup=_kb.as_markup())
+    
+    await add_message_to_delete_dict(add_msg,
+                                     state)
     
     await state.update_data(add_msg=(add_msg.chat.id, add_msg.message_id))
 
@@ -188,6 +218,9 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
     else:
         await delete_prev_subactive_msg(data)
         sub_active_msg: types.Message = await message.answer(text='Невалидная ссылка')
+
+    await add_message_to_delete_dict(sub_active_msg,
+                                     state)
 
     await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
     
@@ -279,7 +312,12 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
 
     if not product_list:
         await delete_prev_subactive_msg(data)
+
         sub_active_msg = await message.answer('Нет добавленных продуктов')
+
+        await add_message_to_delete_dict(sub_active_msg,
+                                     state)
+
         await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
         return
     

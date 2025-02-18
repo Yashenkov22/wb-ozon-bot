@@ -44,6 +44,7 @@ scheduler_cron = CronTrigger(minute=1,
 
 
 async def periodic_delete_old_message(user_id: int):
+    key = f'fsm:{user_id}:{user_id}:data'
     pass
 
 async def check_product_by_user_in_db(user_id: int,
