@@ -662,10 +662,21 @@ async def edit_sale_callback(callback: types.CallbackQuery,
                 #     )
                 )
         )
+        test_query = (
+            select(
+                product_model.id
+            )
+        )
         async with session as _session:
             res = await _session.execute(query)
+
+            test_res = await _session.execute(test_query)
         
         _sale_data = res.fetchall()
+
+        test_data = test_res.fetchall()
+
+        print(test_data)
 
         print(_sale_data)
 
