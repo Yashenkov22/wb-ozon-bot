@@ -633,9 +633,6 @@ async def edit_sale_callback(callback: types.CallbackQuery,
 
     marker, user_id, product_id = callback_data[1:]
 
-    print(marker, user_id, product_id)
-    print(callback.from_user.id)
-
     with_redirect = True
 
     if callback_prefix.endswith('rd'):
@@ -656,30 +653,16 @@ async def edit_sale_callback(callback: types.CallbackQuery,
                 product_model.start_price,
             )\
             .where(
+                and_(
                     product_model.id == int(product_id),
-                # and_(
-                #     # product_model.user_id == callback.from_user.id,
-                #     )
+                    product_model.user_id == callback.from_user.id,
+                    )
                 )
-        )
-        test_query = (
-            select(
-                product_model.id
-            )
         )
         async with session as _session:
             res = await _session.execute(query)
-
-            test_res = await _session.execute(test_query)
         
         _sale_data = res.fetchall()
-
-        test_data = test_res.fetchall()
-
-        print(test_data)
-
-        print(_sale_data)
-
         link, sale, start_price = _sale_data[0]
 
     await state.update_data(
