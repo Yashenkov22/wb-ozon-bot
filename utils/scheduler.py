@@ -43,6 +43,9 @@ scheduler_cron = CronTrigger(minute=1,
                              timezone=timezone)
 
 
+async def periodic_delete_old_message(user_id: int):
+    pass
+
 async def check_product_by_user_in_db(user_id: int,
                                       short_link: str,
                                       marker: Literal['wb', 'ozon'],
