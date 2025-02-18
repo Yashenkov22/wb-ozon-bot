@@ -74,6 +74,12 @@ async def start(message: types.Message | types.CallbackQuery,
 
     w = datetime.now()
     print('текущее время', w)
+    try:
+        print('1', q.date.timestamp())
+        print('2', w.timestamp())
+        pass
+    except Exception as ex:
+        print('DATE ERROR', ex)
 
     # print('разница', w - q.date)
     
