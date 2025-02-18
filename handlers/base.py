@@ -649,6 +649,7 @@ async def edit_sale_callback(callback: types.CallbackQuery,
         start_price = _sale_data.get('start_price')
     else:
         product_model = WbProduct if marker == 'wb' else OzonProductModel
+        print(type(product_model))
         query = (
             select(
                 product_model.link,
