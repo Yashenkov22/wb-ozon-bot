@@ -52,14 +52,13 @@ async def start(message: types.Message | types.CallbackQuery,
                 scheduler: AsyncIOScheduler):
     _message = message
 
-    if message.from_user.id == 686339126:
-        await state.update_data(test_state=(message.chat.id, message.date.timestamp(), message.message_id))
-
-
     await try_delete_prev_list_msgs(message.chat.id,
                                     state)
     
     await state.clear()
+
+    if message.from_user.id == 686339126:
+        await state.update_data(test_state=(message.chat.id, message.date.timestamp(), message.message_id))
     
     await check_user(message,
                      session)
