@@ -70,7 +70,7 @@ async def start(message: types.Message | types.CallbackQuery,
                                 chat_id=_message.from_user.id,
                                 reply_markup=_kb.as_markup(resize_keyboard=True))
     
-    print('время отправки сообщения', datetime.fromtimestamp(q.date))
+    print('время отправки сообщения', q.date)
 
     print('текущее время', datetime.now())
     
