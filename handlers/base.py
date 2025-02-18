@@ -649,7 +649,6 @@ async def edit_sale_callback(callback: types.CallbackQuery,
         start_price = _sale_data.get('start_price')
     else:
         product_model = WbProduct if marker == 'wb' else OzonProductModel
-        print(type(product_model))
         query = (
             select(
                 product_model.link,
@@ -657,10 +656,10 @@ async def edit_sale_callback(callback: types.CallbackQuery,
                 product_model.start_price,
             )\
             .where(
-                and_(
                     product_model.id == int(product_id),
-                    product_model.user_id == callback.from_user.id,
-                    )
+                # and_(
+                #     # product_model.user_id == callback.from_user.id,
+                #     )
                 )
         )
         async with session as _session:
