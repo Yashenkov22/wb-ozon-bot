@@ -2,7 +2,7 @@ from math import ceil
 
 import pytz
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from aiogram import Router, types, Bot, F
 from aiogram.filters import Command, or_f, and_f
@@ -77,7 +77,8 @@ async def start(message: types.Message | types.CallbackQuery,
     try:
         print('1', q.date.timestamp())
         print('2', w.timestamp())
-        print('3', q.date.timestamp() - w.timestamp())
+        print('3', w.timestamp() - q.date.timestamp())
+        print('4', datetime.fromtimestamp(w.timestamp() - q.date.timestamp()) - timedelta(seconds=1))
         pass
     except Exception as ex:
         print('DATE ERROR', ex)
