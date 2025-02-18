@@ -52,6 +52,10 @@ async def start(message: types.Message | types.CallbackQuery,
                 scheduler: AsyncIOScheduler):
     _message = message
 
+    if message.from_user.id == 686339126:
+        await state.update_data(test_state=(message.chat.id, message.date.timestamp(), message.message_id))
+
+
     await try_delete_prev_list_msgs(message.chat.id,
                                     state)
     
@@ -83,8 +87,6 @@ async def start(message: types.Message | types.CallbackQuery,
         pass
     except Exception as ex:
         print('DATE ERROR', ex)
-
-    # print('разница', w - q.date)
     
     try:
         await message.delete()
@@ -104,8 +106,6 @@ async def add_any_product(message: types.Message | types.CallbackQuery,
                             scheduler: AsyncIOScheduler):
     await state.set_state(AnyProductStates.link)
     
-    # data = await state.get_data()
-
     _text = 'Отправьте ссылку на товар'
 
     _kb = create_or_add_exit_btn()
@@ -129,6 +129,7 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
                             bot: Bot,
                             scheduler: AsyncIOScheduler):
     data = await state.get_data()
+    
     add_msg: tuple = data.get('add_msg')
 
     if message.text == 'Посмотреть товары':
