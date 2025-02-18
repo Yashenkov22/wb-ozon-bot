@@ -78,7 +78,7 @@ async def start(message: types.Message | types.CallbackQuery,
         print('1', q.date.timestamp())
         print('2', w.timestamp())
         print('3', w.timestamp() - q.date.timestamp())
-        print('4', datetime.fromtimestamp(w.timestamp() - q.date.timestamp()) - timedelta(seconds=1))
+        print('4', datetime.fromtimestamp(w.timestamp()) - datetime.fromtimestamp(q.date.timestamp()))
         pass
     except Exception as ex:
         print('DATE ERROR', ex)
