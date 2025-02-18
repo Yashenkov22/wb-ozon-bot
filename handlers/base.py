@@ -72,7 +72,10 @@ async def start(message: types.Message | types.CallbackQuery,
     
     print('время отправки сообщения', q.date)
 
-    print('текущее время', datetime.now())
+    w = datetime.now()
+    print('текущее время', w)
+
+    print('разница', w - q)
     
     try:
         await message.delete()
