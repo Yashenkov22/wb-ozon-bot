@@ -125,15 +125,19 @@ async def start(message: types.Message | types.CallbackQuery,
 
     if dict_msg_on_delete:
         for _key in list(dict_msg_on_delete.keys()):
-            chat_id, message_id = dict_msg_on_delete.get(_key)
-            try:
-                await bot.delete_message(chat_id=chat_id,
-                                        message_id=message_id)
-            except Exception as ex:
-                del dict_msg_on_delete[_key]
-                print(ex)
-            else:
-                del dict_msg_on_delete[_key]
+            chat_id, message_date = dict_msg_on_delete.get(_key)
+            date_now = datetime.now()
+
+            print((datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) > timedelta(seconds=5))
+            if (datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) > timedelta(seconds=5):
+                try:
+                    await bot.delete_message(chat_id=chat_id,
+                                            message_id=_key)
+                except Exception as ex:
+                    del dict_msg_on_delete[_key]
+                    print(ex)
+                else:
+                    del dict_msg_on_delete[_key]
 
     async with redis_client.pipeline(transaction=True) as pipe:
         bytes_data = json.dumps(json_user_data)

@@ -73,7 +73,7 @@ async def add_message_to_delete_dict(message: types.Message,
         if not dict_msg_on_delete:
             dict_msg_on_delete = dict()
 
-        dict_msg_on_delete[message_date] = (chat_id, message_id)
+        dict_msg_on_delete[message_id] = (chat_id, message_date)
 
         await state.update_data(dict_msg_on_delete=dict_msg_on_delete)
 
