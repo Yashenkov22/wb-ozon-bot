@@ -130,6 +130,7 @@ async def start(message: types.Message | types.CallbackQuery,
                 await bot.delete_message(chat_id=chat_id,
                                         message_id=message_id)
             except Exception as ex:
+                del dict_msg_on_delete[_key]
                 print(ex)
             else:
                 del dict_msg_on_delete[_key]
