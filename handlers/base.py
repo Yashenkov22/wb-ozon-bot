@@ -751,7 +751,7 @@ async def edit_sale_callback(callback: types.CallbackQuery,
     await add_message_to_delete_dict(msg,
                                      state)
     
-    await state.update_data(msg=(callback.from_user.id, callback.message.message_id))
+    await state.update_data(msg=(msg.chat.id, msg.message_id))
     await callback.answer()
 
 
@@ -866,7 +866,7 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
             await bot.delete_message(chat_id=msg[0],
                                         message_id=msg[-1])
         except Exception as ex:
-            print(ex)
+            print('ERROR WITH TRY DELETE SCHEDULER EDIT SALE MESSAGE', ex)
             
     try:
         await message.delete()
