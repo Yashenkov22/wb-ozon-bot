@@ -339,7 +339,7 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         sub_active_msg = await message.answer('Нет добавленных продуктов')
 
         await add_message_to_delete_dict(sub_active_msg,
-                                     state)
+                                         state)
 
         await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
         return
@@ -762,6 +762,10 @@ async def edit_sale_callback(callback: types.CallbackQuery,
                                 message_id=callback.message.message_id,
                                 reply_markup=_kb.as_markup())
     
+    await add_message_to_delete_dict(msg,
+                                     state)
+
+    
     await state.update_data(msg=(msg.chat.id, msg.message_id))
     await callback.answer()
 
@@ -780,6 +784,10 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
 
     if not new_sale.isdigit():
         sub_active_msg = await message.answer(text=f'Невалидные данные\nОжидается число, передано: {new_sale}')
+
+        await add_message_to_delete_dict(sub_active_msg,
+                                        state)
+
         await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
     
         try:
@@ -797,6 +805,10 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
 
     if not sale_data:
         sub_active_msg = await message.answer('Ошибка')
+
+        await add_message_to_delete_dict(sub_active_msg,
+                                        state)
+
         await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
 
         try:
@@ -814,6 +826,10 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
 
     if start_price <= float(new_sale):
         sub_active_msg = await message.answer(text=f'Невалидные данные\nСкидка не может быть больше или равной цене товара\nПередано {new_sale}, Начальная цена товара: {start_price}')
+        
+        await add_message_to_delete_dict(sub_active_msg,
+                                         state)
+
         await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
 
         try:
@@ -849,20 +865,23 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
         else:
             sub_active_msg = await message.answer('Скидка обновлена')
 
-            await state.update_data(sale_data=None,
-                                    _add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
-            await state.set_state()
+    await add_message_to_delete_dict(sub_active_msg,
+                                     state)
 
-            if with_redirect:
-                await show_product_list(product_dict=product_dict,
-                                        user_id=message.from_user.id,
-                                        state=state)
-            else:
-                try:
-                    await bot.delete_message(chat_id=msg[0],
-                                             message_id=msg[-1])
-                except Exception as ex:
-                    print(ex)
+    await state.update_data(sale_data=None,
+                            _add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+    await state.set_state()
+
+    if with_redirect:
+        await show_product_list(product_dict=product_dict,
+                                user_id=message.from_user.id,
+                                state=state)
+    else:
+        try:
+            await bot.delete_message(chat_id=msg[0],
+                                        message_id=msg[-1])
+        except Exception as ex:
+            print(ex)
             
     try:
         await message.delete()
@@ -1019,6 +1038,10 @@ async def view_product(callback: types.CallbackQuery,
         list_msg: types.Message =  bot.send_message(chat_id=callback.from_user.id,
                                                     text=_text,
                                                     reply_markup=_kb.as_markup())
+
+        await add_message_to_delete_dict(list_msg,
+                                         state)
+
         await state.update_data(list_msg=(list_msg.chat.id, list_msg.message_id))
         
     await callback.answer()            
@@ -1034,15 +1057,6 @@ async def any_input(message: types.Message,
 
     await delete_prev_subactive_msg(data)
 
-    # _add_msg: tuple = data.get('_add_msg')
-
-    # if _add_msg:
-    #     try:
-    #         await bot.delete_message(chat_id=_add_msg[0],
-    #                                  message_id=_add_msg[-1])
-    #     except Exception as ex:
-    #         print(ex)
-
     _message_text = message.text.strip().split()
 
     _name = link = None
@@ -1056,7 +1070,6 @@ async def any_input(message: types.Message,
     check_link = check_input_link(link)
 
     if check_link:
-
         sub_active_msg = await message.answer(text=f'{check_link} товар добавляется...')
 
         user_data = {
@@ -1067,10 +1080,12 @@ async def any_input(message: types.Message,
             'product_marker': check_link,
         }
 
-
         scheduler.add_job(add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
     else:
         sub_active_msg = await message.answer(text='Невалидная ссылка')
+
+    await add_message_to_delete_dict(sub_active_msg,
+                                     state)
     
     await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
     

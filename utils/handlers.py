@@ -42,11 +42,6 @@ DEFAULT_PAGE_ELEMENT_COUNT = 5
 # lock = asyncio.Lock()
 
 
-# def check_input_link(link: str):
-#     return (link.startswith('https://ozon')) or \
-#         (link.startswith('https://www.ozon')) or \
-#         (link.startswith('https://www.wildberries'))
-
 async def state_clear(state: FSMContext):
     data = await state.get_data()
 
@@ -248,38 +243,8 @@ async def check_user_last_message_time(user_id: int,
 
             await state.update_data(state_dict)
             print('state on end', await state.get_data())
-                # user_data = json.dumps(user_data)
-                # await pipe.set(key, user_data)
-
-                # await pipe.execute()
 
     
-    # query = (
-    #     select(
-    #         User
-    #     )\
-    #     .where(User.tg_id == user_id)
-    # )
-
-    # res = await session.execute(query)
-
-    # user = res.scalar_one_or_none()
-
-    # if user:
-    #     moscow_tz = pytz.timezone('Europe/Moscow')
-    #     _now = datetime.now()
-    #     moscow_time = _now.astimezone(moscow_tz)
-    #     _time_delta = moscow_time - timedelta(seconds=20)
-
-    #     print(moscow_time , user.last_action_time.astimezone(moscow_tz))
-
-    #     if user.last_action_time is not None \
-    #         and user.last_action_time.astimezone(moscow_tz) >= _time_delta:
-    #         return 'percent'
-    #     else:
-    #         # await sleep(1)
-    #         return 'link'
-
 async def add_procent_to_product(user_data: dict,
                                  session: AsyncSession,
                                  percent: str):
@@ -337,9 +302,7 @@ async def add_procent_to_product(user_data: dict,
 
             pass
         else:
-            # error
-            pass
-    
+            pass    
 
         
 async def save_product(user_data: dict,
@@ -349,7 +312,6 @@ async def save_product(user_data: dict,
     msg = user_data.get('msg')
     _name = user_data.get('name')
     link: str = user_data.get('link')
-    # percent: int = user_data.get('percent')
 
     ozon_query = (
         select(OzonProduct.id)\
@@ -390,10 +352,6 @@ async def save_product(user_data: dict,
 
             ozon_short_link = link[(_idx + len(_prefix)):]
 
-        # await state.update_data(ozon_link=ozon_link,
-        #                         ozon_short_link=ozon_short_link)
-        # await state.update_data(ozon_short_link=ozon_short_link)
-
         query = (
             select(
                 OzonProduct.id,
@@ -409,8 +367,6 @@ async def save_product(user_data: dict,
         res = res.scalar_one_or_none()
 
         if res:
-            # await bot.send_message(chat_id=msg[0],
-            #                        text='Товар уже добавлен')
             return True
 
         print('do request on OZON API')
@@ -418,12 +374,10 @@ async def save_product(user_data: dict,
         try:
             timeout = aiohttp.ClientTimeout(total=30)
             async with aiohttp.ClientSession() as aiosession:
-                # _url = f"http://5.61.53.235:1441/product/{message.text}"
                 _url = f"http://172.18.0.7:8080/product/{ozon_short_link}"
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
 
-                # response = await aiosession.get(url=_url)
                     print(f'OZON RESPONSE CODE {response.status}')
                     if response.status == 408:
                         print('TIMEOUT')
@@ -431,11 +385,7 @@ async def save_product(user_data: dict,
                                                text='Таймаут API')
                         return True
 
-                    # print(f'OZON RESPONSE CODE {response.status}')
-
                     res = await response.text()
-
-                # print(res)
 
             if res == '408 Request Timeout':
                 await bot.send_message(chat_id=msg[0],
@@ -446,7 +396,6 @@ async def save_product(user_data: dict,
             _new_short_link = res.split('|')[0]
 
             w = re.findall(r'\"cardPrice.*currency?', res)
-            # print(w)
 
             _alt = re.findall(r'\"alt.*,?', res)
             _product_name = None
@@ -456,15 +405,10 @@ async def save_product(user_data: dict,
                 _product_name = _alt[0].split('//')[0]
                 _prefix = f'\"alt\":\"'
                 
-                # if _product_name.startswith(_prefix):
-                # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
                 _product_name = _product_name[len(_prefix)+2:]
                 _product_name = ' '.join(_product_name.split()[:4])
 
             print(_product_name)
-
-            # await state.update_data(ozon_product_name=_product_name)
-            # print('NAME   ',_alt[0].split('//')[0])
 
             if w:
                 w = w[0].split(',')[:3]
@@ -505,21 +449,13 @@ async def save_product(user_data: dict,
 
                     script_list = json_data.get('seo').get('script')
 
-                    # if v:
-                    #     t = v.get('script')
-
-                    # if script_list:
                     inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
 
                     print('innerHTML', inner_html)
 
-                    # if inner_html:
-                        # print(type(b))
                     try:
                         inner_html_json: dict = json.loads(inner_html)
                         offers = inner_html_json.get('offers')
-
-                        # print(offers)
 
                         _price = offers.get('price')
 
@@ -527,18 +463,10 @@ async def save_product(user_data: dict,
                         actual_price = int(_price)
                         basic_price = int(_price)
 
-                        # price_dict = {
-                        #     'ozon_start_price': 0,
-                        #     'ozon_actual_price': float(_p),
-                        #     'ozon_basic_price': float(_p),
-                        # }
-
-                        # await state.update_data(data=price_dict)
-                        
                         print('Price', _price)
                     except Exception as ex:
-                        return True
                         print('problem', ex)
+                        return True
 
                     print('PRICE PARSE ERROR', user_data)
                 except Exception as ex:
@@ -553,24 +481,12 @@ async def save_product(user_data: dict,
                 'actual_price': actual_price,
                 'start_price': start_price,
                 'basic_price': basic_price,
-                #
                 'sale': _sale,
-                #
-                # 'percent': int(data.get('percent')),
                 'name': _name,
                 'time_create': datetime.now(),
                 'user_id': msg[0],
             }
 
-            # if percent:
-            #     _data.update(percent=int(percent))
-            
-            # query = (
-            #     insert(OzonProduct)\
-            #     .values(**_data)
-            # )
-
-            # await session.execute(query)
             ozon_product = OzonProduct(**_data)
 
             session.add(ozon_product)
@@ -579,7 +495,6 @@ async def save_product(user_data: dict,
 
             ozon_product_id = ozon_product.id
 
-            #          user_id | marker | product_id
             job_id = f'{msg[0]}.ozon.{ozon_product_id}'
 
             job = scheduler.add_job(push_check_ozon_price,
@@ -627,7 +542,6 @@ async def save_product(user_data: dict,
 
         short_link = link[_idx_prefix + len(_prefix):].split('/')[0]
 
-        # data = await state.get_data()
         query = (
             select(
                 WbProduct.id,
@@ -643,12 +557,7 @@ async def save_product(user_data: dict,
         res = res.scalar_one_or_none()
 
         if res:
-            # await bot.send_message(chat_id=msg[0],
-            #                        text='Товар уже добавлен')
             return True
-
-
-        # msg: tuple = data.get('msg')
 
         query = (
             select(WbPunkt.zone)\
@@ -666,46 +575,17 @@ async def save_product(user_data: dict,
                                    text='Не получилось найти пункт выдачи')
             return
         
-        # query = (
-        #     select(
-        #         WbProduct.id
-        #     )\
-        #     .join(User,
-        #         WbProduct.user_id == User.tg_id)\
-        #     .where(
-        #         and_(
-        #             User.tg_id == msg[0],
-        #             WbProduct.link == link,
-        #         )
-        #     )
-        # )
-        # async with session as session:
-        #     res = await session.execute(query)
-
-        #     check_product_by_user = res.scalar_one_or_none()
-
-        # if check_product_by_user:
-            # _kb = create_or_add_cancel_btn()
-            # await bot.edit_message_text(chat_id=msg[0],
-            #                             message_id=msg[-1],
-            #                             text='Продукт уже добален',
-            #                             reply_markup=_kb.as_markup())
-            # await message.delete()
-            # return
         try:
             timeout = aiohttp.ClientTimeout(total=15)
             async with aiohttp.ClientSession() as aiosession:
                 _url = f"http://172.18.0.2:8080/product/{del_zone}/{short_link}"
                 async with aiosession.get(url=_url,
                                 timeout=timeout) as response:
-                # response = await aiosession.get(url=_url)
-
                     try:
                         res = await response.json()
                         print(res)
                     except Exception as ex:
                         print('API RESPONSE ERROR', ex)
-                        # await message.answer('ошибка при запросе к апи\n/start')
                         return
         except Exception as ex:
             print(ex)
@@ -748,7 +628,6 @@ async def save_product(user_data: dict,
 
             _wb_punkt_id = _wb_punkt_id.fetchall()
 
-            # print('short_link', data.get('wb_product_id'))
             _sale = generate_sale_for_price(float(_product_price))
 
             _data_name = _name if _name else _product_name
@@ -760,18 +639,12 @@ async def save_product(user_data: dict,
                     'short_link': short_link,
                     'start_price': _product_price,
                     'actual_price': _product_price,
-                    #
                     'sale': _sale,
-                    #
-                    # 'percent': float(data.get('percent')),
                     'name': _data_name,
                     'time_create': datetime.now(),
                     'user_id': msg[0],
                     'wb_punkt_id': _wb_punkt_id,
                 }
-
-                # if percent:
-                #     _data.update(percent=int(percent))
 
                 wb_product = WbProduct(**_data)
 
@@ -783,19 +656,6 @@ async def save_product(user_data: dict,
 
                 print('product_id', wb_product_id)
                 
-                # query = (
-                #     insert(WbProduct)\
-                #     .values(**data)
-                # )
-                # await session.execute(query)
-
-                # try:
-                #     await session.commit()
-                # except Exception as ex:
-                #     print(ex)
-                # else:
-                    # scheduler.add_job()
-                #          user_id | marker | product_id
                 job_id = f'{msg[0]}.wb.{wb_product_id}'
         
                 job = scheduler.add_job(push_check_wb_price,
@@ -829,224 +689,9 @@ async def save_product(user_data: dict,
             else:
                 _text = 'Что то пошло не так'
                 print(_text)
-
-
-                    # await state.update_data(wb_product_link=wb_product_link,
-                    #                         wb_product_id=wb_product_id,
-                    #                         wb_start_price=float(_product_price),
-                    #                         wb_product_price=float(_product_price),
-                    #                         wb_product_name=_product_name)
-
         pass
     else:
-        # error
         pass
-
-
-    # if _idx > 0:
-    #     link = message.text[_idx:]
-    # else:
-    #     return
-    
-    # if link.startswith('https://ozon'):
-    #     query = (
-    #         update(
-    #             User
-    #         )\
-    #         .values(last_action_time=datetime.now(),
-    #                 last_action='ozon')\
-    #         .where(User.tg_id == message.from_user.id)
-    #     )
-
-    #     await session.execute(query)
-    #     await session.commit()
-    #     pass
-
-# async def validate_link(message: types.Message,
-#                         state: FSMContext,
-#                         session: AsyncSession):
-#     _idx = message.text.find('https')
-
-#     if _idx > 0:
-#         link = message.text[_idx:]
-#     else:
-#         return
-    
-#     if link.startswith('https://ozon'):
-#         query = (
-#             update(
-#                 User
-#             )\
-#             .values(last_action_time=datetime.now(),
-#                     last_action='ozon')\
-#             .where(User.tg_id == message.from_user.id)
-#         )
-
-#         await session.execute(query)
-#         await session.commit()
-#         pass
-
-
-
-        # ozon_link = message.text.strip()
-
-        # query = (
-        #     select(
-        #         OzonProduct.id
-        #     )\
-        #     .join(User,
-        #         OzonProduct.user_id == User.tg_id)\
-        #     .where(
-        #         and_(
-        #             User.tg_id == message.from_user.id,
-        #             OzonProduct.link == ozon_link,
-        #         )
-        #     )
-        # )
-        # async with session as session:
-        #     res = await session.execute(query)
-
-        #     check_product_by_user = res.scalar_one_or_none()
-
-        # if check_product_by_user:
-        #     # _kb = create_or_add_cancel_btn()
-        #     # # await msg.edit_text(text='Продукт уже добален',
-        #     # #                     reply_markup=_kb.as_markup())
-        #     # await message.delete()
-        #     return
-
-
-        # # _kb = create_done_kb(marker='ozon_product')
-
-        # # _kb = create_or_add_cancel_btn()
-
-
-        # # await state.update_data(ozon_link=ozon_link)
-
-        # if ozon_link.startswith('https://ozon.ru/t/'):
-        #     _idx = ozon_link.find('/t/')
-        #     print(_idx)
-        #     _prefix = '/t/'
-        #     ozon_short_link = 'croppedLink|' + ozon_link[_idx+len(_prefix):]
-        #     print(ozon_short_link)
-        # else:
-        #     _prefix = 'product/'
-
-        #     _idx = ozon_link.rfind('product/')
-
-        #     ozon_short_link = ozon_link[(_idx + len(_prefix)):]
-
-        # await state.update_data(ozon_short_link=ozon_short_link)
-
-        # print('do request')
-
-        # try:
-        #     async with aiohttp.ClientSession() as aiosession:
-        #         # _url = f"http://5.61.53.235:1441/product/{message.text}"
-        #         _url = f"http://172.18.0.4:8080/product/{ozon_short_link}"
-
-        #         response = await aiosession.get(url=_url)
-
-        #         print(response.status)
-
-        #         res = await response.text()
-
-        #         # print(res)
-
-        #         w = re.findall(r'\"cardPrice.*currency?', res)
-        #         print(w)
-
-        #         _alt = re.findall(r'\"alt.*,?', res)
-        #         _product_name = None
-        #         _product_name_limit = 21
-                
-        #         if _alt:
-        #             _product_name = _alt[0].split('//')[0]
-        #             _prefix = f'\"alt\":\"'
-                    
-        #             # if _product_name.startswith(_prefix):
-        #             # _product_name = _product_name[len(_prefix)+2:][:_product_name_limit]
-        #             _product_name = _product_name[len(_prefix)+2:]
-
-        #         print(_product_name)
-
-        #         await state.update_data(ozon_product_name=_product_name)
-        #         # print('NAME   ',_alt[0].split('//')[0])
-
-        #         if w:
-        #             w = w[0].split(',')[:3]
-
-        #             _d = {
-        #                 'price': None,
-        #                 'originalPrice': None,
-        #                 'cardPrice': None,
-        #             }
-
-        #             for k in _d:
-        #                 if not all(v for v in _d.values()):
-        #                     for q in w:
-        #                         if q.find(k) != -1:
-        #                             name, price = q.split(':')
-        #                             price = price.replace('\\', '').replace('"', '')
-        #                             price = float(''.join(price.split()[:-1]))
-        #                             print(price)
-        #                             _d[k] = price
-        #                             break
-        #                 else:
-        #                     break
-
-        #             print(_d)
-
-        #             await state.update_data(ozon_start_price=_d.get('cardPrice', 0))
-        #             await state.update_data(ozon_actual_price=_d.get('cardPrice', 0))
-
-        #             price_text = '|'.join(str(v) for v in _d.items())
-        #         else:
-        #             _text = 'Возникли проблемы'
-            
-        #     _product_price = _d.get('cardPrice')
-        #     example_percent = 10
-        #     example_different = (_product_price * example_percent) / 100
-        #     example_price = _product_price - example_different
-
-        #     _text = f'Основная цена товара: {_product_price}\nАктуальная цена товара: {_product_price}\nВведите <b>процент как число</b>.\nКогда цена товара снизится <b>на этот процент или ниже</b>, мы сообщим Вам.\n\nПример:\n   Процент: {example_percent}\n   Ожидаемая(или ниже) цена товара: {_product_price} - {example_different} = {example_price}'
-
-        #     # _text = f'Ваш продукт\n{message.text}\nЦена продукта: {price_text}'
-
-        #     await state.update_data(ozon_product=message.text)  # ?
-
-        #     await state.set_state(OzonProduct.percent)
-
-        #     if msg:
-        #         await bot.edit_message_text(text=_text,
-        #                                     chat_id=message.chat.id,
-        #                                     message_id=msg.message_id,
-        #                                     reply_markup=_kb.as_markup())
-        #     else:
-        #         await bot.send_message(chat_id=message.chat.id,
-        #                             text=_text,
-        #                             reply_markup=_kb.as_markup())
-                
-        #     await message.delete()
-        # except Exception as ex:
-        #     print(ex)
-        #     pass
-    # elif link.startswith('https://www.wildberries'):
-    #     query = (
-    #         update(
-    #             User
-    #         )\
-    #         .values(lact_action_time=datetime.now(),
-    #                 last_action='wb')\
-    #         .where(User.tg_id == message.from_user.id)
-    #     )
-
-    #     await session.execute(query)
-    #     await session.commit()
-    #     pass
-    # else:
-    #     pass
-
 
 
 async def clear_state_and_redirect_to_start(message: types.Message | types.CallbackQuery,
@@ -1106,7 +751,6 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                     list_punkt.append([lat, lon])
                     await state.update_data(list_punkt=list_punkt)
 
-                    # _text = 'Wb пукнт успешно добавлен'
             case 'ozon_product':
                 _data = {
                     'link': data.get('ozon_link'),
@@ -1120,12 +764,6 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                     'user_id': callback.from_user.id,
                 }
                 
-                # query = (
-                #     insert(OzonProduct)\
-                #     .values(**_data)
-                # )
-
-                # await session.execute(query)
                 ozon_product = OzonProduct(**_data)
 
                 session.add(ozon_product)
@@ -1166,7 +804,6 @@ async def save_data_to_storage(callback: types.CallbackQuery,
                     _text = 'Ozon товар не был добавлен'
                 pass
             case 'wb_product':
-            # if _basic_price and _product_price:
 
                 async with session.begin():
                     query = (
@@ -1207,19 +844,6 @@ async def save_data_to_storage(callback: types.CallbackQuery,
 
                         print('product_id', wb_product_id)
                         
-                        # query = (
-                        #     insert(WbProduct)\
-                        #     .values(**data)
-                        # )
-                        # await session.execute(query)
-
-                        # try:
-                        #     await session.commit()
-                        # except Exception as ex:
-                        #     print(ex)
-                        # else:
-                            # scheduler.add_job()
-                        #          user_id | marker | product_id
                         job_id = f'{callback.from_user.id}.wb.{wb_product_id}'
 
                         job = scheduler.add_job(push_check_wb_price,
@@ -1307,7 +931,7 @@ async def check_user(message: types.Message,
             select(User)\
             .where(User.tg_id == message.from_user.id)
         )
-        # async with session as session:
+
         res = await _session.execute(query)
 
         res = res.scalar_one_or_none()
@@ -1319,127 +943,13 @@ async def check_user(message: types.Message,
                                 session)
 
 
-
-# async def show_item(callback: types.CallbackQuery,
-#                     state: FSMContext):
-#     data = await state.get_data()
-
-#     marker = data.get('action')
-
-#     msg: types.Message = data.get('msg')
-#     product_id, link, actaul_price, start_price, user_id, time_create, percent, job_id, photo_kb = item_constructor(data)
-
-#     # if not data.get('visited'):
-#     #     await state.update_data(visited=True)
-#     time_create: datetime
-#     moscow_tz = pytz.timezone('Europe/Moscow')
-#     moscow_time = time_create.astimezone(moscow_tz)
-
-#     waiting_price = actaul_price - ((actaul_price * percent) / 100)
-
-#     _text = f'Привет {user_id}\nТвой {marker} <a href="{link}">товар</a>\n\nНачальная цена: {start_price}\nАктуальная цена: {actaul_price}\nВыставленный процент: {percent}\nОжидаемая(или ниже) цена товара:{waiting_price}\nДата начала отслеживания: {moscow_time}'
-
-#     _kb = add_cancel_btn_to_photo_keyboard(photo_kb)
-
-#     _kb = create_remove_kb(user_id=callback.from_user.id,
-#                            product_id=product_id,
-#                            marker=marker,
-#                            job_id=job_id,
-#                            _kb=_kb)
-#     # _kb = create_or_add_cancel_btn(_kb)
-
-#     if msg:
-#         await msg.edit_text(text=_text,
-#                             reply_markup=_kb.as_markup())
-
-#     # await callback.message.answer_photo(photo,
-#     #                                     caption=f'Товар: {name}\nЦена: {price}',
-#     #                                     reply_markup=photo_kb.as_markup())
-        
-#     # else:
-#     #     await callback.message.edit_media(InputMediaPhoto(media=photo,
-#     #                                                       type='photo',
-#     #                                                       caption=f'Товар: {name}\nЦена: {price}'),
-#     #                                       reply_markup=photo_kb.as_markup())
-        
-
-# def item_constructor(data: dict[str, Any]):
-#     marker = data.get('action')
-
-#     product_idx = data.get(f'{marker}_product_idx')
-#     product_list = data.get(f'{marker}_product_list')
-
-#     print(f'{marker}_product list', product_list, 'idx', product_idx)
-#     kb_init: str
-    
-#     if len(product_list) == 1:
-#         kb_init = 'one'
-#     else:
-#         if product_idx == 0:
-#             kb_init = 'start'
-#         elif product_idx < len(product_list)-1:
-#             kb_init = 'mid'
-#         else:
-#             kb_init = 'end'
-
-#     photo_kb = create_photo_keyboard(kb_init)
-#     _product = product_list[product_idx]
-
-#     product_id, link, actaul_price, start_price, user_id, time_create, sale, job_id = _product
-
-#     return (
-#         product_id,
-#         link,
-#         actaul_price,
-#         start_price,
-#         user_id,
-#         time_create,
-#         sale,
-#         job_id,
-#         photo_kb,
-#     )
-
-
-
-# async def show_item_list(callback: types.CallbackQuery,
-#                          state: FSMContext,
-#                          bot: Bot):
-#     data = await state.get_data()
-
-#     marker = data.get('action')
-
-#     msg: tuple = data.get('msg')
-
-#     # product_idx = data.get(f'{marker}_product_idx')
-#     product_list = data.get(f'{marker}_product_list')
-
-#     _kb = create_product_list_kb(callback.from_user.id,
-#                                  product_list,
-#                                  marker)
-#     _kb = create_or_add_cancel_btn(_kb)
-    
-#     _text = f'Ваши {marker} товары'
-    
-#     if msg:
-#         await bot.edit_message_text(chat_id=msg[0],
-#                                     message_id=msg[-1],
-#                                     text=_text,
-#                                     reply_markup=_kb.as_markup())
-#     else:
-#         await bot.send_message(chat_id=callback.from_user.id,
-#                                text=_text,
-#                                reply_markup=_kb.as_markup())
-    
-
-
-
 async def show_product_list(product_dict: dict,
                             user_id: int,
                             state: FSMContext):
     data = await state.get_data()
 
-    print('data' ,data)
-    print('product_dict', product_dict)
+    # print('data' ,data)
+    # print('product_dict', product_dict)
 
     current_page = product_dict.get('current_page')
     product_list = product_dict.get('product_list')
@@ -1453,6 +963,9 @@ async def show_product_list(product_dict: dict,
         await delete_prev_subactive_msg(data)
         sub_active_msg = await bot.send_message(chat_id=user_id,
                                                 text='Нет добавленных товаров')
+        await add_message_to_delete_dict(sub_active_msg,
+                                         state)
+
         await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
         return
 
