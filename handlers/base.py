@@ -130,6 +130,7 @@ async def start(message: types.Message | types.CallbackQuery,
                 try:
                     await bot.delete_message(chat_id=chat_id,
                                             message_id=_key)
+                    # await bot.delete_messages() # что будет если какое то сообщение не сможет удалиться и произойдет ошибка ???
                 except Exception as ex:
                     del dict_msg_on_delete[_key]
                     print(ex)
@@ -743,15 +744,14 @@ async def edit_sale_callback(callback: types.CallbackQuery,
     _kb = create_or_add_cancel_btn()
 
     msg = await bot.edit_message_text(text=f'<b>Установленная скидка на Ваш {marker.upper()} <a href="{link}">товар</a> {sale}</b>\n\nУкажите новую скидку <b>как число</b> в следующем сообщении',
-                                chat_id=callback.from_user.id,
-                                message_id=callback.message.message_id,
-                                reply_markup=_kb.as_markup())
+                                      chat_id=callback.from_user.id,
+                                      message_id=callback.message.message_id,
+                                      reply_markup=_kb.as_markup())
     
     await add_message_to_delete_dict(msg,
                                      state)
-
     
-    await state.update_data(msg=(msg.chat.id, msg.message_id))
+    await state.update_data(msg=(callback.from_user.id, callback.message.message_id))
     await callback.answer()
 
 
@@ -893,7 +893,6 @@ async def view_product(callback: types.CallbackQuery,
 
     match marker:
         case 'wb':
-            # pass
             subquery = (
                 select(UserJob.job_id,
                     UserJob.user_id,
@@ -938,7 +937,6 @@ async def view_product(callback: types.CallbackQuery,
                 product_id, link, actaul_price, start_price, user_id, time_create, name, sale, product_marker, job_id = _product
 
         case 'ozon':
-            # pass
             subquery = (
                 select(UserJob.job_id,
                     UserJob.user_id,
