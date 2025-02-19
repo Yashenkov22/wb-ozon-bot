@@ -61,9 +61,6 @@ async def start(message: types.Message | types.CallbackQuery,
                                     state)
     
     await state_clear(state)
-
-    # if message.from_user.id == 686339126:
-    #     await state.update_data(test_state=(message.chat.id, message.date.timestamp(), message.message_id))
     
     await check_user(message,
                      session)
@@ -74,23 +71,23 @@ async def start(message: types.Message | types.CallbackQuery,
         message = message.message
 
     _kb = create_reply_start_kb()
-    q = await bot.send_message(text=start_text.format(message.from_user.username),
-                                chat_id=_message.from_user.id,
-                                reply_markup=_kb.as_markup(resize_keyboard=True))
+    await bot.send_message(text=start_text.format(message.from_user.username),
+                           chat_id=_message.from_user.id,
+                           reply_markup=_kb.as_markup(resize_keyboard=True))
     
-    print('время отправки сообщения', q.date)
+    # print('время отправки сообщения', q.date)
 
-    w = datetime.now()
-    print('текущее время', w)
-    try:
-        print('1', q.date.timestamp())
-        print('2', w.timestamp())
-        print('3', w.timestamp() - q.date.timestamp())
-        print('4', datetime.fromtimestamp(w.timestamp()) - datetime.fromtimestamp(q.date.timestamp()))
-        print('5', (datetime.fromtimestamp(w.timestamp()) - datetime.fromtimestamp(q.date.timestamp())) > timedelta(microseconds=1))
-        pass
-    except Exception as ex:
-        print('DATE ERROR', ex)
+    # w = datetime.now()
+    # print('текущее время', w)
+    # try:
+    #     print('1', q.date.timestamp())
+    #     print('2', w.timestamp())
+    #     print('3', w.timestamp() - q.date.timestamp())
+    #     print('4', datetime.fromtimestamp(w.timestamp()) - datetime.fromtimestamp(q.date.timestamp()))
+    #     print('5', (datetime.fromtimestamp(w.timestamp()) - datetime.fromtimestamp(q.date.timestamp())) > timedelta(microseconds=1))
+    #     pass
+    # except Exception as ex:
+    #     print('DATE ERROR', ex)
     
     try:
         await message.delete()
@@ -198,18 +195,6 @@ async def any_product_proccess(message: types.Message | types.CallbackQuery,
                                        bot,
                                        scheduler)
         return
-
-    # _add_msg: tuple = data.get('_add_msg')
-
-    # if _add_msg:
-    #     try:
-    #         await bot.delete_message(chat_id=_add_msg[0],
-    #                                  message_id=_add_msg[-1])
-    #     except Exception as ex:
-    #         print(ex)
-
-    # add_msg: tuple = data.get('add_msg')
-    # await delete_prev_subactive_msg(data)
 
     print('add msg', add_msg)
 

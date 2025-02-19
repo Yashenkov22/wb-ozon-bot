@@ -27,10 +27,8 @@ from db.base import Subscription, User, WbProduct, WbPunkt, OzonProduct, UserJob
 from utils.scheduler import push_check_ozon_price, push_check_wb_price, scheduler_cron
 
 from keyboards import (add_back_btn, add_pagination_btn,
-                       create_or_add_cancel_btn, create_or_add_exit_btn,
-                       create_photo_keyboard, create_product_list_for_page_kb, create_product_list_kb,
-                       create_remove_kb,
-                       add_cancel_btn_to_photo_keyboard)
+                       create_or_add_exit_btn,
+                       create_product_list_for_page_kb)
 
 from utils.storage import redis_client
 
@@ -38,8 +36,6 @@ from config import DEV_ID
 
 
 DEFAULT_PAGE_ELEMENT_COUNT = 5
-
-# lock = asyncio.Lock()
 
 
 async def state_clear(state: FSMContext):

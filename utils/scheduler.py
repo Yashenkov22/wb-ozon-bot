@@ -22,7 +22,7 @@ from keyboards import add_or_create_close_kb, create_remove_and_edit_sale_kb, cr
 
 from bot22 import bot
 
-from .any import generate_pretty_amount, generate_sale_for_price
+from .any import generate_pretty_amount, generate_sale_for_price, add_message_to_delete_dict
 
 
 JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
@@ -46,6 +46,7 @@ scheduler_cron = CronTrigger(minute=1,
 async def periodic_delete_old_message(user_id: int):
     key = f'fsm:{user_id}:{user_id}:data'
     pass
+
 
 async def check_product_by_user_in_db(user_id: int,
                                       short_link: str,
@@ -735,7 +736,7 @@ async def add_product_task(user_data: dict):
                 _text = f'{product_marker} товар уже был в Вашем списке или ошибка'
             else:
                 _text = f'{product_marker} товар добавлен к отслеживанию✅'
-                # pass
+
             await bot.edit_message_text(chat_id=msg[0],
                                         message_id=_add_msg_id,
                                         text=_text)
@@ -876,9 +877,10 @@ async def push_check_wb_price(user_id: str,
 
                     _kb = add_or_create_close_kb(_kb)
 
-                    await bot.send_message(chat_id=user_id,
-                                            text=_text,
-                                            reply_markup=_kb.as_markup())
+                    msg = await bot.send_message(chat_id=user_id,
+                                                 text=_text,
+                                                 reply_markup=_kb.as_markup())
+                    await add_message_to_delete_dict(msg)
                     return
 
         except Exception as ex:
@@ -945,8 +947,6 @@ async def push_check_ozon_price(user_id: str,
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
 
-                # response = await aiosession.get(url=_url)
-
                     print(response.status)
 
                     if response.status == 408:
@@ -955,16 +955,7 @@ async def push_check_ozon_price(user_id: str,
 
                     res = await response.text()
 
-# 
-            # print('RES FROM OZON API', res)
-            # __response_data = res.split('|')[-1]
-
-            # __json_data: dict = json.loads(__response_data)
-
-            # print(__json_data)
-
             w = re.findall(r'\"cardPrice.*currency?', res)
-            # print(w)
 
             if w:
                 w = w[0].split(',')[:3]
@@ -989,9 +980,8 @@ async def push_check_ozon_price(user_id: str,
                         break
 
                 print(_d)
-                # start_price = _d.get('cardPrice', 0)
+
                 _product_price = _d.get('cardPrice', 0)
-                # basic_price = _d.get('price', 0)
             else:
                 try:
                     response_data = res.split('|')[-1]
@@ -1000,40 +990,16 @@ async def push_check_ozon_price(user_id: str,
 
                     script_list = json_data.get('seo').get('script')
 
-                    # if v:
-                    #     t = v.get('script')
-
-                    # if script_list:
                     inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
 
-                    # print('innerHTML', inner_html)
-
-                    # if inner_html:
-                        # print(type(b))
-                        # try:
                     inner_html_json: dict = json.loads(inner_html)
                     offers = inner_html_json.get('offers')
 
-                    # print(offers)
-
                     _price = offers.get('price')
 
-                    # start_price = _price
                     _product_price = _price
-                    # basic_price = _price
-
-                    # price_dict = {
-                    #     'ozon_start_price': 0,
-                    #     'ozon_actual_price': float(_p),
-                    #     'ozon_basic_price': float(_p),
-                    # }
-
-                    # await state.update_data(data=price_dict)
                     
                     print('Price', _price)
-                        # except Exception as ex:
-                        #     print('problem', ex)
-                            # return
                 except Exception as ex:
                     print('scheduler parse inner html error', ex)
                     return
@@ -1049,8 +1015,6 @@ async def push_check_ozon_price(user_id: str,
                 return
             else:
                 _waiting_price = start_price - sale
-                # if percent:
-                #     _waiting_price = start_price - ((start_price * percent) / 100)
 
                 query = (
                     update(
@@ -1067,7 +1031,6 @@ async def push_check_ozon_price(user_id: str,
                         except Exception as ex:
                             await session.rollback()
                             print(ex)
-                    # if _waiting_price == actual_price:
 
                 pretty_product_price = generate_pretty_amount(_product_price)
                 pretty_actual_price = generate_pretty_amount(actual_price)
@@ -1090,108 +1053,12 @@ async def push_check_ozon_price(user_id: str,
 
                     _kb = add_or_create_close_kb(_kb)
 
-                    await bot.send_message(chat_id=user_id,
-                                            text=_text,
-                                            reply_markup=_kb.as_markup())
+                    msg = await bot.send_message(chat_id=user_id,
+                                                 text=_text,
+                                                 reply_markup=_kb.as_markup())
+                    await add_message_to_delete_dict(msg)
                     return
 
-
-#
-
-                # if actual_price < _product_price:
-                #     return
-                
-                # # _text = f'Ozon товар\n{_name[:21]}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}\nЦена изменилась\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
-                
-                # # if _waiting_price:
-                # if _waiting_price >= _product_price:
-                #     # _text = f'Ozon товар\n{_name}\n<a href="{link}">Ссылка на товар</a>\n\nУстановленная скидка: {pretty_sale}\n\nНачальная цена: {pretty_start_price}Цена товара, которую(или ниже) Вы ждали\nОбновленная цена товара: {pretty_product_price}\n(было {pretty_actual_price})'
-
-                #     _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по озон карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
-                    
-                #     # _kb = create_remove_kb(user_id,
-                #     #                         product_id,
-                #     #                         marker='ozon',
-                #     #                         job_id=job_id,
-                #     #                         with_redirect=False)
-                #     _kb = create_remove_and_edit_sale_kb(user_id=user_id,
-                #                                         product_id=product_id,
-                #                                         marker='ozon',
-                #                                         job_id=job_id,
-                #                                         with_redirect=False)
-
-                    
-                #     _kb = add_or_create_close_kb(_kb)
-
-                #     await bot.send_message(chat_id=user_id,
-                #                             text=_text,
-                #                             reply_markup=_kb.as_markup())
-                #     return
-                    
-                    # if _product_price < actual_price:
-                    #     await bot.send_message(chat_id=user_id,
-                    #                             text=_text,
-                    #                             reply_markup=_kb.as_markup())
-                    #     return
-
-            # else:
-                # try:
-                #     response_data = res.split('|')[-1]
-
-                #     json_data: dict = json.loads(response_data)
-
-                #     script_list = json_data.get('seo').get('script')
-
-                #     # if v:
-                #     #     t = v.get('script')
-
-                #     if script_list:
-                #         inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
-
-                #         print('innerHTML', inner_html)
-
-                #         if inner_html:
-                #             # print(type(b))
-                #             try:
-                #                 inner_html_json: dict = json.loads(inner_html)
-                #                 offers = inner_html_json.get('offers')
-
-                #                 # print(offers)
-
-                #                 _price = offers.get('price')
-
-                #                 start_price = _price
-                #                 actual_price = _price
-                #                 basic_price = _price
-
-                #                 # price_dict = {
-                #                 #     'ozon_start_price': 0,
-                #                 #     'ozon_actual_price': float(_p),
-                #                 #     'ozon_basic_price': float(_p),
-                #                 # }
-
-                #                 # await state.update_data(data=price_dict)
-                                
-                #                 print('Price', _price)
-                #             except Exception as ex:
-                                
-                #                 print('problem', ex)
-
-
-
-                        # print('\nV', v)
-                        # print('\nT', t)
-                #     else:
-                #         print('problem')
-                #         return
-                # except Exception as ex:
-                #     print(ex)
-                # _text = f'Не получилось спарсить цену {_name}'
-                # print(f'{_text} {res[:100]}')
-                # return
-
-            # await bot.send_message(chat_id=user_id,
-            #                         text=_text)
         except Exception as ex:
             print('OZON SCHEDULER ERROR', ex)
 
