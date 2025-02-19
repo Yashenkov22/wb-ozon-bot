@@ -115,13 +115,31 @@ async def start(message: types.Message | types.CallbackQuery,
         user_data: bytes = await pipe.get(key)
         results = await pipe.execute()
         #Извлекаем результат из выполненного pipeline
-    print(results)
-    print(user_data)
+    print('RESULTS', results)
+    print('USER DATA (BYTES)', user_data)
 
     json_user_data: dict = json.loads(results[0])
-    print(json_user_data)
+    print('USER DATA', json_user_data)
+
+    dict_msg_on_delete: dict = json_user_data.get('dict_msg_on_delete')
+
+    if dict_msg_on_delete:
+        for _key in dict_msg_on_delete:
+            chat_id, message_id = dict_msg_on_delete.get(_key)
+            try:
+                await bot.delete_message(chat_id=chat_id,
+                                        message_id=message_id)
+            except Exception as ex:
+                print(ex)
+            else:
+                del dict_msg_on_delete[_key]
+
+    async with redis_client.pipeline(transaction=True) as pipe:
+        bytes_data = json.dumps(json_user_data)
+        await pipe.set(key, bytes_data)
+        results = await pipe.execute()
+
     await message.delete()
-    pass
 
 
 @main_router.message(F.text == 'Добавить товар')
