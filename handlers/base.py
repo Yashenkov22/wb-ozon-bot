@@ -124,7 +124,7 @@ async def start(message: types.Message | types.CallbackQuery,
     dict_msg_on_delete: dict = json_user_data.get('dict_msg_on_delete')
 
     if dict_msg_on_delete:
-        for _key in dict_msg_on_delete.keys():
+        for _key in list(dict_msg_on_delete.keys()):
             chat_id, message_id = dict_msg_on_delete.get(_key)
             try:
                 await bot.delete_message(chat_id=chat_id,
