@@ -81,6 +81,7 @@ async def add_task_to_delete_old_message_for_users():
 
 
 async def periodic_delete_old_message(user_id: int):
+    print(f'TEST SCHEDULER TASK DELETE OLD MESSAGE USER {user_id}')
     key = f'fsm:{user_id}:{user_id}:data'
 
     async with redis_client.pipeline(transaction=True) as pipe:
