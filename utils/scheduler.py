@@ -56,7 +56,7 @@ async def add_task_to_delete_old_message_for_users():
                     User.tg_id,
                 )\
                 .where(
-                        User.tg_id == int(DEV_ID),
+                        User.tg_id.in_(686339126, 311364517),
                     ))\
 
             res = await session.execute(query)
@@ -101,9 +101,9 @@ async def periodic_delete_old_message(user_id: int):
         for _key in list(dict_msg_on_delete.keys()):
             chat_id, message_date = dict_msg_on_delete.get(_key)
             date_now = datetime.now()
-            # тестовый вариант, удаляем сообщения младше 13ти часов
-            print((datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) < timedelta(hours=13))
-            if (datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) < timedelta(hours=13):
+            # тестовый вариант, удаляем сообщения старше 1 часа
+            print((datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) > timedelta(hours=1))
+            if (datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) > timedelta(hours=1):
                 try:
                     await bot.delete_message(chat_id=chat_id,
                                             message_id=_key)
