@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import re
 from typing import Literal
@@ -22,7 +22,10 @@ from keyboards import add_or_create_close_kb, create_remove_and_edit_sale_kb, cr
 
 from bot22 import bot
 
+from .storage import redis_client
 from .any import generate_pretty_amount, generate_sale_for_price, add_message_to_delete_dict
+
+from config import DEV_ID
 
 
 JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
@@ -43,8 +46,77 @@ scheduler_cron = CronTrigger(minute=1,
                              timezone=timezone)
 
 
+async def add_task_to_delete_old_message_for_users():
+
+    async for session in get_session():
+        try:
+            query = (
+                select(
+                    User.tg_id,
+                )\
+                .where(
+                        User.tg_id == int(DEV_ID),
+                    ))\
+
+            res = await session.execute(query)
+
+            res = res.fetchall()
+        finally:
+            try:
+                await session.close()
+            except Exception:
+                pass
+
+    for user in res:
+        user_id = user[0]
+        job_id = f'delete_msg_task_{user_id}'
+
+        scheduler.add_job(periodic_delete_old_message,
+                          trigger='interval',
+                          minutes=5,
+                          id=job_id,
+                          jobstore='sqlalchemy',
+                          coalesce=True,
+                          kwargs={'user_id': user_id})
+
+
 async def periodic_delete_old_message(user_id: int):
     key = f'fsm:{user_id}:{user_id}:data'
+
+    async with redis_client.pipeline(transaction=True) as pipe:
+        user_data: bytes = await pipe.get(key)
+        results = await pipe.execute()
+        #Извлекаем результат из выполненного pipeline
+    print('RESULTS', results)
+    print('USER DATA (BYTES)', user_data)
+
+    json_user_data: dict = json.loads(results[0])
+    print('USER DATA', json_user_data)
+
+    dict_msg_on_delete: dict = json_user_data.get('dict_msg_on_delete')
+
+    if dict_msg_on_delete:
+        for _key in list(dict_msg_on_delete.keys()):
+            chat_id, message_date = dict_msg_on_delete.get(_key)
+            date_now = datetime.now()
+            # тестовый вариант, удаляем сообщения младше 13ти часов
+            print((datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) < timedelta(hours=13))
+            if (datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) < timedelta(hours=13):
+                try:
+                    await bot.delete_message(chat_id=chat_id,
+                                            message_id=_key)
+                    # await bot.delete_messages() # что будет если какое то сообщение не сможет удалиться и произойдет ошибка ???
+                except Exception as ex:
+                    del dict_msg_on_delete[_key]
+                    print(ex)
+                else:
+                    del dict_msg_on_delete[_key]
+
+    async with redis_client.pipeline(transaction=True) as pipe:
+        bytes_data = json.dumps(json_user_data)
+        await pipe.set(key, bytes_data)
+        results = await pipe.execute()
+
     pass
 
 

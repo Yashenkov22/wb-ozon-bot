@@ -49,7 +49,7 @@ from handlers.base import main_router
 from handlers.ozon import ozon_router
 from handlers.wb import wb_router
 
-from utils.scheduler import startup_update_scheduler_jobs
+from utils.scheduler import startup_update_scheduler_jobs, add_task_to_delete_old_message_for_users
 
 from bot22 import bot
 
@@ -154,6 +154,7 @@ async def on_startup():
     scheduler.start()
 
     startup_update_scheduler_jobs(scheduler)
+    add_task_to_delete_old_message_for_users()
 
 
 @app.on_event('shutdown')

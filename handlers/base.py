@@ -851,9 +851,6 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
             sub_active_msg = await message.answer('Не удалось обновить скидку')
         else:
             sub_active_msg = await message.answer('Скидка обновлена')
-            # sub_active_msg = await bot.edit_message_text(chat_id=msg[0],
-            #                                              message_id=msg[-1],
-            #                                              text='Скидка обновлена')            
 
     await add_message_to_delete_dict(sub_active_msg,
                                      state)
