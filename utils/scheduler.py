@@ -47,6 +47,7 @@ scheduler_cron = CronTrigger(minute=1,
 
 
 async def add_task_to_delete_old_message_for_users():
+    print('add task to delete old message...')
 
     async for session in get_session():
         try:
