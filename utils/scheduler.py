@@ -56,7 +56,7 @@ async def add_task_to_delete_old_message_for_users():
                     User.tg_id,
                 )\
                 .where(
-                        User.tg_id.in_(686339126, 311364517),
+                        User.tg_id.in_((686339126, 311364517)),
                     ))\
 
             res = await session.execute(query)
