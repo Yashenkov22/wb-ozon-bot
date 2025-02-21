@@ -784,6 +784,10 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 modify_func = push_check_ozon_price
             
             job.modify(func=modify_func)
+        
+        elif job.id.find('delete_msg_task') != -1:
+            modify_func = periodic_delete_old_message
+            job.modify(func=modify_func)
 
 
 async def add_product_task(user_data: dict):
@@ -941,8 +945,10 @@ async def push_check_wb_price(user_id: str,
 
                     if actual_price < _product_price:
                         _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _disable_notification = True
                     else:
                         _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _disable_notification = False
 
                     _kb = create_remove_and_edit_sale_kb(user_id=user_id,
                                                         product_id=product_id,
@@ -954,6 +960,7 @@ async def push_check_wb_price(user_id: str,
 
                     msg = await bot.send_message(chat_id=user_id,
                                                  text=_text,
+                                                 disable_notification=_disable_notification,
                                                  reply_markup=_kb.as_markup())
                     await add_message_to_delete_dict(msg)
                     return
@@ -1117,8 +1124,10 @@ async def push_check_ozon_price(user_id: str,
 
                     if actual_price < _product_price:
                         _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _disable_notification = True
                     else:
                         _text = f'🚨 Изменилась цена на <a href="{link}">{_name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _disable_notification = False
 
                     _kb = create_remove_and_edit_sale_kb(user_id=user_id,
                                                         product_id=product_id,
@@ -1130,6 +1139,7 @@ async def push_check_ozon_price(user_id: str,
 
                     msg = await bot.send_message(chat_id=user_id,
                                                  text=_text,
+                                                 disable_notification=_disable_notification,
                                                  reply_markup=_kb.as_markup())
                     await add_message_to_delete_dict(msg)
                     return
