@@ -41,7 +41,7 @@ async def add_message_to_delete_dict(message: types.Message,
     message_id = message.message_id
 
     # test on myself
-    if chat_id == int(DEV_ID):
+    if chat_id in (int(DEV_ID), 311364517):
         if state is not None:
             data = await state.get_data()
 
