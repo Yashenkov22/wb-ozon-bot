@@ -777,12 +777,13 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     print('start up update scheduler jobs...')
 
     for job in jobs:
-        if job.id.find('wb') > 0:
-            modify_func = push_check_wb_price
-        else:
-            modify_func = push_check_ozon_price
-        
-        job.modify(func=modify_func)
+        if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
+            if job.id.find('wb') > 0:
+                modify_func = push_check_wb_price
+            else:
+                modify_func = push_check_ozon_price
+            
+            job.modify(func=modify_func)
 
 
 async def add_product_task(user_data: dict):
