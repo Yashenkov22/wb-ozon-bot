@@ -24,7 +24,7 @@ from keyboards import (create_or_add_exit_btn,
                        create_remove_and_edit_sale_kb,
                        create_reply_start_kb)
 
-from states import AnyProductStates, EditSale
+from states import AnyProductStates, EditSale, LocationState
 
 from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
                             check_input_link,
@@ -97,6 +97,28 @@ async def start(message: types.Message | types.CallbackQuery,
 
     except Exception as ex:
         print(ex)
+
+
+@main_router.message(F.text == 'test_location')
+async def test_location(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    await state.set_state(LocationState.location)
+    await message.answer('кинь координаты')
+    await message.delete()
+
+#and_f(EditSale.new_sale), F.content_type == types.ContentType.TEXT
+@main_router.message(and_f(LocationState.location), F.content_type == types.ContentType.LOCATION)
+async def proccess_location(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    print(message.__dict__)
+    print(message.location)
+    await state.set_state()
 
 
 @main_router.message(Command('test_redis'))

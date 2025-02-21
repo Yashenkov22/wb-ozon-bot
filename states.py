@@ -29,3 +29,7 @@ class OzonProduct(StatesGroup):
 
 class EditSale(StatesGroup):
     new_sale = State()
+
+
+class LocationState(StatesGroup):
+    location = State()
