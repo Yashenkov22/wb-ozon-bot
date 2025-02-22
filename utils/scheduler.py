@@ -46,6 +46,9 @@ timezone = pytz.timezone('Europe/Moscow')
 scheduler_cron = CronTrigger(minute=1,
                              timezone=timezone)
 
+scheduler_interval = IntervalTrigger(hours=1,
+                                     timezone=timezone)
+
 
 async def add_task_to_delete_old_message_for_users():
     print('add task to delete old message...')
@@ -789,8 +792,7 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         elif job.id.find('delete_msg_task') != -1:
             modify_func = periodic_delete_old_message
             job.modify(func=modify_func,
-                       trigger=IntervalTrigger,
-                       hours=1)
+                       trigger=scheduler_interval)
 
 
 async def add_product_task(user_data: dict):
