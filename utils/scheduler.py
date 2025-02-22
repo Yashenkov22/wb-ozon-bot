@@ -102,8 +102,8 @@ async def periodic_delete_old_message(user_id: int):
             chat_id, message_date = dict_msg_on_delete.get(_key)
             date_now = datetime.now()
             # тестовый вариант, удаляем сообщения старше 1 часа
-            print((datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) > timedelta(hours=1))
-            if (datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) > timedelta(hours=1):
+            print((datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) > timedelta(hours=36))
+            if (datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) > timedelta(hours=36):
                 try:
                     await bot.delete_message(chat_id=chat_id,
                                             message_id=_key)
@@ -787,7 +787,9 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         
         elif job.id.find('delete_msg_task') != -1:
             modify_func = periodic_delete_old_message
-            job.modify(func=modify_func)
+            job.modify(func=modify_func,
+                       trigger='interval',
+                       hours=1)
 
 
 async def add_product_task(user_data: dict):
