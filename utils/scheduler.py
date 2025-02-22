@@ -8,6 +8,7 @@ import aiohttp
 from aiogram import types, Bot
 
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.job import Job
@@ -788,7 +789,7 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         elif job.id.find('delete_msg_task') != -1:
             modify_func = periodic_delete_old_message
             job.modify(func=modify_func,
-                       trigger='interval',
+                       trigger=IntervalTrigger,
                        hours=1)
 
 
