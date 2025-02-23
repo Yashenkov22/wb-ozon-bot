@@ -549,18 +549,19 @@ async def save_product(user_data: dict,
 
         if not del_zone:
             lat, lon = ('55.707106', '37.572854')
+            del_zone = -1281648
 
             async with aiohttp.ClientSession() as aiosession:
-                _url = f"http://172.18.0.7:8080/pickUpPoint/{lat}/{lon}"
-                response = await aiosession.get(url=_url)
+                # _url = f"http://172.18.0.7:8080/pickUpPoint/{lat}/{lon}"
+                # response = await aiosession.get(url=_url)
 
-                res = await response.json()
+                # res = await response.json()
 
-                deliveryRegions = res.get('deliveryRegions')
+                # deliveryRegions = res.get('deliveryRegions')
 
-                print(deliveryRegions)
+                # print(deliveryRegions)
 
-                del_zone = deliveryRegions[-1]
+                # del_zone = deliveryRegions[-1]
             
                 _data = {
                     'lat': float(lat),
