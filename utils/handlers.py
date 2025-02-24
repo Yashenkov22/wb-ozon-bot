@@ -914,7 +914,7 @@ async def add_user(message: types.Message,
                 print(ex)
                 await _session.rollback()
             else:
-                add_task_to_delete_old_message_for_users(user_id=message.from_user.id)
+                await add_task_to_delete_old_message_for_users(user_id=message.from_user.id)
                 print('user added')
                 return True
     else:

@@ -154,7 +154,7 @@ async def on_startup():
     scheduler.start()
 
     startup_update_scheduler_jobs(scheduler)
-    await add_task_to_delete_old_message_for_users()
+    # await add_task_to_delete_old_message_for_users()
 
 
 @app.on_event('shutdown')
