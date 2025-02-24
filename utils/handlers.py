@@ -24,7 +24,7 @@ from bot22 import bot
 
 from db.base import Subscription, User, WbProduct, WbPunkt, OzonProduct, UserJob
 
-from utils.scheduler import push_check_ozon_price, push_check_wb_price, scheduler_cron
+from utils.scheduler import push_check_ozon_price, push_check_wb_price, scheduler_cron, add_task_to_delete_old_message_for_users
 
 from keyboards import (add_back_btn, add_pagination_btn,
                        create_or_add_exit_btn,
@@ -56,17 +56,17 @@ async def add_message_to_delete_dict(message: types.Message,
     message_id = message.message_id
 
     # test on myself
-    if chat_id in (int(DEV_ID), 311364517):
-        data = await state.get_data()
+    # if chat_id in (int(DEV_ID), 311364517):
+    data = await state.get_data()
 
-        dict_msg_on_delete: dict = data.get('dict_msg_on_delete')
+    dict_msg_on_delete: dict = data.get('dict_msg_on_delete')
 
-        if not dict_msg_on_delete:
-            dict_msg_on_delete = dict()
+    if not dict_msg_on_delete:
+        dict_msg_on_delete = dict()
 
-        dict_msg_on_delete[message_id] = (chat_id, message_date)
+    dict_msg_on_delete[message_id] = (chat_id, message_date)
 
-        await state.update_data(dict_msg_on_delete=dict_msg_on_delete)
+    await state.update_data(dict_msg_on_delete=dict_msg_on_delete)
 
 
 def check_input_link(link: str):
@@ -914,6 +914,7 @@ async def add_user(message: types.Message,
                 print(ex)
                 await _session.rollback()
             else:
+                add_task_to_delete_old_message_for_users(user_id=message.from_user.id)
                 print('user added')
                 return True
     else:

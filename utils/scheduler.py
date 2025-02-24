@@ -1,9 +1,11 @@
-from datetime import datetime, timedelta
 import json
 import re
-from typing import Literal
 import pytz
 import aiohttp
+import asyncio
+
+from datetime import datetime, timedelta
+from typing import Literal
 
 from aiogram import types, Bot
 
@@ -50,18 +52,26 @@ scheduler_interval = IntervalTrigger(hours=1,
                                      timezone=timezone)
 
 
-async def add_task_to_delete_old_message_for_users():
+async def add_task_to_delete_old_message_for_users(user_id: int = None):
     print('add task to delete old message...')
 
     async for session in get_session():
         try:
-            query = (
-                select(
-                    User.tg_id,
-                )\
-                .where(
-                        User.tg_id.in_((686339126, 311364517)),
-                    ))\
+            if user_id is not None:
+                query = (
+                    select(
+                        User.tg_id,
+                    )\
+                    .where(
+                        User.tg_id == user_id,
+                    )
+                    )
+            else:
+                query = (
+                    select(
+                        User.tg_id,
+                        )
+                    )
 
             res = await session.execute(query)
 
@@ -77,8 +87,7 @@ async def add_task_to_delete_old_message_for_users():
         job_id = f'delete_msg_task_{user_id}'
 
         scheduler.add_job(periodic_delete_old_message,
-                          trigger='interval',
-                          minutes=5,
+                          trigger=scheduler_interval,
                           id=job_id,
                           jobstore='sqlalchemy',
                           coalesce=True,
@@ -93,11 +102,11 @@ async def periodic_delete_old_message(user_id: int):
         user_data: bytes = await pipe.get(key)
         results = await pipe.execute()
         #Извлекаем результат из выполненного pipeline
-    print('RESULTS', results)
-    print('USER DATA (BYTES)', user_data)
+    # print('RESULTS', results)
+    # print('USER DATA (BYTES)', user_data)
 
     json_user_data: dict = json.loads(results[0])
-    print('USER DATA', json_user_data)
+    # print('USER DATA', json_user_data)
 
     dict_msg_on_delete: dict = json_user_data.get('dict_msg_on_delete')
 
@@ -111,6 +120,7 @@ async def periodic_delete_old_message(user_id: int):
                 try:
                     await bot.delete_message(chat_id=chat_id,
                                             message_id=_key)
+                    await asyncio.sleep(0.1)
                     # await bot.delete_messages() # что будет если какое то сообщение не сможет удалиться и произойдет ошибка ???
                 except Exception as ex:
                     del dict_msg_on_delete[_key]
@@ -807,9 +817,10 @@ async def add_product_task(user_data: dict):
                                                                      marker=product_marker,
                                                                      session=session)
             if check_product_limit:
-                await bot.edit_message_text(chat_id=msg[0],
+                msg = await bot.edit_message_text(chat_id=msg[0],
                                             message_id=_add_msg_id,
                                             text=f'Достугнут лимит {product_marker.upper()} товаров по Вашей подписке\nЛимит: {check_product_limit}')
+                await add_message_to_delete_dict(msg)
                 return
 
             async for session in get_session():
