@@ -221,7 +221,7 @@ async def check_subscription_limit(user_id: int,
         print('SUBSCRIPTION TEST', product_count, subscription_limit)
 
         if product_count >= subscription_limit:
-            return True
+            return subscription_limit
 
 
 async def save_product(user_data: dict,
@@ -819,7 +819,7 @@ async def add_product_task(user_data: dict):
             if check_product_limit:
                 msg = await bot.edit_message_text(chat_id=msg[0],
                                             message_id=_add_msg_id,
-                                            text=f'Достугнут лимит {product_marker.upper()} товаров по Вашей подписке\nЛимит: {check_product_limit}')
+                                            text=f'Достугнут лимит {product_marker.upper()} товаров по Вашей подписке\nЛимит товаров: {check_product_limit}')
                 await add_message_to_delete_dict(msg)
                 return
 
