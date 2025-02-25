@@ -159,7 +159,7 @@ async def on_startup():
 
 @app.on_event('shutdown')
 async def on_shutdown():
-    await bot.delete_webhook()
+    await bot.delete_webhook(drop_pending_updates=True)
     # await bot.set_webhook(f"{PUBLIC_URL}{WEBHOOK_PATH}",
     #                       drop_pending_updates=True)
                         #   allowed_updates=['message', 'callback_query'])
