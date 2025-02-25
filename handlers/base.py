@@ -72,7 +72,7 @@ async def start(message: types.Message | types.CallbackQuery,
 
     _kb = create_reply_start_kb()
     await bot.send_message(text=start_text.format(message.from_user.username),
-                           chat_id=_message.from_user.id,
+                           chat_id=_message.chat.id,
                            reply_markup=_kb.as_markup(resize_keyboard=True))
     
     # print('время отправки сообщения', q.date)
