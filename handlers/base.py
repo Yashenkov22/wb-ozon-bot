@@ -185,7 +185,7 @@ async def add_any_product(message: types.Message | types.CallbackQuery,
                                         reply_markup=_kb.as_markup())
     except Exception as ex:
         print(f'STRANGE EEROR WITH ADD PRODUCT WITH BUTTON FOR USER {message.chat.id} {message.from_user.username}', ex)
-        add_msg = await message.answer('Странная ошибка, потерпи, разбираюсь...')
+        add_msg = await message.answer('Странная ошибка, потерпи немного, разбираюсь...')
 
     await add_message_to_delete_dict(add_msg,
                                      state)
