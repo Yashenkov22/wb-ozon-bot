@@ -204,6 +204,7 @@ def create_reply_start_kb():
 
     _kb.add(types.KeyboardButton(text='Добавить товар'))
     _kb.add(types.KeyboardButton(text='Посмотреть товары'))
+    _kb.row(types.KeyboardButton(text='Настройки'))
 
     return _kb
 
@@ -307,6 +308,43 @@ def create_pagination_page_kb(product_dict: dict):
     return _kb
 
 
-# def add_back_to_current_page(_kb: InlineKeyboardBuilder):
-#     _kb.row(types.InlineKeyboardButton(text='Вернуться',
-#                                        callback_data=''))
+def create_settings_kb():
+    _kb = InlineKeyboardBuilder()
+
+    _kb.add(types.InlineKeyboardButton(text='Настройки Wildberries',
+                                       callback_data='settings_wb'))
+    _kb.add(types.InlineKeyboardButton(text='Настройки Ozon',
+                                       callback_data='settings_ozon'))
+    
+    return _kb
+
+
+def create_specific_settings_block_kb(marker: Literal['wb', 'ozon'],
+                                      has_punkt: bool = False):
+    _kb = InlineKeyboardBuilder()
+
+    if has_punkt:
+        _text = f'Изменить {marker.upper()} пункт выдачи'
+        _callback_data = f'edit_punkt_{marker}'
+    else:
+        _text = f'Добавить {marker.upper()} пункт выдачи'
+        _callback_data = f'add_punkt_{marker}'
+
+    _kb.row(types.InlineKeyboardButton(text=_text,
+                                       callback_data=_callback_data))
+    
+    if has_punkt:
+        _delete_text = f'Удалить {marker.upper()} пункт выдачи'
+        _delete_callback_data = f'delete_punkt_{marker}'
+        
+        _kb.row(types.InlineKeyboardButton(text=_delete_text,
+                                           callback_data=_delete_callback_data))
+
+    return _kb
+
+    # if has_ozon_punkt:
+    #     ozon_text = 'Изменить Ozon пункт выдачи'
+    #     ozon_callback_data = 'edit_punkt_ozon'
+    # else:
+    #     ozon_text = 'add_punkt_ozon'
+    #     ozon_callback_data = 'Добавить Ozon пункт выдачи'

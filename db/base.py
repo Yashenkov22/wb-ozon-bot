@@ -47,15 +47,34 @@ class WbPunkt(Base):
     __tablename__ = 'wb_punkts'
     
     id = Column(Integer, primary_key=True, index=True)
-    lat = Column(Float)
-    lon = Column(Float)
+    # lat = Column(Float)
+    # lon = Column(Float)
+    index = Column(Integer)
+    city = Column(String)
     zone = Column(Integer, default=None, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
-    user_id = Column(BigInteger, ForeignKey('users.tg_id'))
+    user_id = Column(BigInteger, ForeignKey('users.tg_id'), nullable=True)
     
     # Связь с пользователем
     user = relationship(User, back_populates="wb_punkts")
     wb_products = relationship('WbProduct', back_populates="wb_punkt")
+
+
+class OzonPunkt(Base):
+    __tablename__ = 'ozon_punkts'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    # lat = Column(Float)
+    # lon = Column(Float)
+    index = Column(Integer)
+    city = Column(String)
+    zone = Column(Integer, default=None, nullable=True)
+    time_create = Column(TIMESTAMP(timezone=True))
+    user_id = Column(BigInteger, ForeignKey('users.tg_id'), nullable=True)
+    
+    # Связь с пользователем
+    user = relationship(User, back_populates="ozon_punkts")
+    ozon_products = relationship('OzonProduct', back_populates="ozon_punkt")
 
 
 class OzonProduct(Base):
@@ -80,9 +99,12 @@ class OzonProduct(Base):
     # last_name = Column(String, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
     user_id = Column(BigInteger, ForeignKey('users.tg_id'))
+    ozon_punkt_id = Column(Integer, ForeignKey('ozon_punkts.id'), nullable=True)
     
     # Связь с пользователем
     user = relationship(User, back_populates="ozon_products")
+    ozon_punkt = relationship(OzonPunkt, back_populates="ozon_products")
+
 
 
 class WbProduct(Base):
@@ -109,7 +131,7 @@ class WbProduct(Base):
     # last_name = Column(String, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
     user_id = Column(BigInteger, ForeignKey('users.tg_id'))
-    wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'))
+    wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'), nullable=True)
 
     user = relationship(User, back_populates="wb_products")
     wb_punkt = relationship(WbPunkt, back_populates="wb_products")

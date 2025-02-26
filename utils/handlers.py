@@ -5,7 +5,7 @@ import re
 import aiohttp
 
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Literal
 
 from asyncio import sleep
 
@@ -15,16 +15,24 @@ from aiogram import types, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from sqlalchemy import update, select, and_, or_, insert
+from sqlalchemy import update, select, and_, or_, insert, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from bot22 import bot
 
-from db.base import Subscription, User, WbProduct, WbPunkt, OzonProduct, UserJob
+from db.base import (OzonPunkt,
+                     Subscription,
+                     User,
+                     WbProduct,
+                     WbPunkt,
+                     OzonProduct,
+                     UserJob)
 
-from utils.scheduler import push_check_ozon_price, push_check_wb_price, scheduler_cron, add_task_to_delete_old_message_for_users
+from utils.scheduler import (push_check_ozon_price,
+                             push_check_wb_price,
+                             add_task_to_delete_old_message_for_users)
 
 from keyboards import (add_back_btn, add_pagination_btn,
                        create_or_add_exit_btn,
@@ -938,6 +946,28 @@ async def check_user(message: types.Message,
     else:
         return await add_user(message,
                                 session)
+    
+
+async def check_has_punkt(user_id: int,
+                          marker: Literal['wb', 'ozon'],
+                          session: AsyncSession):
+    punkt_model = WbPunkt if marker == 'wb' else OzonPunkt
+
+    query = (
+        # exists()\
+        select(
+            punkt_model.id,
+        )
+        .where(
+            punkt_model.user_id == user_id
+        )
+    )
+
+    res = await session.execute(query)
+
+    has_punkt = res.scalar_one_or_none()
+    
+    return bool(has_punkt)
 
 
 async def show_product_list(product_dict: dict,

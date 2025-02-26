@@ -22,11 +22,13 @@ from keyboards import (create_or_add_exit_btn,
                        create_pagination_page_kb,
                        create_or_add_cancel_btn,
                        create_remove_and_edit_sale_kb,
-                       create_reply_start_kb)
+                       create_reply_start_kb,
+                       create_settings_kb,
+                       create_specific_settings_block_kb)
 
 from states import AnyProductStates, EditSale, LocationState
 
-from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
+from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT, check_has_punkt,
                             check_input_link,
                             delete_prev_subactive_msg,
                             generate_pretty_amount,
@@ -74,21 +76,7 @@ async def start(message: types.Message | types.CallbackQuery,
     await bot.send_message(text=start_text.format(message.from_user.username),
                            chat_id=_message.chat.id,
                            reply_markup=_kb.as_markup(resize_keyboard=True))
-    
-    # print('время отправки сообщения', q.date)
-
-    # w = datetime.now()
-    # print('текущее время', w)
-    # try:
-    #     print('1', q.date.timestamp())
-    #     print('2', w.timestamp())
-    #     print('3', w.timestamp() - q.date.timestamp())
-    #     print('4', datetime.fromtimestamp(w.timestamp()) - datetime.fromtimestamp(q.date.timestamp()))
-    #     print('5', (datetime.fromtimestamp(w.timestamp()) - datetime.fromtimestamp(q.date.timestamp())) > timedelta(microseconds=1))
-    #     pass
-    # except Exception as ex:
-    #     print('DATE ERROR', ex)
-    
+        
     try:
         await message.delete()
         
@@ -389,6 +377,61 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         await message.delete()
     except Exception:
         pass
+
+
+@main_router.message(F.text == 'Настройки')
+async def get_settings(message: types.Message | types.CallbackQuery,
+                       state: FSMContext,
+                       session: AsyncSession,
+                       bot: Bot,
+                       scheduler: AsyncIOScheduler):
+    _text = 'Это Ваши настройки⚙️\n<b>Выберите нужный раздел</b>'
+    _kb = create_settings_kb()
+    _kb = create_or_add_exit_btn(_kb)
+
+    settings_msg = await bot.send_message(chat_id=message.chat.id,
+                                         text=_text,
+                                         reply_markup=_kb.as_markup())
+
+    await add_message_to_delete_dict(settings_msg,
+                                     state)
+    
+    await state.update_data(settings_msg=(settings_msg.chat.id, settings_msg.message_id))
+
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
+
+@main_router.callback_query(F.data.startswith('settings'))
+async def specific_settings_block(callback: types.CallbackQuery,
+                                  state: FSMContext,
+                                  session: AsyncSession,
+                                  bot: Bot,
+                                  scheduler: AsyncIOScheduler):
+    marker = callback.data.split('_')[-1]
+
+    data = await state.get_data()
+
+    settings_msg: tuple = data.get('settings_msg')
+
+    async with session as _session:
+        has_punkt = await check_has_punkt(user_id=callback.from_user.id,
+                                          marker=marker,
+                                          session=_session)
+
+    _kb = create_specific_settings_block_kb(marker=marker,
+                                            has_punkt=has_punkt)
+    _kb = create_or_add_exit_btn(_kb)
+
+    _text = f'Раздел настроек {marker.upper()}\nВыберите действие'
+
+    await bot.edit_message_text(text=_text,
+                                chat_id=settings_msg[0],
+                                message_id=settings_msg[-1],
+                                reply_markup=_kb.as_markup())
+    await callback.answer()
 
 
 @main_router.callback_query(F.data == 'pagination_page')

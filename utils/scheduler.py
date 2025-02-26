@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy import insert, select, and_, update, func
 
-from db.base import Subscription, WbProduct, WbPunkt, User, get_session, UserJob, OzonProduct
+from db.base import OzonPunkt, Subscription, WbProduct, WbPunkt, User, get_session, UserJob, OzonProduct
 
 from keyboards import add_or_create_close_kb, create_remove_and_edit_sale_kb, create_remove_kb
 
@@ -240,9 +240,7 @@ async def save_product(user_data: dict,
     )
 
     wb_query = (
-        select(
-            WbProduct.id
-        )\
+        select(WbProduct.id)\
         .where(WbProduct.user_id == msg[0])
     )
 
@@ -295,6 +293,25 @@ async def save_product(user_data: dict,
             # await bot.send_message(chat_id=msg[0],
             #                        text='Товар уже добавлен')
             return True
+        
+        query = (
+            select(
+                OzonPunkt.id,
+                OzonPunkt.zone,
+                )\
+            .join(User,
+                  OzonPunkt.user_id == User.tg_id)\
+            .where(User.tg_id == msg[0])
+        )
+        async with session as session:
+            res = await session.execute(query)
+
+            _ozon_punkt = res.fetchall()
+
+        if _ozon_punkt:
+            ozon_punkt_id, del_zone = _ozon_punkt[0]
+        else:
+            ozon_punkt_id, del_zone = (None, None)
 
         print('do request on OZON API')
 
@@ -302,7 +319,11 @@ async def save_product(user_data: dict,
             timeout = aiohttp.ClientTimeout(total=30)
             async with aiohttp.ClientSession() as aiosession:
                 # _url = f"http://5.61.53.235:1441/product/{message.text}"
-                _url = f"http://172.18.0.6:8080/product/{ozon_short_link}"
+                if not del_zone:
+                    _url = f"http://172.18.0.6:8080/product/{ozon_short_link}"
+                else:
+                    _url = f"http://172.18.0.6:8080/product/{del_zone}/{ozon_short_link}"
+
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
 
@@ -453,6 +474,7 @@ async def save_product(user_data: dict,
                 'sale': _sale,
                 #
                 # 'percent': int(data.get('percent')),
+                'ozon_punkt_id': ozon_punkt_id,
                 'name': _name,
                 'time_create': datetime.now(),
                 'user_id': msg[0],
@@ -523,7 +545,6 @@ async def save_product(user_data: dict,
 
         short_link = link[_idx_prefix + len(_prefix):].split('/')[0]
 
-        # data = await state.get_data()
         query = (
             select(
                 WbProduct.id,
@@ -539,15 +560,13 @@ async def save_product(user_data: dict,
         res = res.scalar_one_or_none()
 
         if res:
-            # await bot.send_message(chat_id=msg[0],
-            #                        text='Товар уже добавлен')
             return True
 
-
-        # msg: tuple = data.get('msg')
-
         query = (
-            select(WbPunkt.zone)\
+            select(
+                WbPunkt.id,
+                WbPunkt.zone,
+                )\
             .join(User,
                 WbPunkt.user_id == User.tg_id)\
             .where(User.tg_id == msg[0])
@@ -555,49 +574,54 @@ async def save_product(user_data: dict,
         async with session as session:
             res = await session.execute(query)
 
-            del_zone = res.scalar_one_or_none()
+            _wb_punkt = res.fetchall()
 
-        if not del_zone:
-            lat, lon = ('55.707106', '37.572854')
-            del_zone = -1281648
+        if _wb_punkt:
+            wb_punkt_id, del_zone = _wb_punkt[0]
+        else:
+            wb_punkt_id, del_zone = (None, -1281648)
 
-            async with aiohttp.ClientSession() as aiosession:
-                # _url = f"http://172.18.0.7:8080/pickUpPoint/{lat}/{lon}"
-                # response = await aiosession.get(url=_url)
+        # if not del_zone:
+        #     # lat, lon = ('55.707106', '37.572854')
+        #     del_zone = -1281648
 
-                # res = await response.json()
+            # async with aiohttp.ClientSession() as aiosession:
+            #     # _url = f"http://172.18.0.7:8080/pickUpPoint/{lat}/{lon}"
+            #     # response = await aiosession.get(url=_url)
 
-                # deliveryRegions = res.get('deliveryRegions')
+            #     # res = await response.json()
 
-                # print(deliveryRegions)
+            #     # deliveryRegions = res.get('deliveryRegions')
 
-                # del_zone = deliveryRegions[-1]
+            #     # print(deliveryRegions)
+
+            #     # del_zone = deliveryRegions[-1]
             
-                _data = {
-                    'lat': float(lat),
-                    'lon': float(lon),
-                    'zone': del_zone,
-                    'user_id': msg[0],
-                    'time_create': datetime.now(tz=pytz.timezone('Europe/Moscow')),
-                }
+            #     _data = {
+            #         'lat': float(lat),
+            #         'lon': float(lon),
+            #         'zone': del_zone,
+            #         'user_id': msg[0],
+            #         'time_create': datetime.now(tz=pytz.timezone('Europe/Moscow')),
+            #     }
 
-                query = (
-                    insert(WbPunkt)\
-                    .values(**_data)
-                )
-                async with session as session:
-                    await session.execute(query)
+            #     query = (
+            #         insert(WbPunkt)\
+            #         .values(**_data)
+            #     )
+            #     async with session as session:
+            #         await session.execute(query)
 
-                    try:
-                        await session.commit()
-                        _text = 'Wb пукнт успешно добавлен'
-                    except Exception:
-                        await session.rollback()
-                        _text = 'Wb пукнт не удалось добавить'
+            #         try:
+            #             await session.commit()
+            #             _text = 'Wb пукнт успешно добавлен'
+            #         except Exception:
+            #             await session.rollback()
+            #             _text = 'Wb пукнт не удалось добавить'
 
-                        await bot.send_message(chat_id=msg[0],
-                                            text='Не получилось найти пункт выдачи')
-                        return True
+            #             await bot.send_message(chat_id=msg[0],
+            #                                 text='Не получилось найти пункт выдачи')
+            #             return True
         
         # query = (
         #     select(
@@ -677,101 +701,101 @@ async def save_product(user_data: dict,
                 _product_price = float(_product_price)
 
         async with session.begin():
-            query = (
-                select(WbPunkt.id,
-                        WbPunkt.zone)\
-                .join(User,
-                        WbPunkt.user_id == User.tg_id)\
-                .where(User.tg_id == msg[0])
-            )
+            # query = (
+            #     select(WbPunkt.id,
+            #             WbPunkt.zone)\
+            #     .join(User,
+            #             WbPunkt.user_id == User.tg_id)\
+            #     .where(User.tg_id == msg[0])
+            # )
 
-            _wb_punkt_id = await session.execute(query)
+            # _wb_punkt_id = await session.execute(query)
 
-            _wb_punkt_id = _wb_punkt_id.fetchall()
+            # _wb_punkt_id = _wb_punkt_id.fetchall()
 
             # print('short_link', data.get('wb_product_id'))
             _sale = generate_sale_for_price(float(_product_price))
 
             _data_name = _name if _name else _product_name
 
-            if _wb_punkt_id:
-                _wb_punkt_id, zone = _wb_punkt_id[0]
-                _data = {
-                    'link': link,
-                    'short_link': short_link,
-                    'start_price': _product_price,
-                    'actual_price': _product_price,
-                    #
-                    'sale': _sale,
-                    #
-                    # 'percent': float(data.get('percent')),
-                    'name': _data_name,
-                    'time_create': datetime.now(),
-                    'user_id': msg[0],
-                    'wb_punkt_id': _wb_punkt_id,
-                }
+            # if _wb_punkt_id:
+                # _wb_punkt_id, zone = _wb_punkt_id[0]
+            _data = {
+                'link': link,
+                'short_link': short_link,
+                'start_price': _product_price,
+                'actual_price': _product_price,
+                #
+                'sale': _sale,
+                #
+                # 'percent': float(data.get('percent')),
+                'name': _data_name,
+                'time_create': datetime.now(),
+                'user_id': msg[0],
+                'wb_punkt_id': wb_punkt_id,
+            }
 
-                # if percent:
-                #     _data.update(percent=int(percent))
+            # if percent:
+            #     _data.update(percent=int(percent))
 
-                wb_product = WbProduct(**_data)
+            wb_product = WbProduct(**_data)
 
-                session.add(wb_product)
+            session.add(wb_product)
 
-                await session.flush()
+            await session.flush()
 
-                wb_product_id = wb_product.id
+            wb_product_id = wb_product.id
 
-                print('product_id', wb_product_id)
-                
-                # query = (
-                #     insert(WbProduct)\
-                #     .values(**data)
-                # )
-                # await session.execute(query)
+            print('product_id', wb_product_id)
+            
+            # query = (
+            #     insert(WbProduct)\
+            #     .values(**data)
+            # )
+            # await session.execute(query)
 
-                # try:
-                #     await session.commit()
-                # except Exception as ex:
-                #     print(ex)
-                # else:
-                    # scheduler.add_job()
-                #          user_id | marker | product_id
-                job_id = f'{msg[0]}.wb.{wb_product_id}'
-        
-                job = scheduler.add_job(push_check_wb_price,
-                                trigger='interval',
-                                minutes=15,
-                                id=job_id,
-                                coalesce=True,
-                                jobstore='sqlalchemy',
-                                kwargs={'user_id': msg[0],
-                                        'product_id': wb_product_id})
-                
-                _data = {
-                    'user_id': msg[0],
-                    'product_id': wb_product_id,
-                    'product_marker': 'wb_product',
-                    'job_id': job.id,
-                }
+            # try:
+            #     await session.commit()
+            # except Exception as ex:
+            #     print(ex)
+            # else:
+                # scheduler.add_job()
+            #          user_id | marker | product_id
+            job_id = f'{msg[0]}.wb.{wb_product_id}'
+    
+            job = scheduler.add_job(push_check_wb_price,
+                            trigger='interval',
+                            minutes=15,
+                            id=job_id,
+                            coalesce=True,
+                            jobstore='sqlalchemy',
+                            kwargs={'user_id': msg[0],
+                                    'product_id': wb_product_id})
+            
+            _data = {
+                'user_id': msg[0],
+                'product_id': wb_product_id,
+                'product_marker': 'wb_product',
+                'job_id': job.id,
+            }
 
-                user_job = UserJob(**_data)
+            user_job = UserJob(**_data)
 
-                session.add(user_job)
+            session.add(user_job)
 
-                try:
-                    await session.commit()
-                except Exception as ex:
-                    print(ex)
-                    _text = 'Что то пошло не так'
-                    return True
-                else:
-                    _text = 'Wb товар успешно добавлен'
-                    print(_text)
-            else:
+            try:
+                await session.commit()
+            except Exception as ex:
+                print(ex)
                 _text = 'Что то пошло не так'
-                print(_text)
                 return True
+            else:
+                _text = 'Wb товар успешно добавлен'
+                print(_text)
+            # else:
+            #     _text = 'Что то пошло не так'
+            #     print(_text)
+            #     return True
 
 
                     # await state.update_data(wb_product_link=wb_product_link,
