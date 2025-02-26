@@ -99,11 +99,11 @@ class OzonProduct(Base):
     # last_name = Column(String, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
     user_id = Column(BigInteger, ForeignKey('users.tg_id'))
-    ozon_punkt_id = Column(Integer, ForeignKey('ozon_punkts.id'), nullable=True)
+    ozon_punkt_id = Column(Integer, ForeignKey('ozon_punkts.id', ondelete='SET NULL'), nullable=True)
     
     # Связь с пользователем
     user = relationship(User, back_populates="ozon_products")
-    ozon_punkt = relationship(OzonPunkt, back_populates="ozon_products")
+    ozon_punkt = relationship(OzonPunkt, back_populates="ozon_products", passive_deletes=True)
 
 
 
@@ -115,26 +115,18 @@ class WbProduct(Base):
                 index=True)
     link = Column(String)
     short_link = Column(String)
-    # basic_price = Column(Float)
     start_price = Column(Float)
     actual_price = Column(Float)
     sale = Column(Float)
-    # percent = Column(Integer)
     name = Column(String,
                   nullable=True,
                   default=None)
-    # now_price = Column(Float)
-    # del_zone = Column(Integer)
-    # expected_price = Column(Float)
-    # username = Column(String, nullable=True)
-    # first_name = Column(String, nullable=True)
-    # last_name = Column(String, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
     user_id = Column(BigInteger, ForeignKey('users.tg_id'))
-    wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id'), nullable=True)
+    wb_punkt_id = Column(Integer, ForeignKey('wb_punkts.id', ondelete='SET NULL'), nullable=True)
 
     user = relationship(User, back_populates="wb_products")
-    wb_punkt = relationship(WbPunkt, back_populates="wb_products")
+    wb_punkt = relationship(WbPunkt, back_populates="wb_products", passive_deletes=True)
 
 
 

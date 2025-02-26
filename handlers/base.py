@@ -385,7 +385,7 @@ async def get_settings(message: types.Message | types.CallbackQuery,
                        session: AsyncSession,
                        bot: Bot,
                        scheduler: AsyncIOScheduler):
-    _text = 'Это Ваши настройки⚙️\n<b>Выберите нужный раздел</b>'
+    _text = '⚙️Ваши настройки⚙️\n\n<b>Выберите нужный раздел</b>'
     _kb = create_settings_kb()
     _kb = create_or_add_exit_btn(_kb)
 
