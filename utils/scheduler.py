@@ -951,9 +951,8 @@ async def add_punkt_by_user(punkt_data: dict):
         return
     
     async for session in get_session():
-        await session.execute(query)
-        
         try:
+            await session.execute(query)
             await session.commit()
         except Exception as ex:
             await session.rollback()

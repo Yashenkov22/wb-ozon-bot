@@ -49,9 +49,9 @@ class WbPunkt(Base):
     id = Column(Integer, primary_key=True, index=True)
     # lat = Column(Float)
     # lon = Column(Float)
-    index = Column(Integer)
+    index = Column(BigInteger)
     city = Column(String)
-    zone = Column(Integer, default=None, nullable=True)
+    zone = Column(BigInteger, default=None, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
     user_id = Column(BigInteger, ForeignKey('users.tg_id'), nullable=True)
     
@@ -66,9 +66,9 @@ class OzonPunkt(Base):
     id = Column(Integer, primary_key=True, index=True)
     # lat = Column(Float)
     # lon = Column(Float)
-    index = Column(Integer)
+    index = Column(BigInteger)
     city = Column(String)
-    zone = Column(Integer, default=None, nullable=True)
+    zone = Column(BigInteger, default=None, nullable=True)
     time_create = Column(TIMESTAMP(timezone=True))
     user_id = Column(BigInteger, ForeignKey('users.tg_id'), nullable=True)
     
