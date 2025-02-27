@@ -576,6 +576,8 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
 
     scheduler.add_job(add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
 
+    await message.delete()
+
 
 @main_router.callback_query(F.data == 'pagination_page')
 async def pagination_page(callback: types.Message | types.CallbackQuery,
