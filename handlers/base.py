@@ -535,6 +535,12 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
                                         message_id=sub_active_msg[-1])
         
         await state.set_state()
+
+        try:
+            await message.delete()
+        except Exception as ex:
+            print(ex)
+            pass
         
         return 
 
@@ -547,6 +553,12 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
                                     chat_id=settings_msg[0],
                                     message_id=settings_msg[-1],
                                     reply_markup=_kb.as_markup())
+        try:
+            await message.delete()
+        except Exception as ex:
+            print(ex)
+            pass
+
         return
     
     city_index = city_index_dict.get(city)
@@ -556,6 +568,12 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
                                     chat_id=settings_msg[0],
                                     message_id=settings_msg[-1],
                                     reply_markup=_kb.as_markup())
+        try:
+            await message.delete()
+        except Exception as ex:
+            print(ex)
+            pass
+
         return
     
     punkt_data: dict = data.get('punkt_data')
