@@ -168,107 +168,107 @@ async def start(message: types.Message | types.CallbackQuery,
     await message.delete()
 
 
-@main_router.message(F.text == 'Добавить товар')
-async def add_any_product(message: types.Message | types.CallbackQuery,
-                            state: FSMContext,
-                            session: AsyncSession,
-                            bot: Bot,
-                            scheduler: AsyncIOScheduler):
-    await state.set_state(AnyProductStates.link)
+# @main_router.message(F.text == 'Добавить товар')
+# async def add_any_product(message: types.Message | types.CallbackQuery,
+#                             state: FSMContext,
+#                             session: AsyncSession,
+#                             bot: Bot,
+#                             scheduler: AsyncIOScheduler):
+#     await state.set_state(AnyProductStates.link)
     
-    _text = 'Отправьте ссылку на товар'
+#     _text = 'Отправьте ссылку на товар'
 
-    _kb = create_or_add_exit_btn()
+#     _kb = create_or_add_exit_btn()
 
-    try:
-        add_msg = await bot.send_message(chat_id=message.chat.id,
-                                        text=_text,
-                                        reply_markup=_kb.as_markup())
-    except Exception as ex:
-        print(f'STRANGE EEROR WITH ADD PRODUCT WITH BUTTON FOR USER {message.chat.id} {message.from_user.username}', ex)
-        # add_msg = await message.answer('Странная ошибка, потерпи немного, разбираюсь...')
-        return
+#     try:
+#         add_msg = await bot.send_message(chat_id=message.chat.id,
+#                                         text=_text,
+#                                         reply_markup=_kb.as_markup())
+#     except Exception as ex:
+#         print(f'STRANGE EEROR WITH ADD PRODUCT WITH BUTTON FOR USER {message.chat.id} {message.from_user.username}', ex)
+#         # add_msg = await message.answer('Странная ошибка, потерпи немного, разбираюсь...')
+#         return
 
-    await add_message_to_delete_dict(add_msg,
-                                     state)
+#     await add_message_to_delete_dict(add_msg,
+#                                      state)
     
-    await state.update_data(add_msg=(add_msg.chat.id, add_msg.message_id))
+#     await state.update_data(add_msg=(add_msg.chat.id, add_msg.message_id))
 
-    try:
-        await message.delete()
-    except Exception:
-        pass
+#     try:
+#         await message.delete()
+#     except Exception:
+#         pass
 
 
-@main_router.message(and_f(AnyProductStates.link, F.content_type == types.ContentType.TEXT))
-async def any_product_proccess(message: types.Message | types.CallbackQuery,
-                            state: FSMContext,
-                            session: AsyncSession,
-                            bot: Bot,
-                            scheduler: AsyncIOScheduler):
-    data = await state.get_data()
+# @main_router.message(and_f(AnyProductStates.link, F.content_type == types.ContentType.TEXT))
+# async def any_product_proccess(message: types.Message | types.CallbackQuery,
+#                             state: FSMContext,
+#                             session: AsyncSession,
+#                             bot: Bot,
+#                             scheduler: AsyncIOScheduler):
+#     data = await state.get_data()
     
-    add_msg: tuple = data.get('add_msg')
+#     add_msg: tuple = data.get('add_msg')
 
-    if message.text == 'Посмотреть товары':
-        try:
-            await bot.delete_message(chat_id=add_msg[0],
-                                     message_id=add_msg[-1])
-        except Exception as ex:
-            print(ex)
+#     if message.text == 'Посмотреть товары':
+#         try:
+#             await bot.delete_message(chat_id=add_msg[0],
+#                                      message_id=add_msg[-1])
+#         except Exception as ex:
+#             print(ex)
 
-        await state.set_state()
-        await get_all_products_by_user(message,
-                                       state,
-                                       session,
-                                       bot,
-                                       scheduler)
-        return
+#         await state.set_state()
+#         await get_all_products_by_user(message,
+#                                        state,
+#                                        session,
+#                                        bot,
+#                                        scheduler)
+#         return
 
-    print('add msg', add_msg)
+#     print('add msg', add_msg)
 
-    _message_text = message.text.strip().split()
+#     _message_text = message.text.strip().split()
 
-    _name = link = None
+#     _name = link = None
 
-    if len(_message_text) > 1:
-        *_name, link = _message_text
-        _name = ' '.join(_name)
-    else:
-        link = message.text.strip()
+#     if len(_message_text) > 1:
+#         *_name, link = _message_text
+#         _name = ' '.join(_name)
+#     else:
+#         link = message.text.strip()
 
-    check_link = check_input_link(link) # None or Literal['WB', 'OZON']
+#     check_link = check_input_link(link) # None or Literal['WB', 'OZON']
 
-    if check_link:
-        await delete_prev_subactive_msg(data)
-        sub_active_msg: types.Message = await message.answer(text=f'{check_link} товар добавляется...')
+#     if check_link:
+#         await delete_prev_subactive_msg(data)
+#         sub_active_msg: types.Message = await message.answer(text=f'{check_link} товар добавляется...')
 
-        user_data = {
-            'msg': (message.chat.id, message.message_id),
-            'name': _name,
-            'link': link,
-            '_add_msg_id': sub_active_msg.message_id,
-            'product_marker': check_link,
-        }
+#         user_data = {
+#             'msg': (message.chat.id, message.message_id),
+#             'name': _name,
+#             'link': link,
+#             '_add_msg_id': sub_active_msg.message_id,
+#             'product_marker': check_link,
+#         }
 
-        scheduler.add_job(add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
-    else:
-        await delete_prev_subactive_msg(data)
-        sub_active_msg: types.Message = await message.answer(text='Невалидная ссылка')
+#         scheduler.add_job(add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
+#     else:
+#         await delete_prev_subactive_msg(data)
+#         sub_active_msg: types.Message = await message.answer(text='Невалидная ссылка')
 
-    await add_message_to_delete_dict(sub_active_msg,
-                                     state)
+#     await add_message_to_delete_dict(sub_active_msg,
+#                                      state)
 
-    await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+#     await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
     
-    try:
-        await state.set_state()
-        await bot.delete_message(chat_id=add_msg[0],
-                                 message_id=add_msg[-1])
-        await message.delete()
-    except Exception as ex:
-        print(ex)
-        pass
+#     try:
+#         await state.set_state()
+#         await bot.delete_message(chat_id=add_msg[0],
+#                                  message_id=add_msg[-1])
+#         await message.delete()
+#     except Exception as ex:
+#         print(ex)
+#         pass
     
 
 @main_router.message(F.text == 'Посмотреть товары')

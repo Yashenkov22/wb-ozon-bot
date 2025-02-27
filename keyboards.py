@@ -202,9 +202,9 @@ def add_or_create_close_kb(_kb: InlineKeyboardBuilder = None):
 def create_reply_start_kb():
     _kb = ReplyKeyboardBuilder()
 
-    _kb.add(types.KeyboardButton(text='Добавить товар'))
+    # _kb.add(types.KeyboardButton(text='Добавить товар'))
     _kb.add(types.KeyboardButton(text='Посмотреть товары'))
-    _kb.row(types.KeyboardButton(text='Настройки'))
+    _kb.add(types.KeyboardButton(text='Настройки'))
 
     return _kb
 
