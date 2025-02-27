@@ -320,31 +320,24 @@ def create_settings_kb():
 
 
 def create_specific_settings_block_kb(marker: Literal['wb', 'ozon'],
-                                      has_punkt: bool = False):
+                                      has_punkt: str = None):
     _kb = InlineKeyboardBuilder()
 
     if has_punkt:
         _text = f'Изменить {marker.upper()} пункт выдачи'
-        _callback_data = f'edit_punkt_{marker}'
+        _callback_data = f'punkt_edit_{marker}'
     else:
         _text = f'Добавить {marker.upper()} пункт выдачи'
-        _callback_data = f'add_punkt_{marker}'
+        _callback_data = f'punkt_add_{marker}'
 
     _kb.row(types.InlineKeyboardButton(text=_text,
                                        callback_data=_callback_data))
     
     if has_punkt:
         _delete_text = f'Удалить {marker.upper()} пункт выдачи'
-        _delete_callback_data = f'delete_punkt_{marker}'
+        _delete_callback_data = f'punkt_delete_{marker}'
         
         _kb.row(types.InlineKeyboardButton(text=_delete_text,
                                            callback_data=_delete_callback_data))
 
     return _kb
-
-    # if has_ozon_punkt:
-    #     ozon_text = 'Изменить Ozon пункт выдачи'
-    #     ozon_callback_data = 'edit_punkt_ozon'
-    # else:
-    #     ozon_text = 'add_punkt_ozon'
-    #     ozon_callback_data = 'Добавить Ozon пункт выдачи'

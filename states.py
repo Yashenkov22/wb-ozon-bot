@@ -33,3 +33,7 @@ class EditSale(StatesGroup):
 
 class LocationState(StatesGroup):
     location = State()
+
+
+class PunktState(StatesGroup):
+    city = State()

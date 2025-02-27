@@ -2,6 +2,7 @@ from math import ceil
 
 import pytz
 import json
+import aiohttp
 
 from datetime import datetime, timedelta
 
@@ -26,7 +27,10 @@ from keyboards import (create_or_add_exit_btn,
                        create_settings_kb,
                        create_specific_settings_block_kb)
 
-from states import AnyProductStates, EditSale, LocationState
+from states import (AnyProductStates,
+                    EditSale,
+                    LocationState,
+                    PunktState)
 
 from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT, check_has_punkt,
                             check_input_link,
@@ -37,9 +41,16 @@ from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT, check_has_punkt,
                             try_delete_prev_list_msgs,
                             state_clear,
                             add_message_to_delete_dict)
-from utils.scheduler import add_product_task
+from utils.scheduler import add_product_task, add_punkt_by_user
 
-from db.base import OzonProduct as OzonProductModel, User, Base, UserJob, WbProduct
+from utils.cities import city_index_dict
+
+from db.base import (OzonProduct as OzonProductModel,
+                     OzonPunkt,
+                     User,
+                     UserJob,
+                     WbProduct,
+                     WbPunkt)
 
 from utils.storage import redis_client
 
@@ -50,6 +61,8 @@ moscow_tz = pytz.timezone('Europe/Moscow')
 
 start_text = '🖐Здравствуйте, {}\n\nС помощью этого бота вы сможете отследить изменение цены на понравившиеся товары в маркетплейсах Wildberries и Ozon.'
 
+
+city_name_examples = 'Пример валидных значений городов:\nМосква, Санкт-Петербург, Ростов-на-Дону, Нижний Новгород, Комсомольск-на-Амуре'
 
 @main_router.message(Command('start'))
 async def start(message: types.Message | types.CallbackQuery,
@@ -417,21 +430,151 @@ async def specific_settings_block(callback: types.CallbackQuery,
     settings_msg: tuple = data.get('settings_msg')
 
     async with session as _session:
-        has_punkt = await check_has_punkt(user_id=callback.from_user.id,
+        city_punkt = await check_has_punkt(user_id=callback.from_user.id,
                                           marker=marker,
                                           session=_session)
 
     _kb = create_specific_settings_block_kb(marker=marker,
-                                            has_punkt=has_punkt)
+                                            has_punkt=city_punkt)
     _kb = create_or_add_exit_btn(_kb)
 
-    _text = f'Раздел настроек {marker.upper()}\nВыберите действие'
+    if not city_punkt:
+        city_punkt = 'Москва (по умолчанию)'
+
+    _sub_text = f'Отслеживание цен по городу: {city_punkt}'
+
+    _text = f'⚙️Раздел настроек {marker.upper()}⚙️\n\n{_sub_text}\n\nВыберите действие'
 
     await bot.edit_message_text(text=_text,
                                 chat_id=settings_msg[0],
                                 message_id=settings_msg[-1],
                                 reply_markup=_kb.as_markup())
     await callback.answer()
+
+
+@main_router.callback_query(F.data.startswith('punkt'))
+async def specific_punkt_block(callback: types.CallbackQuery,
+                               state: FSMContext,
+                               session: AsyncSession,
+                               bot: Bot,
+                               scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    settings_msg: tuple = data.get('settings_msg')
+
+    callback_data = callback.data.split('_')
+    punkt_action, punkt_marker = callback_data[1:]
+
+    punkt_data = {
+        'user_id': callback.from_user.id,
+        'punkt_action': punkt_action,
+        'punkt_marker': punkt_marker,
+    }
+
+    await state.update_data(punkt_data=punkt_data)
+
+    # await state.set_state(PunktState.city)
+    _kb = create_or_add_exit_btn()
+
+    match punkt_action:
+        case 'add':
+            await state.set_state(PunktState.city)
+            _text = f'Введите название города, в котором хотите отслеживать цены\n\n{city_name_examples}'
+
+            await bot.edit_message_text(text=_text,
+                                        chat_id=settings_msg[0],
+                                        message_id=settings_msg[-1],
+                                        reply_markup=_kb.as_markup())
+
+            # query = (
+            #     insert(
+            #         punkt_model
+            #     )\
+            #     .values()
+            # )
+            pass
+        case 'edit':
+            await state.set_state(PunktState.city)
+            _text = f'Введите название <b>нового</b> города, в котором хотите отслеживать цены\n\n{city_name_examples}'
+
+            await bot.edit_message_text(text=_text,
+                                        chat_id=settings_msg[0],
+                                        message_id=settings_msg[-1],
+                                        reply_markup=_kb.as_markup())
+
+            pass
+        case 'delete':
+            pass
+    # punkt_model = WbPunkt if punkt_marker == 'wb' else OzonPunkt
+
+
+    pass
+
+
+@main_router.message(and_f(PunktState.city), F.content_type == types.ContentType.TEXT)
+async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    settings_msg: tuple = data.get('settings_msg')
+
+    if not settings_msg:
+        sub_active_msg: tuple = data.get('_add_msg')
+
+        if not sub_active_msg:
+            sub_active_msg: types.Message = await message.answer('Возникли трудности, попробуйте еще раз')
+            await add_message_to_delete_dict(sub_active_msg,
+                                            state)
+            await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+        else:
+            await bot.edit_message_text(text='Возникли трудности, попробуйте еще раз',
+                                        chat_id=sub_active_msg[0],
+                                        message_id=sub_active_msg[-1])
+        
+        await state.set_state()
+        
+        return 
+
+    city = message.text.strip()
+
+    _kb = create_or_add_exit_btn()
+
+    if not city.isalpha():
+        await bot.edit_message_text(text=f'Переданы невалидные данные\nОжидается строка, передано - {city}',
+                                    chat_id=settings_msg[0],
+                                    message_id=settings_msg[-1],
+                                    reply_markup=_kb.as_markup())
+        return
+    
+    city_index = city_index_dict.get(city)
+
+    if not city_index:
+        await bot.edit_message_text(text=f'Не удалось найти переданный город\nПередано - {city}\n\nПожалуйста, проверяйте корректность вводимого значения\n\n{city_name_examples}',
+                                    chat_id=settings_msg[0],
+                                    message_id=settings_msg[-1],
+                                    reply_markup=_kb.as_markup())
+        return
+    
+    punkt_data: dict = data.get('punkt_data')
+
+    punkt_marker: str = punkt_data.get('punkt_marker')
+
+    punkt_data.update({
+        'city': city,
+        'index': city_index,
+        'settings_msg': settings_msg,
+    })
+
+    await bot.edit_message_text(text=f'Добавление пункта выдачи для маркетплейса {punkt_marker.upper()}...\n\nПросим Вас не пытаться добавить новые пункты, пока не завершиться текущее добавление',
+                                chat_id=settings_msg[0],
+                                message_id=settings_msg[-1])
+
+    await state.set_state()
+
+    scheduler.add_job(add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
 
 
 @main_router.callback_query(F.data == 'pagination_page')

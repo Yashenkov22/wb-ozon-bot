@@ -956,7 +956,7 @@ async def check_has_punkt(user_id: int,
     query = (
         # exists()\
         select(
-            punkt_model.id,
+            punkt_model.city,
         )
         .where(
             punkt_model.user_id == user_id
@@ -965,9 +965,10 @@ async def check_has_punkt(user_id: int,
 
     res = await session.execute(query)
 
-    has_punkt = res.scalar_one_or_none()
+    city_punkt = res.scalar_one_or_none()
     
-    return bool(has_punkt)
+    # return bool(has_punkt)
+    return city_punkt
 
 
 async def show_product_list(product_dict: dict,

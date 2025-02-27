@@ -27,6 +27,7 @@ from bot22 import bot
 
 from .storage import redis_client
 from .any import generate_pretty_amount, generate_sale_for_price, add_message_to_delete_dict
+from .cities import city_index_dict
 
 from config import DEV_ID
 
@@ -866,6 +867,95 @@ async def add_product_task(user_data: dict):
             await bot.edit_message_text(chat_id=msg[0],
                                         message_id=_add_msg_id,
                                         text=f'{product_marker.upper()} не удалось добавить')
+            
+
+async def add_punkt_by_user(punkt_data: dict):
+    punkt_action: str = punkt_data.get('punkt_action')
+    punkt_marker: str = punkt_data.get('punkt_marker')
+    city: str = punkt_data.get('city')
+    city_index: str = punkt_data.get('city_index')
+    settings_msg: tuple = punkt_data.get('settings_msg')
+    user_id: int = punkt_data.get('user_id')
+
+    punkt_model = WbPunkt if punkt_marker == 'wb' else OzonPunkt
+
+    try:
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession() as aiosession:
+            if punkt_marker == 'wb':
+                _url = f"http://172.18.0.7:8080/pickUpPoint/{city_index}"
+            else:
+                _url = f"http://172.18.0.7:8080/pickUpPoint/{city_index}"
+
+            async with aiosession.get(url=_url,
+                            timeout=timeout) as response:
+                del_zone = await response.text()
+
+                print('DEL ZONE', del_zone)
+    except Exception as ex:
+        print('DEL ZONE REQUEST ERRROR', ex)
+        await bot.edit_message_text(text='Что то пошло не так, просим прощения\n\nПопробуйте повторить позже',
+                                    chat_id=settings_msg[0],
+                                    message_id=settings_msg[-1])
+        return
+    
+    if punkt_action == 'add':
+        insert_data = {
+            'user_id': user_id,
+            'index': city_index,
+            'city': city,
+            'zone': del_zone,
+            'time_create': datetime.now(),
+        }
+        query = (
+            insert(
+                punkt_model
+            )\
+            .values(**insert_data)
+        )
+        
+        success_text = f'Пункт выдачи успешно добавлен (Установленный город - {city})'
+        error_text = f'Не получилось добавить пункт выдачи (Переданный город - {city})'
+
+    elif punkt_action == 'edit':
+        update_data = {
+            'city': city,
+            'index': city_index,
+            'zone': del_zone,
+            'time_create': datetime.now(),
+        }
+        query = (
+            update(
+                punkt_model
+            )\
+            .values(**update_data)\
+            .where(punkt_model.user_id == user_id)
+        )
+        
+        success_text = f'Пункт выдачи успешно изменён (Новый установленный город - {city})'
+        error_text = f'Не получилось изменить пункт выдачи (Переданный город - {city})'
+
+    else:
+        print('!!!!!!!!Такого не должно быть!!!!!!!!')
+        return
+    
+    async for session in get_session():
+        await session.execute(query)
+        
+        try:
+            await session.commit()
+        except Exception as ex:
+            await session.rollback()
+            print('ADD/EDIT PUNKT BY USER ERRROR', ex)
+            await bot.edit_message_text(text=error_text,
+                                        chat_id=settings_msg[0],
+                                        message_id=settings_msg[-1])
+        else:
+            await bot.edit_message_text(text=success_text,
+                                        chat_id=settings_msg[0],
+                                        message_id=settings_msg[-1])
+
+    pass
 
 
 async def push_check_wb_price(user_id: str,
