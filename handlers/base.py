@@ -509,7 +509,7 @@ async def specific_punkt_block(callback: types.CallbackQuery,
 
         case 'delete':
             punkt_model = WbPunkt if punkt_marker == 'wb' else OzonPunkt
-            
+
             query = (
                 delete(
                     punkt_model
@@ -529,9 +529,11 @@ async def specific_punkt_block(callback: types.CallbackQuery,
                 except Exception as ex:
                     print(ex)
                     await _session.rollback()
-                    await callback.answer(text=f'Не получилось удалить пункт выдачи для маркетплейса {punkt_marker.upper()}')
+                    await callback.answer(text=f'Не получилось удалить пункт выдачи для маркетплейса {punkt_marker.upper()}',
+                                          show_alert=True)
                 else:
-                    await callback.answer(text=f'Пункт выдачи для маркетплейса {punkt_marker.upper()} успешно удалён!')
+                    await callback.answer(text=f'Пункт выдачи для маркетплейса {punkt_marker.upper()} успешно удалён!',
+                                          show_alert=True)
                     _success_redirect = True
 
             if _success_redirect:
