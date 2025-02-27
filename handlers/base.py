@@ -402,19 +402,31 @@ async def get_settings(message: types.Message | types.CallbackQuery,
     _kb = create_settings_kb()
     _kb = create_or_add_exit_btn(_kb)
 
-    settings_msg = await bot.send_message(chat_id=message.chat.id,
-                                         text=_text,
-                                         reply_markup=_kb.as_markup())
+    data = await state.get_data()
+
+    settings_msg: tuple = data.get('settings_msg')
+
+    if settings_msg:
+        try:
+            await bot.delete_message(chat_id=settings_msg[0],
+                                     message_id=settings_msg[-1])
+        except Exception:
+            pass
+
+    settings_msg: types.Message = await bot.send_message(chat_id=message.from_user.id,
+                                                         text=_text,
+                                                         reply_markup=_kb.as_markup())
 
     await add_message_to_delete_dict(settings_msg,
                                      state)
     
     await state.update_data(settings_msg=(settings_msg.chat.id, settings_msg.message_id))
 
-    try:
-        await message.delete()
-    except Exception:
-        pass
+    if isinstance(message, types.Message):
+        try:
+            await message.delete()
+        except Exception:
+            pass
 
 
 @main_router.callback_query(F.data.startswith('settings'))
@@ -486,13 +498,6 @@ async def specific_punkt_block(callback: types.CallbackQuery,
                                         message_id=settings_msg[-1],
                                         reply_markup=_kb.as_markup())
 
-            # query = (
-            #     insert(
-            #         punkt_model
-            #     )\
-            #     .values()
-            # )
-            pass
         case 'edit':
             await state.set_state(PunktState.city)
             _text = f'Введите название <b>нового</b> города, в котором хотите отслеживать цены\n\n{city_name_examples}'
@@ -502,13 +507,39 @@ async def specific_punkt_block(callback: types.CallbackQuery,
                                         message_id=settings_msg[-1],
                                         reply_markup=_kb.as_markup())
 
-            pass
         case 'delete':
-            pass
-    # punkt_model = WbPunkt if punkt_marker == 'wb' else OzonPunkt
+            punkt_model = WbPunkt if punkt_marker == 'wb' else OzonPunkt
+            
+            query = (
+                delete(
+                    punkt_model
+                )\
+                .where(
+                    punkt_model.user_id == callback.from_user.id,
+                )
+            )
+            # *на всякий случай
+            _success_redirect = False
 
+            async with session as _session:
+                await _session.execute(query)
 
-    pass
+                try:
+                    await _session.commit()
+                except Exception as ex:
+                    print(ex)
+                    await _session.rollback()
+                    await callback.answer(text=f'Не получилось удалить пункт выдачи для маркетплейса {punkt_marker.upper()}')
+                else:
+                    await callback.answer(text=f'Пункт выдачи для маркетплейса {punkt_marker.upper()} успешно удалён!')
+                    _success_redirect = True
+
+            if _success_redirect:
+                await get_settings(callback,
+                                   state,
+                                   session,
+                                   bot,
+                                   scheduler)
 
 
 @main_router.message(and_f(PunktState.city), F.content_type == types.ContentType.TEXT)
