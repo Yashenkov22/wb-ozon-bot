@@ -873,7 +873,7 @@ async def add_punkt_by_user(punkt_data: dict):
     punkt_action: str = punkt_data.get('punkt_action')
     punkt_marker: str = punkt_data.get('punkt_marker')
     city: str = punkt_data.get('city')
-    city_index: str = punkt_data.get('city_index')
+    city_index: str = punkt_data.get('index')
     settings_msg: tuple = punkt_data.get('settings_msg')
     user_id: int = punkt_data.get('user_id')
 
