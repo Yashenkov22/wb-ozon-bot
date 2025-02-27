@@ -877,6 +877,8 @@ async def add_punkt_by_user(punkt_data: dict):
     settings_msg: tuple = punkt_data.get('settings_msg')
     user_id: int = punkt_data.get('user_id')
 
+    print(punkt_data)
+
     punkt_model = WbPunkt if punkt_marker == 'wb' else OzonPunkt
 
     try:
@@ -885,7 +887,7 @@ async def add_punkt_by_user(punkt_data: dict):
             if punkt_marker == 'wb':
                 _url = f"http://172.18.0.7:8080/pickUpPoint/{city_index}"
             else:
-                _url = f"http://172.18.0.7:8080/pickUpPoint/{city_index}"
+                _url = f"http://172.18.0.6:8080/pickUpPoint/{city_index}"
 
             async with aiosession.get(url=_url,
                             timeout=timeout) as response:
