@@ -995,8 +995,8 @@ async def push_check_wb_price(user_id: str,
                     subquery.c.job_id,
                 )\
                 .select_from(WbProduct)\
-                .join(WbPunkt,
-                        WbProduct.wb_punkt_id == WbPunkt.id)\
+                .outerjoin(WbPunkt,
+                            WbProduct.wb_punkt_id == WbPunkt.id)\
                 .join(User,
                         WbProduct.user_id == User.tg_id)\
                 .outerjoin(subquery,
@@ -1019,6 +1019,9 @@ async def push_check_wb_price(user_id: str,
                 pass
     if res:
         username, link, short_link, actual_price, start_price, _name, sale, zone, job_id = res[0]
+
+        if not zone:
+            zone = -1281648
 
         name = _name if _name is not None else 'Отсутствует'
         try:
