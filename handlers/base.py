@@ -548,18 +548,18 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
 
     _kb = create_or_add_exit_btn()
 
-    if not city.isalpha():
-        await bot.edit_message_text(text=f'Переданы невалидные данные\nОжидается строка, передано - {city}',
-                                    chat_id=settings_msg[0],
-                                    message_id=settings_msg[-1],
-                                    reply_markup=_kb.as_markup())
-        try:
-            await message.delete()
-        except Exception as ex:
-            print(ex)
-            pass
+    # if not city.isalpha():
+    #     await bot.edit_message_text(text=f'Переданы невалидные данные\nОжидается строка, передано - {city}',
+    #                                 chat_id=settings_msg[0],
+    #                                 message_id=settings_msg[-1],
+    #                                 reply_markup=_kb.as_markup())
+    #     try:
+    #         await message.delete()
+    #     except Exception as ex:
+    #         print(ex)
+    #         pass
 
-        return
+    #     return
     
     city_index = city_index_dict.get(city)
 
