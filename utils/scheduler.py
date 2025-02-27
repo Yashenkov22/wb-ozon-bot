@@ -899,10 +899,19 @@ async def add_punkt_by_user(punkt_data: dict):
                                     message_id=settings_msg[-1])
         return
     
+    try:
+        del_zone = int(del_zone)
+    except Exception as ex:
+        print('RESPONSE ERROR WITH CONVERT DEL ZONE', ex)
+        await bot.edit_message_text(text='Что то пошло не так, просим прощения\n\nПопробуйте повторить позже',
+                                    chat_id=settings_msg[0],
+                                    message_id=settings_msg[-1])
+        return
+    
     if punkt_action == 'add':
         insert_data = {
             'user_id': user_id,
-            'index': city_index,
+            'index': int(city_index),
             'city': city,
             'zone': del_zone,
             'time_create': datetime.now(),
@@ -920,7 +929,7 @@ async def add_punkt_by_user(punkt_data: dict):
     elif punkt_action == 'edit':
         update_data = {
             'city': city,
-            'index': city_index,
+            'index': int(city_index),
             'zone': del_zone,
             'time_create': datetime.now(),
         }
