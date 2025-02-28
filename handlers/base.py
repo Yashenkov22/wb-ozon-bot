@@ -454,7 +454,8 @@ async def specific_settings_block(callback: types.CallbackQuery,
                 city_punkt = await check_has_punkt(user_id=callback.from_user.id,
                                                 session=_session)
 
-            _kb = create_specific_settings_block_kb(has_punkt=city_punkt)
+            # _kb = create_specific_settings_block_kb(has_punkt=city_punkt)
+            _kb = create_punkt_settings_block_kb(has_punkt=city_punkt)
             _kb = create_or_add_exit_btn(_kb)
 
             if not city_punkt:
