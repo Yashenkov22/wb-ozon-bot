@@ -949,17 +949,17 @@ async def check_user(message: types.Message,
     
 
 async def check_has_punkt(user_id: int,
-                          marker: Literal['wb', 'ozon'],
                           session: AsyncSession):
-    punkt_model = WbPunkt if marker == 'wb' else OzonPunkt
+    wb_punkt_model = WbPunkt
+    # ozon_punkt_model = OzonPunkt
 
     query = (
         # exists()\
         select(
-            punkt_model.city,
+            wb_punkt_model.city,
         )
         .where(
-            punkt_model.user_id == user_id
+            wb_punkt_model.user_id == user_id
         )
     )
 

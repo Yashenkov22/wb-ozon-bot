@@ -871,7 +871,7 @@ async def add_product_task(user_data: dict):
 
 async def add_punkt_by_user(punkt_data: dict):
     punkt_action: str = punkt_data.get('punkt_action')
-    punkt_marker: str = punkt_data.get('punkt_marker')
+    # punkt_marker: str = punkt_data.get('punkt_marker')
     city: str = punkt_data.get('city')
     city_index: str = punkt_data.get('index')
     settings_msg: tuple = punkt_data.get('settings_msg')
@@ -879,21 +879,30 @@ async def add_punkt_by_user(punkt_data: dict):
 
     print(punkt_data)
 
-    punkt_model = WbPunkt if punkt_marker == 'wb' else OzonPunkt
+    wb_punkt_model = WbPunkt
+    ozon_punkt_model = OzonPunkt
 
     try:
         timeout = aiohttp.ClientTimeout(total=30)
         async with aiohttp.ClientSession() as aiosession:
-            if punkt_marker == 'wb':
-                _url = f"http://172.18.0.7:8080/pickUpPoint/{city_index}"
-            else:
-                _url = f"http://172.18.0.6:8080/pickUpPoint/{city_index}"
+            # if punkt_marker == 'wb':
+            wb_url = f"http://172.18.0.7:8080/pickUpPoint/{city_index}"
+            # else:
+            ozon_url = f"http://172.18.0.6:8080/pickUpPoint/{city_index}"
 
-            async with aiosession.get(url=_url,
+            # Wb
+            async with aiosession.get(url=wb_url,
                             timeout=timeout) as response:
-                del_zone = await response.text()
+                wb_del_zone = await response.text()
 
-                print('DEL ZONE', del_zone)
+                print('WB DEL ZONE', wb_del_zone)
+            # Ozon
+            async with aiosession.get(url=ozon_url,
+                            timeout=timeout) as response:
+                ozon_del_zone = await response.text()
+
+                print('OZON DEL ZONE', ozon_del_zone)
+
     except Exception as ex:
         print('DEL ZONE REQUEST ERRROR', ex)
         await bot.edit_message_text(text='Что то пошло не так, просим прощения\n\nПопробуйте повторить позже',
@@ -902,7 +911,8 @@ async def add_punkt_by_user(punkt_data: dict):
         return
     
     try:
-        del_zone = int(del_zone)
+        wb_del_zone = int(wb_del_zone)
+        ozon_del_zone = int(ozon_del_zone)
     except Exception as ex:
         print('RESPONSE ERROR WITH CONVERT DEL ZONE', ex)
         await bot.edit_message_text(text='Что то пошло не так, просим прощения\n\nПопробуйте повторить позже',
@@ -911,36 +921,63 @@ async def add_punkt_by_user(punkt_data: dict):
         return
     
     if punkt_action == 'add':
-        insert_data = {
+        wb_insert_data = {
             'user_id': user_id,
             'index': int(city_index),
             'city': city,
-            'zone': del_zone,
+            'zone': wb_del_zone,
             'time_create': datetime.now(),
         }
-        query = (
+        ozon_insert_data = {
+            'user_id': user_id,
+            'index': int(city_index),
+            'city': city,
+            'zone': ozon_del_zone,
+            'time_create': datetime.now(),
+        }
+
+        wb_query = (
             insert(
-                punkt_model
+                wb_punkt_model
             )\
-            .values(**insert_data)
+            .values(**wb_insert_data)
         )
-        
+        ozon_query = (
+            insert(
+                wb_punkt_model
+            )\
+            .values(**ozon_insert_data)
+        )
+
         success_text = f'Пункт выдачи успешно добавлен (Установленный город - {city})'
         error_text = f'Не получилось добавить пункт выдачи (Переданный город - {city})'
 
     elif punkt_action == 'edit':
-        update_data = {
+        wb_update_data = {
             'city': city,
             'index': int(city_index),
-            'zone': del_zone,
+            'zone': wb_del_zone,
             'time_create': datetime.now(),
         }
-        query = (
+        ozon_update_data = {
+            'city': city,
+            'index': int(city_index),
+            'zone': ozon_del_zone,
+            'time_create': datetime.now(),
+        }
+        wb_query = (
             update(
-                punkt_model
+                wb_punkt_model
             )\
-            .values(**update_data)\
-            .where(punkt_model.user_id == user_id)
+            .values(**wb_update_data)\
+            .where(wb_punkt_model.user_id == user_id)
+        )
+        ozon_query = (
+            update(
+                ozon_punkt_model
+            )\
+            .values(**ozon_update_data)\
+            .where(ozon_punkt_model.user_id == user_id)
         )
         
         success_text = f'Пункт выдачи успешно изменён (Новый установленный город - {city})'
@@ -952,7 +989,8 @@ async def add_punkt_by_user(punkt_data: dict):
     
     async for session in get_session():
         try:
-            await session.execute(query)
+            await session.execute(wb_query)
+            await session.execute(ozon_query)
             await session.commit()
         except Exception as ex:
             await session.rollback()
