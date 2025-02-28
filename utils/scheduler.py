@@ -944,7 +944,7 @@ async def add_punkt_by_user(punkt_data: dict):
         )
         ozon_query = (
             insert(
-                wb_punkt_model
+                ozon_punkt_model
             )\
             .values(**ozon_insert_data)
         )
