@@ -400,13 +400,13 @@ async def get_settings(message: types.Message | types.CallbackQuery,
                        bot: Bot,
                        scheduler: AsyncIOScheduler):
     _text = '⚙️Ваши настройки⚙️\n\n<b>Выберите нужный раздел</b>'
-    # _kb = create_settings_kb()
+    _kb = create_settings_kb()
 
-    async with session as _session:
-        city_punkt = await check_has_punkt(user_id=message.from_user.id,
-                                          session=_session)
+    # async with session as _session:
+    #     city_punkt = await check_has_punkt(user_id=message.from_user.id,
+    #                                       session=_session)
 
-    _kb = create_punkt_settings_block_kb(has_punkt=city_punkt)
+    # _kb = create_punkt_settings_block_kb(has_punkt=city_punkt)
     _kb = create_or_add_exit_btn(_kb)
 
     data = await state.get_data()
@@ -436,39 +436,39 @@ async def get_settings(message: types.Message | types.CallbackQuery,
             pass
 
 
-# @main_router.callback_query(F.data.startswith('settings'))
-# async def specific_settings_block(callback: types.CallbackQuery,
-#                                   state: FSMContext,
-#                                   session: AsyncSession,
-#                                   bot: Bot,
-#                                   scheduler: AsyncIOScheduler):
-#     marker = callback.data.split('_')[-1]
+@main_router.callback_query(F.data.startswith('settings'))
+async def specific_settings_block(callback: types.CallbackQuery,
+                                  state: FSMContext,
+                                  session: AsyncSession,
+                                  bot: Bot,
+                                  scheduler: AsyncIOScheduler):
+    settings_marker = callback.data.split('_')[-1]
 
-#     data = await state.get_data()
+    data = await state.get_data()
 
-#     settings_msg: tuple = data.get('settings_msg')
+    settings_msg: tuple = data.get('settings_msg')
 
-#     async with session as _session:
-#         city_punkt = await check_has_punkt(user_id=callback.from_user.id,
-#                                           marker=marker,
-#                                           session=_session)
+    match settings_marker:
+        case 'punkt':
+            async with session as _session:
+                city_punkt = await check_has_punkt(user_id=callback.from_user.id,
+                                                session=_session)
 
-#     _kb = create_specific_settings_block_kb(marker=marker,
-#                                             has_punkt=city_punkt)
-#     _kb = create_or_add_exit_btn(_kb)
+            _kb = create_specific_settings_block_kb(has_punkt=city_punkt)
+            _kb = create_or_add_exit_btn(_kb)
 
-#     if not city_punkt:
-#         city_punkt = 'Москва (по умолчанию)'
+            if not city_punkt:
+                city_punkt = 'Москва (по умолчанию)'
 
-#     _sub_text = f'Отслеживание цен по городу: {city_punkt}'
+            _sub_text = f'Отслеживание цен по городу: {city_punkt}'
 
-#     _text = f'⚙️Раздел настроек {marker.upper()}⚙️\n\n{_sub_text}\n\nВыберите действие'
+            _text = f'⚙️Раздел настроек: Пункт выдачи⚙️\n\n{_sub_text}\n\nВыберите действие'
 
-#     await bot.edit_message_text(text=_text,
-#                                 chat_id=settings_msg[0],
-#                                 message_id=settings_msg[-1],
-#                                 reply_markup=_kb.as_markup())
-#     await callback.answer()
+            await bot.edit_message_text(text=_text,
+                                        chat_id=settings_msg[0],
+                                        message_id=settings_msg[-1],
+                                        reply_markup=_kb.as_markup())
+            await callback.answer()
 
 
 @main_router.callback_query(F.data.startswith('punkt'))
@@ -551,7 +551,7 @@ async def specific_punkt_block(callback: types.CallbackQuery,
                     await callback.answer(text=f'Не получилось удалить пункт выдачи!',
                                           show_alert=True)
                 else:
-                    await callback.answer(text=f'Пункт выдачи для маркетплейса успешно удалён!',
+                    await callback.answer(text=f'Пункт выдачи успешно удалён!',
                                           show_alert=True)
                     _success_redirect = True
 

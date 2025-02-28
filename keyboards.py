@@ -311,10 +311,12 @@ def create_pagination_page_kb(product_dict: dict):
 def create_settings_kb():
     _kb = InlineKeyboardBuilder()
 
-    _kb.add(types.InlineKeyboardButton(text='Настройки Wildberries',
-                                       callback_data='settings_wb'))
-    _kb.add(types.InlineKeyboardButton(text='Настройки Ozon',
-                                       callback_data='settings_ozon'))
+    # _kb.add(types.InlineKeyboardButton(text='Настройки Wildberries',
+    #                                    callback_data='settings_wb'))
+    # _kb.add(types.InlineKeyboardButton(text='Настройки Ozon',
+    #                                    callback_data='settings_ozon'))
+    _kb.add(types.InlineKeyboardButton(text='Пункт выдачи',
+                                       callback_data='settings_punkt'))
     
     return _kb
 
