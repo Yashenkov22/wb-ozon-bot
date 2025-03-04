@@ -95,11 +95,13 @@ async def start(message: types.Message | types.CallbackQuery,
 
     faq_kb = create_faq_kb()
     
-    await bot.send_message(text=start_text.format(message.from_user.username),
+    await bot.send_message(text=sub_start_text.format(message.from_user.username),
                            chat_id=_message.chat.id,
                            reply_markup=_kb.as_markup(resize_keyboard=True))
+    
     start_msg: types.Message = await bot.send_message(chat_id=message.chat.id,
-                                       reply_markup=faq_kb.as_markup())
+                                                      text=start_text,
+                                                      reply_markup=faq_kb.as_markup())
     
     try:
         await bot.unpin_all_chat_messages(chat_id=message.chat.id)
