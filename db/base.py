@@ -43,6 +43,25 @@ class User(Base):
     jobs = relationship('UserJob', back_populates="user")
 
 
+class Punkt(Base):
+    __tablename__ = 'punkts'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    # lat = Column(Float)
+    # lon = Column(Float)
+    index = Column(BigInteger)
+    city = Column(String)
+    wb_zone = Column(BigInteger, default=None, nullable=True)
+    ozon_zone = Column(BigInteger, default=None, nullable=True)
+    time_create = Column(TIMESTAMP(timezone=True))
+    user_id = Column(BigInteger, ForeignKey('users.tg_id'), nullable=True)
+    
+    # Связь с пользователем
+    user = relationship(User, back_populates="punkts")
+    # wb_products = relationship('WbProduct', back_populates="punkt")
+    # ozon_products = relationship('OzonProduct', back_populates="punkt")
+
+
 class WbPunkt(Base):
     __tablename__ = 'wb_punkts'
     

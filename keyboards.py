@@ -366,3 +366,13 @@ def create_punkt_settings_block_kb(has_punkt: str = None):
                                            callback_data=_delete_callback_data))
 
     return _kb
+
+
+def create_faq_kb():
+    _kb = InlineKeyboardBuilder()
+
+    _kb.row(types.InlineKeyboardButton(text='FAQ',
+                                        callback_data='faq'))
+    
+    return _kb
+    

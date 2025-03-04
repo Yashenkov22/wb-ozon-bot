@@ -949,8 +949,8 @@ async def add_punkt_by_user(punkt_data: dict):
             .values(**ozon_insert_data)
         )
 
-        success_text = f'Пункт выдачи успешно добавлен (Установленный город - {city})'
-        error_text = f'Не получилось добавить пункт выдачи (Переданный город - {city})'
+        success_text = f'✅ Пункт выдачи успешно добавлен (Установленный город - {city}).'
+        error_text = f'❌ Не получилось добавить пункт выдачи (Переданный город - {city})'
 
     elif punkt_action == 'edit':
         wb_update_data = {
@@ -980,8 +980,8 @@ async def add_punkt_by_user(punkt_data: dict):
             .where(ozon_punkt_model.user_id == user_id)
         )
         
-        success_text = f'Пункт выдачи успешно изменён (Новый установленный город - {city})'
-        error_text = f'Не получилось изменить пункт выдачи (Переданный город - {city})'
+        success_text = f'✅ Пункт выдачи успешно изменён (Новый установленный город - {city}).'
+        error_text = f'❌ Не получилось изменить пункт выдачи (Переданный город - {city})'
 
     else:
         print('!!!!!!!!Такого не должно быть!!!!!!!!')

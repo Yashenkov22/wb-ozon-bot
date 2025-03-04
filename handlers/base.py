@@ -26,7 +26,8 @@ from keyboards import (create_or_add_exit_btn,
                        create_reply_start_kb,
                        create_settings_kb,
                        create_specific_settings_block_kb,
-                       create_punkt_settings_block_kb)
+                       create_punkt_settings_block_kb,
+                       create_faq_kb)
 
 from states import (AnyProductStates,
                     EditSale,
@@ -60,10 +61,12 @@ main_router = Router()
 
 moscow_tz = pytz.timezone('Europe/Moscow')
 
+
 start_text = '🖐Здравствуйте, {}\n\nС помощью этого бота вы сможете отследить изменение цены на понравившиеся товары в маркетплейсах Wildberries и Ozon.'
 
-
 city_name_examples = 'Пример валидных значений городов:\nМосква, Санкт-Петербург, Ростов-на-Дону, Нижний Новгород, Комсомольск-на-Амуре'
+
+
 
 @main_router.message(Command('start'))
 async def start(message: types.Message | types.CallbackQuery,
@@ -87,10 +90,23 @@ async def start(message: types.Message | types.CallbackQuery,
         message = message.message
 
     _kb = create_reply_start_kb()
-    await bot.send_message(text=start_text.format(message.from_user.username),
-                           chat_id=_message.chat.id,
-                           reply_markup=_kb.as_markup(resize_keyboard=True))
-        
+
+    faq_kb = create_faq_kb()
+    
+    start_msg = await bot.send_message(text=start_text.format(message.from_user.username),
+                                       chat_id=_message.chat.id,
+                                       reply_markup=_kb.as_markup(resize_keyboard=True))
+    await bot.edit_message_reply_markup(chat_id=start_msg.chat.id,
+                                        message_id=start_msg.message_id,
+                                        reply_markup=faq_kb.as_markup())
+    
+    try:
+        await bot.unpin_all_chat_messages(chat_id=message.chat.id)
+    except Exception as ex:
+        print('unpin error', ex)
+    await bot.pin_chat_message(chat_id=start_msg.chat.id,
+                                message_id=start_msg.message_id)
+    
     try:
         await message.delete()
         
@@ -168,6 +184,15 @@ async def start(message: types.Message | types.CallbackQuery,
 
     await message.delete()
 
+
+@main_router.callback_query(F.data == 'faq')
+async def get_faq(callback: types.Message | types.CallbackQuery,
+                  state: FSMContext,
+                  session: AsyncSession,
+                  bot: Bot,
+                  scheduler: AsyncIOScheduler):
+    await callback.answer(text='В разработке',
+                          show_alert=True)
 
 # @main_router.message(F.text == 'Добавить товар')
 # async def add_any_product(message: types.Message | types.CallbackQuery,
@@ -499,7 +524,8 @@ async def specific_punkt_block(callback: types.CallbackQuery,
     match punkt_action:
         case 'add':
             await state.set_state(PunktState.city)
-            _text = f'Введите название города, в котором хотите отслеживать цены\n\n{city_name_examples}'
+            # _text = f'Введите название города, в котором хотите отслеживать цены\n\n{city_name_examples}'
+            _text = '🏙 Введите название города, в формате "Город", в котором хотите отслеживать цены.\n\n❗Если ваш город не находит, введите название ближайшего крупного населённого пункта.'
 
             await bot.edit_message_text(text=_text,
                                         chat_id=settings_msg[0],
@@ -597,27 +623,15 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
         
         return 
 
-    city = message.text.strip()
+    city = message.text.strip().lower()
 
     _kb = create_or_add_exit_btn()
-
-    # if not city.isalpha():
-    #     await bot.edit_message_text(text=f'Переданы невалидные данные\nОжидается строка, передано - {city}',
-    #                                 chat_id=settings_msg[0],
-    #                                 message_id=settings_msg[-1],
-    #                                 reply_markup=_kb.as_markup())
-    #     try:
-    #         await message.delete()
-    #     except Exception as ex:
-    #         print(ex)
-    #         pass
-
-    #     return
     
     city_index = city_index_dict.get(city)
 
     if not city_index:
-        await bot.edit_message_text(text=f'Не удалось найти переданный город\nПередано - {city}\n\nПожалуйста, проверяйте корректность вводимого значения\n\n{city_name_examples}',
+        _text = f'❌ Не удалось найти  - {message.text.strip()}\n\n<b><i>Пожалуйста, проверяйте корректность вводимого значения</i></b>\n\n🏙 Введите название города, в формате "Город", в котором хотите отслеживать цены.\n\n❗Если ваш город не находит, введите название ближайшего крупного населённого пункта.'
+        await bot.edit_message_text(text=_text,
                                     chat_id=settings_msg[0],
                                     message_id=settings_msg[-1],
                                     reply_markup=_kb.as_markup())
@@ -634,12 +648,14 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
     # punkt_marker: str = punkt_data.get('punkt_marker')
 
     punkt_data.update({
-        'city': city,
+        'city': message.text.strip(),
         'index': city_index,
         'settings_msg': settings_msg,
     })
 
-    await bot.edit_message_text(text=f'Добавление пункта выдачи...\n\nПросим Вас не пытаться добавить новый пункт, пока не завершиться текущее добавление',
+    _text = '⏳ Добавление пункта выдачи...\n\n❗<b><i>Просим Вас не пытаться добавить новый пункт, пока не завершиться текущее добавление</i></b>'
+
+    await bot.edit_message_text(text=_text,
                                 chat_id=settings_msg[0],
                                 message_id=settings_msg[-1])
 
