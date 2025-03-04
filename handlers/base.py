@@ -195,6 +195,9 @@ async def get_faq(callback: types.Message | types.CallbackQuery,
                   session: AsyncSession,
                   bot: Bot,
                   scheduler: AsyncIOScheduler):
+    # _kb = 
+    # await bot.send_message(chat_id=callback.from_user.id,
+    #                        text='❓Часто задаваемые вопросы❓')
     await callback.answer(text='В разработке',
                           show_alert=True)
 
@@ -1339,12 +1342,23 @@ async def view_product(callback: types.CallbackQuery,
     await callback.answer()            
 
 
+@main_router.message(F.content_type == types.ContentType.PHOTO)
+async def photo_test(message: types.Message,
+                    state: FSMContext,
+                    session: AsyncSession,
+                    bot: Bot,
+                    scheduler: AsyncIOScheduler):
+    print(message.photo)
+    print('*' * 10)
+    print(message.__dict__)
+
+
 @main_router.message(F.content_type == types.ContentType.TEXT)
 async def any_input(message: types.Message,
                     state: FSMContext,
                     session: AsyncSession,
                     bot: Bot,
-                    scheduler: AsyncIOScheduler):  
+                    scheduler: AsyncIOScheduler):
     data = await state.get_data()
 
     await delete_prev_subactive_msg(data)

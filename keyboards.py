@@ -376,3 +376,21 @@ def create_faq_kb():
     
     return _kb
     
+
+def create_question_faq_kb():
+    _kb = InlineKeyboardBuilder()
+
+    _kb.row(types.InlineKeyboardButton(text='Как добавить товар к отслеживанию?',
+                                        callback_data='question_add_product'))
+    _kb.row(types.InlineKeyboardButton(text='Как посмотреть добавленные товары?',
+                                        callback_data='question_view_product'))
+    _kb.row(types.InlineKeyboardButton(text='Как изменить сумму скидки у отслеживаемых товаров?',
+                                        callback_data='question_edit_sale_product'))
+    _kb.row(types.InlineKeyboardButton(text='Как перестать отслеживать скидку?',
+                                        callback_data='question_delete_product'))
+    _kb.row(types.InlineKeyboardButton(text='Какие уведомления приходят?',
+                                        callback_data='question_send_push_product'))
+    _kb.row(types.InlineKeyboardButton(text='Из каких стран можно отслеживать товар?',
+                                        callback_data='question_country_product'))
+    
+    return _kb
