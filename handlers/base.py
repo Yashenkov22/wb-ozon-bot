@@ -97,12 +97,13 @@ async def start(message: types.Message | types.CallbackQuery,
     
     await bot.send_message(text=sub_start_text.format(message.from_user.username),
                            chat_id=_message.chat.id,
-                           reply_markup=_kb.as_markup(resize_keyboard=True))
+                           reply_markup=_kb.as_markup(resize_keyboard=True),
+                           disable_notification=True)
     
     start_msg: types.Message = await bot.send_message(chat_id=message.chat.id,
                                                       text=start_text,
                                                       reply_markup=faq_kb.as_markup())
-    
+        
     try:
         await bot.unpin_all_chat_messages(chat_id=message.chat.id)
     except Exception as ex:
@@ -491,7 +492,7 @@ async def specific_settings_block(callback: types.CallbackQuery,
 
             _sub_text = f'Отслеживание цен по городу: {city_punkt}'
 
-            _text = f'⚙️Раздел настроек: Пункт выдачи⚙️\n\n{_sub_text}\n\nВыберите действие'
+            _text = f'⚙️Раздел настроек: Пункт выдачи⚙️\n\n{_sub_text}\n\nВыберите действие👇'
 
             await bot.edit_message_text(text=_text,
                                         chat_id=settings_msg[0],
@@ -537,7 +538,8 @@ async def specific_punkt_block(callback: types.CallbackQuery,
 
         case 'edit':
             await state.set_state(PunktState.city)
-            _text = f'Введите название <b>нового</b> города, в котором хотите отслеживать цены\n\n{city_name_examples}'
+            # _text = f'Введите название <b>нового</b> города, в котором хотите отслеживать цены\n\n{city_name_examples}'
+            _text = '🏙 Введите название <b>нового</b> города, в формате "Город", в котором хотите отслеживать цены.\n\n❗Если ваш город не находит, введите название ближайшего крупного населённого пункта.'
 
             await bot.edit_message_text(text=_text,
                                         chat_id=settings_msg[0],
@@ -578,10 +580,10 @@ async def specific_punkt_block(callback: types.CallbackQuery,
                 except Exception as ex:
                     print(ex)
                     await _session.rollback()
-                    await callback.answer(text=f'Не получилось удалить пункт выдачи!',
+                    await callback.answer(text=f'❌ Не получилось удалить пункт выдачи!',
                                           show_alert=True)
                 else:
-                    await callback.answer(text=f'Пункт выдачи успешно удалён!',
+                    await callback.answer(text=f'✅ Пункт выдачи успешно удалён!',
                                           show_alert=True)
                     _success_redirect = True
 
@@ -651,7 +653,7 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
     # punkt_marker: str = punkt_data.get('punkt_marker')
 
     punkt_data.update({
-        'city': message.text.strip(),
+        'city': city.upper(),
         'index': city_index,
         'settings_msg': settings_msg,
     })
