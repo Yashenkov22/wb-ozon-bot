@@ -62,7 +62,9 @@ main_router = Router()
 moscow_tz = pytz.timezone('Europe/Moscow')
 
 
-start_text = '🖐Здравствуйте, {}\n\nС помощью этого бота вы сможете отследить изменение цены на понравившиеся товары в маркетплейсах Wildberries и Ozon.'
+sub_start_text = '🖐Здравствуйте, {}'
+
+start_text = 'С помощью этого бота вы сможете отследить изменение цены на понравившиеся товары в маркетплейсах Wildberries и Ozon.'
 
 city_name_examples = 'Пример валидных значений городов:\nМосква, Санкт-Петербург, Ростов-на-Дону, Нижний Новгород, Комсомольск-на-Амуре'
 
@@ -93,12 +95,11 @@ async def start(message: types.Message | types.CallbackQuery,
 
     faq_kb = create_faq_kb()
     
-    start_msg = await bot.send_message(text=start_text.format(message.from_user.username),
-                                       chat_id=_message.chat.id,
-                                       reply_markup=_kb.as_markup(resize_keyboard=True))
-    await bot.edit_message_reply_markup(chat_id=start_msg.chat.id,
-                                        message_id=start_msg.message_id,
-                                        reply_markup=faq_kb.as_markup())
+    await bot.send_message(text=start_text.format(message.from_user.username),
+                           chat_id=_message.chat.id,
+                           reply_markup=_kb.as_markup(resize_keyboard=True))
+    start_msg: types.Message = await bot.send_message(chat_id=message.chat.id,
+                                       reply_markup=faq_kb.as_markup())
     
     try:
         await bot.unpin_all_chat_messages(chat_id=message.chat.id)
