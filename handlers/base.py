@@ -652,6 +652,8 @@ async def specific_settings_block(callback: types.CallbackQuery,
             _kb = create_question_faq_kb()
             _kb = create_or_add_exit_btn(_kb)
 
+            await try_delete_faq_messages(data)
+
             _text = '❓Часто задаваемые вопросы❓\n\n👇 Выберите ниже интересующий вас пункт👇'
 
             faq_msg = await bot.edit_message_text(chat_id=callback.from_user.id,
