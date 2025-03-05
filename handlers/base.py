@@ -289,6 +289,9 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
 
     faq_msg: tuple = data.get('faq_msg')
 
+    if not faq_msg:
+        faq_msg: tuple = data.get('settings_msg')
+
     callback_data = callback.data
 
     question_prefix = 'question_'
@@ -299,12 +302,11 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
     _kb = create_back_to_faq_kb()
     _kb = create_or_add_exit_faq_btn(_kb)
     
-    
     match question:
         case 'add_product':
             try:
                 await bot.delete_message(chat_id=callback.from_user.id,
-                                        message_id=faq_msg[-1])
+                                         message_id=faq_msg[-1])
             except Exception as ex:
                 print('ERROR WITH DELETE FAQ QUESTION LIST MESSAGE', ex)
             
@@ -647,7 +649,7 @@ async def specific_settings_block(callback: types.CallbackQuery,
                                                   text=_text,
                                                   reply_markup=_kb.as_markup())
             
-            await state.update_data(faq_msg=(faq_msg.chat.id, faq_msg.message_id))
+            await state.update_data(settings_msg=(faq_msg.chat.id, faq_msg.message_id))
             await callback.answer()
 
             # pass

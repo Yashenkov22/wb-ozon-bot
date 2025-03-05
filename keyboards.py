@@ -317,7 +317,7 @@ def create_settings_kb():
     #                                    callback_data='settings_ozon'))
     _kb.add(types.InlineKeyboardButton(text='Пункт выдачи',
                                        callback_data='settings_punkt'))
-    _kb.add(types.InlineKeyboardButton(text='FAQ',
+    _kb.row(types.InlineKeyboardButton(text='FAQ',
                                        callback_data='settings_faq'))
     
     return _kb
