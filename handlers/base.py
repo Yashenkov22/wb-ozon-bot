@@ -344,9 +344,6 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
                             faq_msg=None)
 
     await callback.answer()
-        # case _:
-        #     await callback.answer(text='В разработке',
-        #                           show_alert=True)
             
 
 # @main_router.message(F.text == 'Добавить товар')
