@@ -230,7 +230,7 @@ async def back_to_faq(callback: types.Message | types.CallbackQuery,
 
     try:
         for _msg in question_msg_list:
-            await bot.delete_message(chat_id=chat_id,
+            await bot.delete_message(chat_id=callback.from_user.id,
                                      message_id=_msg)
     except Exception as ex:
         print('ERROR WITH DELETE FAQ MESSAGES')
