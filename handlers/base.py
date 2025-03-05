@@ -267,7 +267,7 @@ async def exit_faq(callback: types.Message | types.CallbackQuery,
             await bot.delete_message(chat_id=chat_id,
                                      message_id=_msg)
     except Exception as ex:
-        print('ERROR WITH DELETE FAQ MESSAGES')
+        print('ERROR WITH DELETE FAQ MESSAGES', ex)
         pass
 
     await callback.answer()
@@ -297,7 +297,7 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
         await bot.delete_message(chat_id=faq_msg[0],
                                 message_id=faq_msg[-1])
     except Exception as ex:
-        print('ERROR WITH DELETE FAQ QUESTION LIST MESSAGE')
+        print('ERROR WITH DELETE FAQ QUESTION LIST MESSAGE', ex)
     
     match question:
         case 'add_product':
