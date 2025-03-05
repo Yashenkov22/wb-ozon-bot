@@ -842,9 +842,10 @@ async def add_product_task(user_data: dict):
                                                                      marker=product_marker,
                                                                      session=session)
             if check_product_limit:
+                _text = f'⛔ Достигнут лимит {product_marker.upper()} товаров по Вашей подписке ⛔\n\nЛимит товаров: {check_product_limit}'
                 msg = await bot.edit_message_text(chat_id=msg[0],
-                                            message_id=_add_msg_id,
-                                            text=f'Достугнут лимит {product_marker.upper()} товаров по Вашей подписке\nЛимит товаров: {check_product_limit}')
+                                                  message_id=_add_msg_id,
+                                                  text=_text)
                 await add_message_to_delete_dict(msg)
                 return
 
