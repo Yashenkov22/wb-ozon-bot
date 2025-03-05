@@ -229,8 +229,9 @@ async def back_to_faq(callback: types.Message | types.CallbackQuery,
     print(question_msg_list)
 
     try:
-        await bot.delete_messages(chat_id=chat_id,
-                                  message_ids=question_msg_list)
+        for _msg in question_msg_list:
+            await bot.delete_message(chat_id=chat_id,
+                                     message_id=_msg)
     except Exception as ex:
         print('ERROR WITH DELETE FAQ MESSAGES')
         pass
@@ -262,8 +263,9 @@ async def exit_faq(callback: types.Message | types.CallbackQuery,
     print(question_msg_list)
 
     try:
-        await bot.delete_messages(chat_id=chat_id,
-                                  message_ids=question_msg_list)
+        for _msg in question_msg_list:
+            await bot.delete_message(chat_id=chat_id,
+                                     message_id=_msg)
     except Exception as ex:
         print('ERROR WITH DELETE FAQ MESSAGES')
         pass
