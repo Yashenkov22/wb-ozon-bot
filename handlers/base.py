@@ -38,12 +38,14 @@ from states import (AnyProductStates,
                     LocationState,
                     PunktState)
 
-from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT, check_has_punkt,
+from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
+                            check_has_punkt,
                             check_input_link,
                             delete_prev_subactive_msg,
                             generate_pretty_amount,
                             check_user,
                             show_product_list,
+                            try_delete_faq_messages,
                             try_delete_prev_list_msgs,
                             state_clear,
                             add_message_to_delete_dict)
@@ -199,6 +201,10 @@ async def get_faq(callback: types.Message | types.CallbackQuery,
                   session: AsyncSession,
                   bot: Bot,
                   scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    await try_delete_faq_messages(data)
+
     _kb = create_question_faq_kb()
     _kb = create_or_add_exit_btn(_kb)
 
@@ -287,6 +293,8 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
                             scheduler: AsyncIOScheduler):
     data = await state.get_data()
 
+    await try_delete_faq_messages(data)
+
     faq_msg: tuple = data.get('faq_msg')
 
     callback_data = callback.data
@@ -326,7 +334,7 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
             question_msg_list: list[int] = [_msg.message_id for _msg in question_msg]
             
             await state.update_data(question_msg_list=question_msg_list,
-                                    back_to_faq_msg=(back_to_faq_msg.from_user.id, back_to_faq_msg.message_id),
+                                    back_to_faq_msg=(callback.from_user.id, back_to_faq_msg.message_id),
                                     faq_msg=None)
     
             await callback.answer()

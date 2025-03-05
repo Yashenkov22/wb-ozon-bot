@@ -1066,3 +1066,26 @@ async def delete_prev_subactive_msg(data: dict):
                                  message_id=subactive_msg[-1])
     except Exception as ex:
         print(ex)
+
+
+async def try_delete_faq_messages(data: dict):
+    question_msg_list: list[int] = data.get('question_msg_list')
+    back_to_faq_msg: tuple = data.get('back_to_faq_msg')
+
+    _chat_id, _message_id = back_to_faq_msg
+
+    question_msg_list.append(_message_id)
+
+    # print(question_msg_list)
+
+    try:
+        await bot.delete_messages(chat_id=_chat_id,
+                                  message_ids=question_msg_list)
+        # for _msg in question_msg_list:
+        #     await bot.delete_message(chat_id=callback.from_user.id,
+        #                              message_id=_msg)
+    except Exception as ex:
+        print('ERROR WITH DELETE FAQ MESSAGES')
+        pass
+
+    pass
