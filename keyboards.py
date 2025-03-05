@@ -317,6 +317,8 @@ def create_settings_kb():
     #                                    callback_data='settings_ozon'))
     _kb.add(types.InlineKeyboardButton(text='Пункт выдачи',
                                        callback_data='settings_punkt'))
+    _kb.add(types.InlineKeyboardButton(text='FAQ',
+                                       callback_data='settings_faq'))
     
     return _kb
 
@@ -380,7 +382,7 @@ def create_faq_kb():
 def create_back_to_faq_kb():
     _kb = InlineKeyboardBuilder()
 
-    _kb.row(types.InlineKeyboardButton(text='Вернуться в раздел FAQ',
+    _kb.row(types.InlineKeyboardButton(text='Вернуться',
                                         callback_data='back_to_faq'))
     
     return _kb
@@ -404,7 +406,7 @@ def create_question_faq_kb():
                                         callback_data='question_add_product'))
     _kb.row(types.InlineKeyboardButton(text='Как посмотреть добавленные товары?',
                                         callback_data='question_view_product'))
-    _kb.row(types.InlineKeyboardButton(text='Как изменить сумму скидки у отслеживаемых товаров?',
+    _kb.row(types.InlineKeyboardButton(text='Как изменить сумму скидки у товаров?',
                                         callback_data='question_edit_sale_product'))
     _kb.row(types.InlineKeyboardButton(text='Как перестать отслеживать скидку?',
                                         callback_data='question_delete_product'))

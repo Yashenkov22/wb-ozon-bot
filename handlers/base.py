@@ -202,8 +202,10 @@ async def get_faq(callback: types.Message | types.CallbackQuery,
     _kb = create_question_faq_kb()
     _kb = create_or_add_exit_btn(_kb)
 
+    _text = '❓Часто задаваемые вопросы❓\n\n👇 Выберите ниже интересующий вас пункт👇'
+
     faq_msg = await bot.send_message(chat_id=callback.from_user.id,
-                                     text='❓Часто задаваемые вопросы❓',
+                                     text=_text,
                                      reply_markup=_kb.as_markup())
     
     await state.update_data(faq_msg=(faq_msg.chat.id, faq_msg.message_id))
@@ -320,7 +322,7 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
                                                       media=image_group.build())
             
             back_to_faq_msg = await bot.send_message(chat_id=callback.from_user.id,
-                                                     text='FAQ клавиатура',
+                                                     text='👇 Выберите дальнейшие действия 👇',
                                                      reply_markup=_kb.as_markup())
             
             question_msg_list: list[int] = [_msg.message_id for _msg in question_msg]
@@ -634,6 +636,20 @@ async def specific_settings_block(callback: types.CallbackQuery,
                                         message_id=settings_msg[-1],
                                         reply_markup=_kb.as_markup())
             await callback.answer()
+        case 'faq':
+            _kb = create_question_faq_kb()
+            _kb = create_or_add_exit_btn(_kb)
+
+            _text = '❓Часто задаваемые вопросы❓\n\n👇 Выберите ниже интересующий вас пункт👇'
+
+            faq_msg = await bot.edit_message_text(chat_id=callback.from_user.id,
+                                                  text=_text,
+                                                  reply_markup=_kb.as_markup())
+            
+            await state.update_data(faq_msg=(faq_msg.chat.id, faq_msg.message_id))
+            await callback.answer()
+
+            # pass
 
 
 @main_router.callback_query(F.data.startswith('punkt'))
