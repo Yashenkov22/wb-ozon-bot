@@ -289,15 +289,11 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
 
     faq_msg: tuple = data.get('faq_msg')
 
-    if not faq_msg:
-        faq_msg: tuple = data.get('settings_msg')
-
     callback_data = callback.data
 
     question_prefix = 'question_'
 
     question = callback_data[len(question_prefix):]
-    print(question)
 
     _kb = create_back_to_faq_kb()
     _kb = create_or_add_exit_faq_btn(_kb)
@@ -337,6 +333,8 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
         case _:
             await callback.answer(text='В разработке',
                                   show_alert=True)
+            
+
 # @main_router.message(F.text == 'Добавить товар')
 # async def add_any_product(message: types.Message | types.CallbackQuery,
 #                             state: FSMContext,
@@ -570,16 +568,12 @@ async def get_settings(message: types.Message | types.CallbackQuery,
     _text = '⚙️Ваши настройки⚙️\n\n<b>Выберите нужный раздел</b>'
     _kb = create_settings_kb()
 
-    # async with session as _session:
-    #     city_punkt = await check_has_punkt(user_id=message.from_user.id,
-    #                                       session=_session)
-
-    # _kb = create_punkt_settings_block_kb(has_punkt=city_punkt)
     _kb = create_or_add_exit_btn(_kb)
 
     data = await state.get_data()
 
     settings_msg: tuple = data.get('settings_msg')
+    faq_msg: tuple = data.get('faq_msg')    
 
     if settings_msg:
         try:
@@ -587,6 +581,14 @@ async def get_settings(message: types.Message | types.CallbackQuery,
                                      message_id=settings_msg[-1])
         except Exception:
             pass
+
+    if faq_msg:
+        try:
+            await bot.delete_message(chat_id=faq_msg[0],
+                                     message_id=faq_msg[-1])
+        except Exception:
+            pass
+
 
     settings_msg: types.Message = await bot.send_message(chat_id=message.from_user.id,
                                                          text=_text,
@@ -649,10 +651,8 @@ async def specific_settings_block(callback: types.CallbackQuery,
                                                   text=_text,
                                                   reply_markup=_kb.as_markup())
             
-            await state.update_data(settings_msg=(faq_msg.chat.id, faq_msg.message_id))
+            await state.update_data(faq_msg=(faq_msg.chat.id, faq_msg.message_id))
             await callback.answer()
-
-            # pass
 
 
 @main_router.callback_query(F.data.startswith('punkt'))
