@@ -375,7 +375,27 @@ def create_faq_kb():
                                         callback_data='faq'))
     
     return _kb
+
+
+def create_back_to_faq_kb():
+    _kb = InlineKeyboardBuilder()
+
+    _kb.row(types.InlineKeyboardButton(text='Вернуться в раздел FAQ',
+                                        callback_data='back_to_faq'))
     
+    return _kb
+
+
+def create_or_add_exit_faq_btn(_kb:InlineKeyboardBuilder = None):
+    if _kb is None:
+        _kb = InlineKeyboardBuilder()
+
+    _kb.row(types.InlineKeyboardButton(text='Закрыть',
+                                       callback_data='exit_faq'))
+    
+    return _kb
+
+
 
 def create_question_faq_kb():
     _kb = InlineKeyboardBuilder()

@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from aiogram import Router, types, Bot, F
 from aiogram.filters import Command, or_f, and_f
 from aiogram.fsm.context import FSMContext
+from aiogram.utils.media_group import MediaGroupBuilder
 
 from sqlalchemy import and_, insert, select, update, or_, delete, func, Integer, Float
 from sqlalchemy.sql.expression import cast
@@ -18,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.date import DateTrigger
 
-from keyboards import (create_or_add_exit_btn,
+from keyboards import (create_or_add_exit_faq_btn,
                        create_or_add_return_to_product_list_btn,
                        create_pagination_page_kb,
                        create_or_add_cancel_btn,
@@ -27,7 +28,10 @@ from keyboards import (create_or_add_exit_btn,
                        create_settings_kb,
                        create_specific_settings_block_kb,
                        create_punkt_settings_block_kb,
-                       create_faq_kb)
+                       create_faq_kb,
+                       create_question_faq_kb,
+                       create_back_to_faq_kb,
+                       create_or_add_exit_btn)
 
 from states import (AnyProductStates,
                     EditSale,
@@ -195,12 +199,129 @@ async def get_faq(callback: types.Message | types.CallbackQuery,
                   session: AsyncSession,
                   bot: Bot,
                   scheduler: AsyncIOScheduler):
-    # _kb = 
-    # await bot.send_message(chat_id=callback.from_user.id,
-    #                        text='❓Часто задаваемые вопросы❓')
-    await callback.answer(text='В разработке',
-                          show_alert=True)
+    _kb = create_question_faq_kb()
+    _kb = create_or_add_exit_btn(_kb)
 
+    faq_msg = await bot.send_message(chat_id=callback.from_user.id,
+                                     text='❓Часто задаваемые вопросы❓',
+                                     reply_markup=_kb.as_markup())
+    
+    await state.update_data(faq_msg=(faq_msg.chat.id, faq_msg.message_id))
+    # await callback.answer(text='В разработке',
+    #                       show_alert=True)
+
+
+@main_router.callback_query(F.data == 'back_to_faq')
+async def back_to_faq(callback: types.Message | types.CallbackQuery,
+                      state: FSMContext,
+                      session: AsyncSession,
+                      bot: Bot,
+                      scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    question_msg_list: list[int] = data.get('question_msg_list')
+    back_to_faq_msg: tuple = data.get('back_to_faq_msg')
+
+    chat_id, _message_id = back_to_faq_msg
+
+    question_msg_list.append(_message_id)
+
+    try:
+        await bot.delete_messages(chat_id=chat_id,
+                                  message_ids=question_msg_list)
+    except Exception as ex:
+        print('ERROR WITH DELETE FAQ MESSAGES')
+        pass
+
+    await callback.answer()
+
+    await get_faq(callback,
+                  state,
+                  session,
+                  bot,
+                  scheduler)
+
+
+@main_router.callback_query(F.data == 'exit_faq')
+async def exit_faq(callback: types.Message | types.CallbackQuery,
+                  state: FSMContext,
+                  session: AsyncSession,
+                  bot: Bot,
+                  scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    question_msg_list: list[int] = data.get('question_msg_list')
+    back_to_faq_msg: tuple = data.get('back_to_faq_msg')
+
+    chat_id, _message_id = back_to_faq_msg
+
+    question_msg_list.append(_message_id)
+
+    try:
+        await bot.delete_messages(chat_id=chat_id,
+                                  message_ids=question_msg_list)
+    except Exception as ex:
+        print('ERROR WITH DELETE FAQ MESSAGES')
+        pass
+
+    await callback.answer()
+
+
+@main_router.callback_query(F.data.startswith('question'))
+async def question_callback(callback: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    faq_msg: tuple = data.get('faq_msg')
+
+    callback_data = callback.data
+
+    question_prefix = 'question_'
+
+    question = callback_data[len(question_prefix):]
+    print(question)
+
+    _kb = create_back_to_faq_kb()
+    _kb = create_or_add_exit_faq_btn(_kb)
+    
+    try:
+        await bot.delete_message(chat_id=faq_msg[0],
+                                message_id=faq_msg[-1])
+    except Exception as ex:
+        print('ERROR WITH DELETE FAQ QUESTION LIST MESSAGE')
+    
+    match question:
+        case 'add_product':
+            images = [
+                'AgACAgIAAxkBAAIC82fHEta81X3SkdKQVVBcF5rT52HdAAJX6jEbtyc5SpHo321SsS2JAQADAgADcwADNgQ',
+                'AgACAgIAAxkBAAIC9GfHE1fATHv6uYlGoswXvEpsgjeWAAJa6jEbtyc5SjOOgrcj2ukFAQADAgADcwADNgQ',
+                'AgACAgIAAxkBAAIDF2fIAAGYvHIX0AJFiKxbVbYC9C_d_wACtu0xGxJTQUooLQaC1TLk8wEAAwIAA3MAAzYE',
+                'AgACAgIAAxkBAAIC9mfHE6XI97vKC-jNp2nsA5LBpKxUAAJP5TEbElM5SqBxPnk4ocLGAQADAgADcwADNgQ'
+            ]
+
+            media_group = [types.InputMediaPhoto(media=file_id) for file_id in images]
+
+            image_group = MediaGroupBuilder(media_group)
+            question_msg = await bot.send_media_group(chat_id=callback.from_user.id,
+                                                      media=image_group.build())
+            
+            back_to_faq_msg = await bot.send_message(chat_id=callback.from_user.id,
+                                                     text='FAQ клавиатура',
+                                                     reply_markup=_kb.as_markup())
+            
+            question_msg_list: list[int] = [_msg.message_id for _msg in question_msg]
+            
+            await state.update_data(question_msg=question_msg_list,
+                                    back_to_faq_msg=(back_to_faq_msg.from_user.id, back_to_faq_msg.message_id),
+                                    faq_msg=None)
+    
+            await callback.answer()
+        case _:
+            await callback.answer(text='В разработке',
+                                  show_alert=True)
 # @main_router.message(F.text == 'Добавить товар')
 # async def add_any_product(message: types.Message | types.CallbackQuery,
 #                             state: FSMContext,
