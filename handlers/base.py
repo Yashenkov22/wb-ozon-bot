@@ -643,6 +643,7 @@ async def specific_settings_block(callback: types.CallbackQuery,
             _text = '❓Часто задаваемые вопросы❓\n\n👇 Выберите ниже интересующий вас пункт👇'
 
             faq_msg = await bot.edit_message_text(chat_id=callback.from_user.id,
+                                                  message_id=settings_msg[-1],
                                                   text=_text,
                                                   reply_markup=_kb.as_markup())
             
