@@ -53,6 +53,8 @@ from utils.scheduler import add_product_task, add_punkt_by_user
 
 from utils.cities import city_index_dict
 
+from utils.pics import start_pic, faq_pic_dict
+
 from db.base import (OzonProduct as OzonProductModel,
                      OzonPunkt,
                      User,
@@ -106,10 +108,13 @@ async def start(message: types.Message | types.CallbackQuery,
                            reply_markup=_kb.as_markup(resize_keyboard=True),
                            disable_notification=True)
     
-    start_msg: types.Message = await bot.send_message(chat_id=message.chat.id,
-                                                      text=start_text,
-                                                      reply_markup=faq_kb.as_markup())
-        
+    # start_msg: types.Message = await bot.send_message(chat_id=message.chat.id,
+    #                                                   text=start_text,
+    #                                                   reply_markup=faq_kb.as_markup())
+    start_msg: types.Message = await bot.send_photo(chat_id=message.chat.id,
+                                                    photo=start_pic,
+                                                    caption=start_text,
+                                                    reply_markup=faq_kb.as_markup())
     try:
         await bot.unpin_all_chat_messages(chat_id=message.chat.id)
     except Exception as ex:
@@ -306,41 +311,42 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
     _kb = create_back_to_faq_kb()
     _kb = create_or_add_exit_faq_btn(_kb)
     
-    match question:
-        case 'add_product':
-            try:
-                await bot.delete_message(chat_id=callback.from_user.id,
-                                         message_id=faq_msg[-1])
-            except Exception as ex:
-                print('ERROR WITH DELETE FAQ QUESTION LIST MESSAGE', ex)
-            
-            images = [
-                'AgACAgIAAxkBAAIC82fHEta81X3SkdKQVVBcF5rT52HdAAJX6jEbtyc5SpHo321SsS2JAQADAgADcwADNgQ',
-                'AgACAgIAAxkBAAIC9GfHE1fATHv6uYlGoswXvEpsgjeWAAJa6jEbtyc5SjOOgrcj2ukFAQADAgADcwADNgQ',
-                'AgACAgIAAxkBAAIDF2fIAAGYvHIX0AJFiKxbVbYC9C_d_wACtu0xGxJTQUooLQaC1TLk8wEAAwIAA3MAAzYE',
-                'AgACAgIAAxkBAAIC9mfHE6XI97vKC-jNp2nsA5LBpKxUAAJP5TEbElM5SqBxPnk4ocLGAQADAgADcwADNgQ'
-            ]
-
-            media_group = [types.InputMediaPhoto(media=file_id) for file_id in images]
-
-            image_group = MediaGroupBuilder(media_group)
-            question_msg = await bot.send_media_group(chat_id=callback.from_user.id,
-                                                      media=image_group.build())
-            
-            back_to_faq_msg = await bot.send_message(chat_id=callback.from_user.id,
-                                                     text='👇 Выберите дальнейшие действия 👇',
-                                                     reply_markup=_kb.as_markup())
-            
-            question_msg_list: list[int] = [_msg.message_id for _msg in question_msg]
-            
-            await state.update_data(question_msg_list=question_msg_list,
-                                    back_to_faq_msg=(callback.from_user.id, back_to_faq_msg.message_id),
-                                    faq_msg=None)
+    # match question:
+    #     case 'add_product':
+    try:
+        await bot.delete_message(chat_id=callback.from_user.id,
+                                    message_id=faq_msg[-1])
+    except Exception as ex:
+        print('ERROR WITH DELETE FAQ QUESTION LIST MESSAGE', ex)
     
-            await callback.answer()
-        case _:
-            await callback.answer(text='В разработке',
-                                  show_alert=True)
+    # images = [
+    #     'AgACAgIAAxkBAAIC82fHEta81X3SkdKQVVBcF5rT52HdAAJX6jEbtyc5SpHo321SsS2JAQADAgADcwADNgQ',
+    #     'AgACAgIAAxkBAAIC9GfHE1fATHv6uYlGoswXvEpsgjeWAAJa6jEbtyc5SjOOgrcj2ukFAQADAgADcwADNgQ',
+    #     'AgACAgIAAxkBAAIDF2fIAAGYvHIX0AJFiKxbVbYC9C_d_wACtu0xGxJTQUooLQaC1TLk8wEAAwIAA3MAAzYE',
+    #     'AgACAgIAAxkBAAIC9mfHE6XI97vKC-jNp2nsA5LBpKxUAAJP5TEbElM5SqBxPnk4ocLGAQADAgADcwADNgQ'
+    # ]
+    images = faq_pic_dict.get(question)
+
+    media_group = [types.InputMediaPhoto(media=file_id) for file_id in images]
+
+    image_group = MediaGroupBuilder(media_group)
+    question_msg = await bot.send_media_group(chat_id=callback.from_user.id,
+                                                media=image_group.build())
+    
+    back_to_faq_msg = await bot.send_message(chat_id=callback.from_user.id,
+                                                text='👇 Выберите дальнейшие действия 👇',
+                                                reply_markup=_kb.as_markup())
+    
+    question_msg_list: list[int] = [_msg.message_id for _msg in question_msg]
+    
+    await state.update_data(question_msg_list=question_msg_list,
+                            back_to_faq_msg=(callback.from_user.id, back_to_faq_msg.message_id),
+                            faq_msg=None)
+
+    await callback.answer()
+        # case _:
+        #     await callback.answer(text='В разработке',
+        #                           show_alert=True)
             
 
 # @main_router.message(F.text == 'Добавить товар')
