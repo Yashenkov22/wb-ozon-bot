@@ -226,6 +226,8 @@ async def back_to_faq(callback: types.Message | types.CallbackQuery,
 
     question_msg_list.append(_message_id)
 
+    print(question_msg_list)
+
     try:
         await bot.delete_messages(chat_id=chat_id,
                                   message_ids=question_msg_list)
@@ -256,6 +258,8 @@ async def exit_faq(callback: types.Message | types.CallbackQuery,
     chat_id, _message_id = back_to_faq_msg
 
     question_msg_list.append(_message_id)
+
+    print(question_msg_list)
 
     try:
         await bot.delete_messages(chat_id=chat_id,
