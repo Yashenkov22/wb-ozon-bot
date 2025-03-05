@@ -297,14 +297,15 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
     _kb = create_back_to_faq_kb()
     _kb = create_or_add_exit_faq_btn(_kb)
     
-    try:
-        await bot.delete_message(chat_id=callback.from_user.id,
-                                message_id=faq_msg[-1])
-    except Exception as ex:
-        print('ERROR WITH DELETE FAQ QUESTION LIST MESSAGE', ex)
     
     match question:
         case 'add_product':
+            try:
+                await bot.delete_message(chat_id=callback.from_user.id,
+                                        message_id=faq_msg[-1])
+            except Exception as ex:
+                print('ERROR WITH DELETE FAQ QUESTION LIST MESSAGE', ex)
+            
             images = [
                 'AgACAgIAAxkBAAIC82fHEta81X3SkdKQVVBcF5rT52HdAAJX6jEbtyc5SpHo321SsS2JAQADAgADcwADNgQ',
                 'AgACAgIAAxkBAAIC9GfHE1fATHv6uYlGoswXvEpsgjeWAAJa6jEbtyc5SjOOgrcj2ukFAQADAgADcwADNgQ',
