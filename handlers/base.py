@@ -314,7 +314,7 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
             
             question_msg_list: list[int] = [_msg.message_id for _msg in question_msg]
             
-            await state.update_data(question_msg=question_msg_list,
+            await state.update_data(question_msg_list=question_msg_list,
                                     back_to_faq_msg=(back_to_faq_msg.from_user.id, back_to_faq_msg.message_id),
                                     faq_msg=None)
     
