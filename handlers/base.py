@@ -220,6 +220,7 @@ async def get_faq(callback: types.Message | types.CallbackQuery,
                                      reply_markup=_kb.as_markup())
     
     await state.update_data(faq_msg=(faq_msg.chat.id, faq_msg.message_id))
+    await callback.answer()
     # await callback.answer(text='В разработке',
     #                       show_alert=True)
 
