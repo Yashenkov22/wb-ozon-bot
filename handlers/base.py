@@ -219,10 +219,11 @@ async def get_faq(callback: types.Message | types.CallbackQuery,
                                      text=_text,
                                      reply_markup=_kb.as_markup())
     
+    await add_message_to_delete_dict(faq_msg,
+                                     state)
+    
     await state.update_data(faq_msg=(faq_msg.chat.id, faq_msg.message_id))
     await callback.answer()
-    # await callback.answer(text='В разработке',
-    #                       show_alert=True)
 
 
 @main_router.callback_query(F.data == 'back_to_faq')
