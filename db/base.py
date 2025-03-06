@@ -62,6 +62,45 @@ class Punkt(Base):
     # ozon_products = relationship('OzonProduct', back_populates="punkt")
 
 
+class Product(Base):
+    __tablename__ = 'products'
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_marker = Column(String)
+    name = Column(String, nullable=True)
+    short_link = Column(String, unique=True)
+    seller = Column(String)
+    rate = Column(String, nullable=True)
+
+
+class UserProduct(Base):
+    __tablename__ = 'user_products'
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(BigInteger, ForeignKey('products.id'))
+    user_id = Column(BigInteger, ForeignKey('users.tg_id'))
+    link = Column(String)
+    start_price = Column(Integer)
+    actual_price = Column(Integer)
+    sale = Column(Integer)
+    time_create = Column(TIMESTAMP(timezone=True))
+
+    user = relationship(User, back_populates="products")
+    product = relationship(Product, back_populates="user_products")
+
+
+class ProductPrice(Base):
+    __tablename__ = 'product_prices'
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(BigInteger, ForeignKey('products.id'))
+    price = Column(Integer)
+    time_price = Column(TIMESTAMP(timezone=True))
+    city = Column(String)
+
+    product = relationship(Product, back_populates="product_prices")
+
+
 class WbPunkt(Base):
     __tablename__ = 'wb_punkts'
     

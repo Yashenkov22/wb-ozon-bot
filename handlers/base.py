@@ -311,20 +311,12 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
     _kb = create_back_to_faq_kb()
     _kb = create_or_add_exit_faq_btn(_kb)
     
-    # match question:
-    #     case 'add_product':
     try:
         await bot.delete_message(chat_id=callback.from_user.id,
                                     message_id=faq_msg[-1])
     except Exception as ex:
         print('ERROR WITH DELETE FAQ QUESTION LIST MESSAGE', ex)
     
-    # images = [
-    #     'AgACAgIAAxkBAAIC82fHEta81X3SkdKQVVBcF5rT52HdAAJX6jEbtyc5SpHo321SsS2JAQADAgADcwADNgQ',
-    #     'AgACAgIAAxkBAAIC9GfHE1fATHv6uYlGoswXvEpsgjeWAAJa6jEbtyc5SjOOgrcj2ukFAQADAgADcwADNgQ',
-    #     'AgACAgIAAxkBAAIDF2fIAAGYvHIX0AJFiKxbVbYC9C_d_wACtu0xGxJTQUooLQaC1TLk8wEAAwIAA3MAAzYE',
-    #     'AgACAgIAAxkBAAIC9mfHE6XI97vKC-jNp2nsA5LBpKxUAAJP5TEbElM5SqBxPnk4ocLGAQADAgADcwADNgQ'
-    # ]
     images = faq_pic_dict.get(question)
 
     media_group = [types.InputMediaPhoto(media=file_id) for file_id in images]
@@ -334,8 +326,13 @@ async def question_callback(callback: types.Message | types.CallbackQuery,
                                                 media=image_group.build())
     
     back_to_faq_msg = await bot.send_message(chat_id=callback.from_user.id,
-                                                text='👇 Выберите дальнейшие действия 👇',
+                                                text='👇Выберите дальнейшие действия',
                                                 reply_markup=_kb.as_markup())
+    
+    question_msg.append(back_to_faq_msg)
+    for _msg in question_msg:
+        await add_message_to_delete_dict(_msg,
+                                         state)
     
     question_msg_list: list[int] = [_msg.message_id for _msg in question_msg]
     
@@ -657,7 +654,7 @@ async def specific_settings_block(callback: types.CallbackQuery,
 
             await try_delete_faq_messages(data)
 
-            _text = '❓Часто задаваемые вопросы❓\n\n👇 Выберите ниже интересующий вас пункт👇'
+            _text = '❓Часто задаваемые вопросы❓\n\n👇Выберите ниже интересующий вас пункт'
 
             faq_msg = await bot.edit_message_text(chat_id=callback.from_user.id,
                                                   message_id=settings_msg[-1],
