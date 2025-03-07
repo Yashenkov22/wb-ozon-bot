@@ -35,6 +35,7 @@ class User(Base):
     last_action = Column(String, nullable=True, default=None)
     last_action_time = Column(TIMESTAMP(timezone=True), nullable=True, default=None)
     subscription_id = Column(BigInteger, ForeignKey('subscriptions.id'), nullable=True, default=None)
+    utm_source = Column(String, nullable=True, default=None)
 
     subscription = relationship(Subscription, back_populates="users")
     ozon_products = relationship("OzonProduct", back_populates="user")
