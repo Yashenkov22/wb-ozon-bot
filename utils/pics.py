@@ -1,6 +1,7 @@
 
 
-start_pic = 'AgACAgIAAxkBAAIEg2fIRzHfgJ-hleejB6EEV-VVGX-EAAJ_6jEbG0JBSqChanbUZTMRAQADAgADcwADNgQ'
+# start_pic = 'AgACAgIAAxkBAAIEg2fIRzHfgJ-hleejB6EEV-VVGX-EAAJ_6jEbG0JBSqChanbUZTMRAQADAgADcwADNgQ'
+start_pic = 'AgACAgIAAxkBAAIF2WfO2shdrxWbscxMII2DJuN7-EARAAIC7DEbNpZ4SojgRlh3FzMSAQADAgADcwADNgQ'
 
 faq_pic_dict = {
     'add_product': [
