@@ -21,6 +21,7 @@ class Subscription(Base):
     name = Column(String)
     wb_product_limit = Column(Integer)
     ozon_product_limit = Column(Integer)
+    
     users = relationship('User', back_populates="subscription")
 
 
@@ -70,7 +71,7 @@ class Product(Base):
     product_marker = Column(String)
     name = Column(String, nullable=True)
     short_link = Column(String, unique=True)
-    seller = Column(String)
+    seller = Column(String, nullable=True)
     rate = Column(String, nullable=True)
 
 
@@ -100,6 +101,16 @@ class ProductPrice(Base):
     city = Column(String)
 
     product = relationship(Product, back_populates="product_prices")
+
+
+class UserProductJob(Base):
+    __tablename__ = 'user_product_job'
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(String)
+    user_product_id = Column(Integer, ForeignKey('user_products.id'))
+
+    user_product = relationship(UserProduct, back_populates="user_product_jobs")
 
 
 class WbPunkt(Base):

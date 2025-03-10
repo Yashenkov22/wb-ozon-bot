@@ -884,7 +884,8 @@ async def save_data_to_storage(callback: types.CallbackQuery,
 
 
 async def add_user(message: types.Message,
-                   session: AsyncSession):
+                   session: AsyncSession,
+                   utm_source: str | None):
     free_subscribtion_query = (
         select(
             Subscription.id
@@ -906,6 +907,7 @@ async def add_user(message: types.Message,
             'last_name': message.from_user.last_name,
             'time_create': datetime.now(),
             'subscription_id': free_subscribtion_id,
+            'utm_source': utm_source,
         }
 
         query = (
@@ -930,7 +932,8 @@ async def add_user(message: types.Message,
 
 
 async def check_user(message: types.Message,
-                     session: AsyncSession):
+                     session: AsyncSession,
+                     utm_source: str | None):
     async with session as _session:
         query = (
             select(User)\
@@ -945,7 +948,8 @@ async def check_user(message: types.Message,
         return True
     else:
         return await add_user(message,
-                                session)
+                              session,
+                              utm_source)
     
 
 async def check_has_punkt(user_id: int,

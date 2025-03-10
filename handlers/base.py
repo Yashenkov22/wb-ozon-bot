@@ -90,11 +90,21 @@ async def start(message: types.Message | types.CallbackQuery,
                                     state)
     
     await state_clear(state)
+
+    utm_source = None
+
+    if isinstance(message, types.Message):
+        query_param = message.text.split()
+
+        if len(query_param) > 1:
+            utm_source = query_param[-1]
+            print('UTM_SOURCE', utm_source)
     
     await check_user(message,
-                     session)
+                     session,
+                     utm_source)
         
-    await state.update_data(action=None)
+    # await state.update_data(action=None)
 
     if isinstance(message, types.CallbackQuery):
         message = message.message
