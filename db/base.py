@@ -89,6 +89,7 @@ class UserProduct(Base):
 
     user = relationship(User, back_populates="products")
     product = relationship(Product, back_populates="user_products")
+    user_product_jobs = relationship('UserProductJob', back_populates="user_product")
 
 
 class ProductPrice(Base):
