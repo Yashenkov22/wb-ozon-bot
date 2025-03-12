@@ -676,7 +676,7 @@ async def specific_settings_block(callback: types.CallbackQuery,
             await state.update_data(faq_msg=(faq_msg.chat.id, faq_msg.message_id))
             await callback.answer()
         case 'company':
-            _kb = create_or_add_exit_btn(_kb)
+            _kb = create_or_add_exit_btn()
 
             _text = 'ИП Марченко Андрей Андреевич\n\n+79124970010\n\n198206, Россия, г. Санкт-Петербург, пр-кт Героев, д 32, стр 1, кв 18\n\nИНН 251116612876'
 
