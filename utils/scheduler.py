@@ -1177,11 +1177,14 @@ async def push_check_ozon_price(user_id: str,
                         OzonProduct.start_price,
                         OzonProduct.name,
                         OzonProduct.sale,
+                        OzonPunkt.zone,
                         subquery.c.job_id,
                     )\
                     .select_from(OzonProduct)\
                     .join(User,
                           OzonProduct.user_id == User.tg_id)\
+                    .outerjoin(OzonPunkt,
+                                OzonProduct.ozon_punkt_id == OzonPunkt.id)\
                     .outerjoin(subquery,
                                subquery.c.product_id == OzonProduct.id)\
                     .where(
@@ -1201,14 +1204,17 @@ async def push_check_ozon_price(user_id: str,
                 except Exception:
                     pass
     if res:
-        username, link, short_link, actual_price, start_price, _name, sale, job_id = res[0]
+        username, link, short_link, actual_price, start_price, _name, sale, zone, job_id = res[0]
 
         _name = _name if _name is not None else 'Отсутствует'
         try:
             timeout = aiohttp.ClientTimeout(total=30)
             async with aiohttp.ClientSession() as aiosession:
+                if zone:
+                    _url = f"http://172.18.0.6:8080/product/{zone}/{short_link}"    
                 # _url = f"http://5.61.53.235:1441/product/{message.text}"
-                _url = f"http://172.18.0.6:8080/product/{short_link}"
+                else:
+                    _url = f"http://172.18.0.6:8080/product/{short_link}"
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
 
