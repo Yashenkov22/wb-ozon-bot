@@ -684,6 +684,7 @@ async def specific_settings_block(callback: types.CallbackQuery,
                                         chat_id=settings_msg[0],
                                         message_id=settings_msg[-1],
                                         reply_markup=_kb.as_markup())
+            await callback.answer()
 
 
 @main_router.callback_query(F.data.startswith('punkt'))
