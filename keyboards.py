@@ -319,8 +319,8 @@ def create_settings_kb():
                                        callback_data='settings_punkt'))
     _kb.row(types.InlineKeyboardButton(text='FAQ',
                                        callback_data='settings_faq'))
-    _kb.row(types.InlineKeyboardButton(text='Информация о боте',
-                                       callback_data='settings_company'))
+    # _kb.row(types.InlineKeyboardButton(text='Информация о боте',
+    #                                    callback_data='settings_company'))
     
     return _kb
 
