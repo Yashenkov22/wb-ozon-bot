@@ -42,7 +42,8 @@ from config import (TOKEN,
                     API_ID,
                     API_HASH,
                     REDIS_HOST,
-                    REDIS_PASSWORD)
+                    REDIS_PASSWORD,
+                    JOB_STORE_URL)
 # from handlers import main_router
 
 from handlers.base import main_router
@@ -92,6 +93,7 @@ event_loop = asyncio.new_event_loop()
 asyncio.set_event_loop(event_loop)
 config = Config(app=app,
                 loop=event_loop,
+                workers=4,
                 host='0.0.0.0',
                 port=8001)
 server = Server(config)
@@ -102,8 +104,6 @@ server = Server(config)
 
 # #For set webhook
 WEBHOOK_PATH = f'/webhook_'
-
-JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
 
 
 # Настройка хранилища задач
