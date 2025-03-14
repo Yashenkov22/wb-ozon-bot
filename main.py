@@ -182,6 +182,7 @@ async def on_shutdown():
 # #Endpoint for incoming updates
 @app.post(WEBHOOK_PATH)
 async def bot_webhook(update: dict):
+    print('UPDATE FROM TG',update)
     tg_update = types.Update(**update)
     # print('TG UPDATE', tg_update, tg_update.__dict__)
     await dp.feed_update(bot=bot, update=tg_update)
