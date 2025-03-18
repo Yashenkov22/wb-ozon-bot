@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class UTMSchema(BaseModel):
-    keitaro_id: str | None = Field(default=None)
+    keitaro_id: str | None = Field(default=None, alias='user')
     utm_source: str | None = Field(default=None)
     utm_medium: str | None = Field(default=None)
     utm_campaign: str | None = Field(default=None)
