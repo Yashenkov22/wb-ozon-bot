@@ -29,12 +29,15 @@ from sqlalchemy import select, and_
 
 from sqlalchemy.ext.automap import automap_base
 
-from db.base import UserJob, engine, session, Base, db_url
+from db.base import UserJob, engine, session, Base, db_url, get_session
 
 from middlewares.db import DbSessionMiddleware
 
 from utils.storage import redis_client, storage
 from utils.scheduler import scheduler
+from utils.utm import add_utm_to_db
+
+from schemas import UTMSchema
 
 from config import (TOKEN,
                     db_url,
@@ -186,6 +189,11 @@ async def bot_webhook(update: dict):
     tg_update = types.Update(**update)
     # print('TG UPDATE', tg_update, tg_update.__dict__)
     await dp.feed_update(bot=bot, update=tg_update)
+
+
+@app.post('/send_utm_data')
+async def send_utm_data(data: UTMSchema):
+    await add_utm_to_db(data)
 
 
 if __name__ == '__main__':
