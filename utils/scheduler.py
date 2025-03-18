@@ -4,6 +4,7 @@ import pytz
 import aiohttp
 import asyncio
 
+from math import ceil
 from datetime import datetime, timedelta
 from typing import Literal
 
@@ -129,12 +130,67 @@ async def periodic_delete_old_message(user_id: int):
                 else:
                     del dict_msg_on_delete[_key]
 
+    pass
+
+
+async def test_periodic_delete_old_message(user_id: int):
+    print(f'TEST SCHEDULER TASK DELETE OLD MESSAGE USER {user_id}')
+    key = f'fsm:{user_id}:{user_id}:data'
+
+    async with redis_client.pipeline(transaction=True) as pipe:
+        user_data: bytes = await pipe.get(key)
+        results = await pipe.execute()
+        #Извлекаем результат из выполненного pipeline
+    # print('RESULTS', results)
+    # print('USER DATA (BYTES)', user_data)
+
+    json_user_data: dict = json.loads(results[0])
+    # print('USER DATA', json_user_data)
+
+    dict_msg_on_delete: dict = json_user_data.get('dict_msg_on_delete')
+
+    message_id_on_delete_list = []
+
+    if dict_msg_on_delete:
+        for _key in list(dict_msg_on_delete.keys()):
+            chat_id, message_date = dict_msg_on_delete.get(_key)
+            date_now = datetime.now()
+            # тестовый вариант, удаляем сообщения старше 1 часа
+            print((datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) > timedelta(hours=36))
+            if (datetime.fromtimestamp(date_now.timestamp()) - datetime.fromtimestamp(message_date)) > timedelta(hours=36):
+                message_id_on_delete_list.append(_key)
+                # try:
+                #     await bot.delete_message(chat_id=chat_id,
+                #                             message_id=_key)
+                #     await asyncio.sleep(0.1)
+                #     # await bot.delete_messages() # что будет если какое то сообщение не сможет удалиться и произойдет ошибка ???
+                # except Exception as ex:
+                #     del dict_msg_on_delete[_key]
+                #     print(ex)
+                # else:
+                del dict_msg_on_delete[_key]
+
+    # ?
+    # json_user_data['dict_msg_on_delete'] = dict_msg_on_delete
+
     async with redis_client.pipeline(transaction=True) as pipe:
         bytes_data = json.dumps(json_user_data)
         await pipe.set(key, bytes_data)
         results = await pipe.execute()
 
+    if message_id_on_delete_list:
+        iterator_count = ceil(len(message_id_on_delete_list) / 100)
+
+        for i in range(iterator_count):
+            idx = i * 100
+            _messages_on_delete = message_id_on_delete_list[idx:idx+100]
+            
+            await bot.delete_messages(chat_id=chat_id,
+                                      message_ids=_messages_on_delete)
+            await asyncio.sleep(0.2)
     pass
+
+
 
 
 async def check_product_by_user_in_db(user_id: int,
@@ -826,7 +882,10 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
             job.modify(func=modify_func)
         
         elif job.id.find('delete_msg_task') != -1:
-            modify_func = periodic_delete_old_message
+            if job.id.find('686339126') != -1:
+                modify_func = test_periodic_delete_old_message
+            else:
+                modify_func = periodic_delete_old_message
             job.modify(func=modify_func,
                        trigger=scheduler_interval)
 
