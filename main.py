@@ -83,7 +83,7 @@ dp.include_router(main_router)
 # #Add session and database connection in handlers 
 
 # #Initialize web server
-app = FastAPI(docs_url='/docs_send')
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
