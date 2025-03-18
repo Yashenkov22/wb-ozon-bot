@@ -6,14 +6,14 @@ from schemas import UTMSchema
 
 async def add_utm_to_db(data: UTMSchema):
     print('1 ',data.__dict__)
-    data = data.model_dump()
-    print('2 ',data)
+    _data = data.model_dump()
+    print('2 ', _data)
 
     query = (
         insert(
             UTM
         )\
-        .values(**data)
+        .values(**_data)
     )
 
     async for session in get_session():
