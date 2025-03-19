@@ -28,7 +28,8 @@ from db.base import (OzonPunkt,
                      WbProduct,
                      WbPunkt,
                      OzonProduct,
-                     UserJob)
+                     UserJob,
+                     UTM)
 
 from utils.scheduler import (push_check_ozon_price,
                              push_check_wb_price,
@@ -926,6 +927,40 @@ async def add_user(message: types.Message,
             else:
                 await add_task_to_delete_old_message_for_users(user_id=message.from_user.id)
                 print('user added')
+
+                if utm_source is not None and not utm_source.startswith('direct'):
+                    utm_query = (
+                        select(
+                            UTM.id,
+                            UTM.client_id,
+                        )\
+                        .where(
+                            UTM.keitaro_id == utm_source
+                        )
+                    )
+                    res = await _session.execute(utm_query)
+                    utm_from_db = res.fetchall()
+
+                    if utm_from_db:
+                        utm_id, client_id = utm_from_db[0]
+
+                        update_utm_query = (
+                            update(
+                                UTM
+                            )\
+                            .values(user_id=message.from_user.id)\
+                            .where(
+                                UTM.id == utm_id
+                            )
+                        )
+                        await _session.execute(update_utm_query)
+                        try:
+                            await _session.commit()
+                        except Exception as ex:
+                            print('ERROR WITH UPDATE UTM BY USER', ex)
+                        else:
+                            # send csv to yandex API
+                            pass
                 return True
     else:
         pass
