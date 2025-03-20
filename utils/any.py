@@ -1,4 +1,7 @@
 import json
+import aiohttp
+import csv
+
 from datetime import datetime, timedelta
 
 from aiogram import types
@@ -6,7 +9,7 @@ from aiogram.fsm.context import FSMContext
 
 from .storage import redis_client
 
-from config import DEV_ID
+from config import DEV_ID, COUNTER_ID, YANDEX_TOKEN
 
 
 def generate_pretty_amount(price: str | float):
@@ -83,3 +86,40 @@ async def add_message_to_delete_dict(message: types.Message,
                 results = await pipe.execute()
         except Exception as ex:
             print('ERROR WITH TRY ADD SCHEDULER MESSAGE TO REDIS STORE', ex)
+
+
+async def send_data_to_yandex_metica(client_id: str):
+    headers ={
+        "Authorization": "OAuth {}".format(YANDEX_TOKEN),
+        }
+    
+    data = [
+        ['ClientId', 'Target', 'DateTime'],
+        [int(client_id), 'NaSkidkuBotStart', datetime.now().timestamp()],
+        ]
+    
+    with open('test_csv.csv', 'w') as _file:
+            writer = csv.writer(_file)
+            writer.writerows(data)
+
+    file = open("test_csv.csv", "r").read()
+
+    timeout = aiohttp.ClientTimeout(total=5)
+    async with aiohttp.ClientSession() as session:
+        url = f'https://api-metrika.yandex.net/management/v1/counter/{COUNTER_ID}/offline_conversions/upload'
+        form_data = aiohttp.FormData()
+        form_data.add_field('file', file)
+        try:
+            async with session.post(url=url,
+                                headers=headers,
+                                timeout=timeout,
+                                data=form_data) as response:
+                # resp = await response.json()
+                status = response.status
+                # h = response.headers['Content-Type']
+                # print(resp)
+                print(status)
+        except Exception as ex:
+            print('ERROR WITH REQUEST TO YANDEX', ex)
+        
+        print(f'YANDEX REQUEST status code {status}')

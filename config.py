@@ -64,3 +64,7 @@ BEARER_TOKEN = os.environ.get('BEARER_TOKEN')
 
 
 FEEDBACK_REASON_PREFIX = 'feedback_reason'
+
+#Yandex metrika
+COUNTER_ID = os.environ.get('COUNTER_ID')
+YANDEX_TOKEN = os.environ.get('YANDEX_TOKEN')

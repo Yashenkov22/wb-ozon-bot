@@ -34,12 +34,12 @@ from db.base import (OzonPunkt,
 from utils.scheduler import (push_check_ozon_price,
                              push_check_wb_price,
                              add_task_to_delete_old_message_for_users)
+from utils.storage import redis_client
+from utils.any import send_data_to_yandex_metica
 
 from keyboards import (add_back_btn, add_pagination_btn,
                        create_or_add_exit_btn,
                        create_product_list_for_page_kb)
-
-from utils.storage import redis_client
 
 from config import DEV_ID
 
@@ -960,7 +960,8 @@ async def add_user(message: types.Message,
                             print('ERROR WITH UPDATE UTM BY USER', ex)
                         else:
                             # send csv to yandex API
-                            pass
+                            await send_data_to_yandex_metica(client_id)
+                            # pass
                 return True
     else:
         pass
