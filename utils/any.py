@@ -110,7 +110,7 @@ async def send_data_to_yandex_metica(client_id: str):
     async with aiohttp.ClientSession() as session:
         url = f'https://api-metrika.yandex.net/management/v1/counter/{COUNTER_ID}/offline_conversions/upload'
         form_data = aiohttp.FormData()
-        form_data.add_field('file', file)
+        form_data.add_field('file', file, filename='test_csv.csv')
         try:
             async with session.post(url=url,
                                 headers=headers,
