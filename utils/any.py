@@ -104,6 +104,8 @@ async def send_data_to_yandex_metica(client_id: str):
 
     file = open("test_csv.csv", "r").read()
 
+    print('CSV FILE', file)
+
     timeout = aiohttp.ClientTimeout(total=5)
     async with aiohttp.ClientSession() as session:
         url = f'https://api-metrika.yandex.net/management/v1/counter/{COUNTER_ID}/offline_conversions/upload'
