@@ -114,10 +114,10 @@ async def send_data_to_yandex_metica(client_id: str):
                                 headers=headers,
                                 timeout=timeout,
                                 data=form_data) as response:
-                # resp = await response.json()
+                resp = await response.json()
                 status = response.status
                 # h = response.headers['Content-Type']
-                # print(resp)
+                print(resp)
                 print(status)
         except Exception as ex:
             print('ERROR WITH REQUEST TO YANDEX', ex)
