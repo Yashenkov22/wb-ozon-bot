@@ -43,7 +43,7 @@ class User(Base):
     wb_punkts = relationship("WbPunkt", back_populates="user")
     wb_products = relationship("WbProduct", back_populates="user")
     jobs = relationship('UserJob', back_populates="user")
-    utms = relationship("UTM", back_populates="user")
+    utm = relationship("UTM", uselist=False, back_populates="user")  # Связь OneToOne
 
 
 class UTM(Base):
@@ -80,9 +80,8 @@ class UTM(Base):
     yclid = Column(String, nullable=True, default=None)
     client_id = Column(String, nullable=True, default=None)
 
-    user_id = Column(BigInteger, ForeignKey('users.tg_id'), nullable=True)
-
-    user = relationship(User, back_populates="utms")
+    user_id = Column(BigInteger, ForeignKey('users.tg_id'), nullable=True, unique=True)  # Внешний ключ с уникальным ограничением
+    user = relationship("User", back_populates="utm")  # Связь OneToOne
 
 
 class Punkt(Base):
