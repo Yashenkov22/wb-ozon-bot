@@ -95,7 +95,7 @@ async def send_data_to_yandex_metica(client_id: str):
     
     data = [
         ['ClientId', 'Target', 'DateTime'],
-        [client_id, 'NaSkidkuBotStart', datetime.now().timestamp()],
+        [client_id, '365954466', datetime.now().timestamp()],
         ]
     
     with open('test_csv.csv', 'w') as _file:
