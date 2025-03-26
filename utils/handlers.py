@@ -960,7 +960,8 @@ async def add_user(message: types.Message,
                             print('ERROR WITH UPDATE UTM BY USER', ex)
                         else:
                             # send csv to yandex API
-                            await send_data_to_yandex_metica(client_id)
+                            await send_data_to_yandex_metica(client_id,
+                                                             goal_id='bot_start')
                             # pass
                 return True
     else:

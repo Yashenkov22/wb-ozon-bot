@@ -20,14 +20,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy import insert, select, and_, update, func
 
-from db.base import OzonPunkt, Subscription, WbProduct, WbPunkt, User, get_session, UserJob, OzonProduct
+from db.base import (OzonPunkt,
+                     Subscription,
+                     WbProduct,
+                     WbPunkt,
+                     User,
+                     get_session,
+                     UserJob,
+                     OzonProduct,
+                     UTM)
 
 from keyboards import add_or_create_close_kb, create_remove_and_edit_sale_kb, create_remove_kb
 
 from bot22 import bot
 
 from .storage import redis_client
-from .any import generate_pretty_amount, generate_sale_for_price, add_message_to_delete_dict
+from .any import generate_pretty_amount, generate_sale_for_price, add_message_to_delete_dict, send_data_to_yandex_metica
 from .cities import city_index_dict
 
 from config import DEV_ID
@@ -310,6 +318,8 @@ async def save_product(user_data: dict,
 
     product_count_by_user = len(products_by_user)
 
+    is_first_product = not bool(product_count_by_user)
+
     print(f'PRODUCT COUNT BY USER {msg[0]} {product_count_by_user}')
 
     # if product_count_by_user >= 100:
@@ -588,7 +598,25 @@ async def save_product(user_data: dict,
                 await session.rollback()
                 _text = 'Ozon товар не был добавлен'
                 print(_text)
-            # else:
+            else:
+                if is_first_product:
+                    # get request to yandex metrika
+                    utm_query = (
+                        select(
+                            UTM.client_id
+                        )\
+                        .where(
+                            UTM.user_id == int(msg[0])
+                        )
+                    )
+
+                    utm_res = await session.execute(utm_query)
+
+                    client_id = utm_res.scalar_one_or_none()
+
+                    if client_id:
+                        await send_data_to_yandex_metica(client_id,
+                                                         goal_id='add_product')
 
         except Exception as ex:
             print(ex)
@@ -849,6 +877,27 @@ async def save_product(user_data: dict,
                 _text = 'Что то пошло не так'
                 return True
             else:
+                if is_first_product:
+                    # get request to yandex metrika
+                    utm_query = (
+                        select(
+                            UTM.client_id
+                        )\
+                        .where(
+                            UTM.user_id == int(msg[0])
+                        )
+                    )
+
+                    utm_res = await session.execute(utm_query)
+
+                    client_id = utm_res.scalar_one_or_none()
+
+                    if client_id:
+                        await send_data_to_yandex_metica(client_id,
+                                                         goal_id='add_product')
+
+                    pass
+
                 _text = 'Wb товар успешно добавлен'
                 print(_text)
             # else:

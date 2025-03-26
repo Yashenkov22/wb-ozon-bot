@@ -88,14 +88,15 @@ async def add_message_to_delete_dict(message: types.Message,
             print('ERROR WITH TRY ADD SCHEDULER MESSAGE TO REDIS STORE', ex)
 
 
-async def send_data_to_yandex_metica(client_id: str):
+async def send_data_to_yandex_metica(client_id: str,
+                                     goal_id: str):
     headers ={
         "Authorization": "OAuth {}".format(YANDEX_TOKEN),
         }
     
     data = [
         ['ClientId', 'Target', 'DateTime'],
-        [client_id, 'bot_start', datetime.now().timestamp()],
+        [client_id, goal_id, datetime.now().timestamp()],
         ]
     
     with open('test_csv.csv', 'w') as _file:
