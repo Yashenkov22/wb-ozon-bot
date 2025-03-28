@@ -372,8 +372,8 @@ async def save_product(user_data: dict,
                   OzonPunkt.user_id == User.tg_id)\
             .where(User.tg_id == msg[0])
         )
-        async with session as session:
-            res = await session.execute(query)
+        async with session as _session:
+            res = await _session.execute(query)
 
             _ozon_punkt = res.fetchall()
 
@@ -589,34 +589,36 @@ async def save_product(user_data: dict,
 
             session.add(user_job)
 
-            try:
-                await session.commit()
-                _text = 'Ozon товар успешно добавлен'
-                print(_text)
-            except Exception as ex:
-                print(ex)
-                await session.rollback()
-                _text = 'Ozon товар не был добавлен'
-                print(_text)
-            else:
-                if is_first_product:
-                    # get request to yandex metrika
-                    utm_query = (
-                        select(
-                            UTM.client_id
-                        )\
-                        .where(
-                            UTM.user_id == int(msg[0])
+            # async for session in get_session():
+            async with session as _session:
+                try:
+                    await _session.commit()
+                    _text = 'Ozon товар успешно добавлен'
+                    print(_text)
+                except Exception as ex:
+                    print(ex)
+                    await _session.rollback()
+                    _text = 'Ozon товар не был добавлен'
+                    print(_text)
+                else:
+                    if is_first_product:
+                        # get request to yandex metrika
+                        utm_query = (
+                            select(
+                                UTM.client_id
+                            )\
+                            .where(
+                                UTM.user_id == int(msg[0])
+                            )
                         )
-                    )
 
-                    utm_res = await session.execute(utm_query)
+                        utm_res = await _session.execute(utm_query)
 
-                    client_id = utm_res.scalar_one_or_none()
+                        client_id = utm_res.scalar_one_or_none()
 
-                    if client_id:
-                        await send_data_to_yandex_metica(client_id,
-                                                         goal_id='add_product')
+                        if client_id:
+                            await send_data_to_yandex_metica(client_id,
+                                                            goal_id='add_product')
 
         except Exception as ex:
             print(ex)
@@ -658,8 +660,8 @@ async def save_product(user_data: dict,
                 WbPunkt.user_id == User.tg_id)\
             .where(User.tg_id == msg[0])
         )
-        async with session as session:
-            res = await session.execute(query)
+        async with session as _session:
+            res = await _session.execute(query)
 
             _wb_punkt = res.fetchall()
 
@@ -787,120 +789,121 @@ async def save_product(user_data: dict,
 
                 _product_price = float(_product_price)
 
-        async with session.begin():
-            # query = (
-            #     select(WbPunkt.id,
-            #             WbPunkt.zone)\
-            #     .join(User,
-            #             WbPunkt.user_id == User.tg_id)\
-            #     .where(User.tg_id == msg[0])
-            # )
+        async with session as _session:
+            async with _session.begin():
+                # query = (
+                #     select(WbPunkt.id,
+                #             WbPunkt.zone)\
+                #     .join(User,
+                #             WbPunkt.user_id == User.tg_id)\
+                #     .where(User.tg_id == msg[0])
+                # )
 
-            # _wb_punkt_id = await session.execute(query)
+                # _wb_punkt_id = await session.execute(query)
 
-            # _wb_punkt_id = _wb_punkt_id.fetchall()
+                # _wb_punkt_id = _wb_punkt_id.fetchall()
 
-            # print('short_link', data.get('wb_product_id'))
-            _sale = generate_sale_for_price(float(_product_price))
+                # print('short_link', data.get('wb_product_id'))
+                _sale = generate_sale_for_price(float(_product_price))
 
-            _data_name = _name if _name else _product_name
+                _data_name = _name if _name else _product_name
 
-            # if _wb_punkt_id:
-                # _wb_punkt_id, zone = _wb_punkt_id[0]
-            _data = {
-                'link': link,
-                'short_link': short_link,
-                'start_price': _product_price,
-                'actual_price': _product_price,
-                #
-                'sale': _sale,
-                #
-                # 'percent': float(data.get('percent')),
-                'name': _data_name,
-                'time_create': datetime.now(),
-                'user_id': msg[0],
-                'wb_punkt_id': wb_punkt_id,
-            }
+                # if _wb_punkt_id:
+                    # _wb_punkt_id, zone = _wb_punkt_id[0]
+                _data = {
+                    'link': link,
+                    'short_link': short_link,
+                    'start_price': _product_price,
+                    'actual_price': _product_price,
+                    #
+                    'sale': _sale,
+                    #
+                    # 'percent': float(data.get('percent')),
+                    'name': _data_name,
+                    'time_create': datetime.now(),
+                    'user_id': msg[0],
+                    'wb_punkt_id': wb_punkt_id,
+                }
 
-            # if percent:
-            #     _data.update(percent=int(percent))
+                # if percent:
+                #     _data.update(percent=int(percent))
 
-            wb_product = WbProduct(**_data)
+                wb_product = WbProduct(**_data)
 
-            session.add(wb_product)
+                session.add(wb_product)
 
-            await session.flush()
+                await session.flush()
 
-            wb_product_id = wb_product.id
+                wb_product_id = wb_product.id
 
-            print('product_id', wb_product_id)
-            
-            # query = (
-            #     insert(WbProduct)\
-            #     .values(**data)
-            # )
-            # await session.execute(query)
+                print('product_id', wb_product_id)
+                
+                # query = (
+                #     insert(WbProduct)\
+                #     .values(**data)
+                # )
+                # await session.execute(query)
 
-            # try:
-            #     await session.commit()
-            # except Exception as ex:
-            #     print(ex)
-            # else:
-                # scheduler.add_job()
-            #          user_id | marker | product_id
-            job_id = f'{msg[0]}.wb.{wb_product_id}'
-    
-            job = scheduler.add_job(push_check_wb_price,
-                            trigger='interval',
-                            minutes=15,
-                            id=job_id,
-                            coalesce=True,
-                            jobstore='sqlalchemy',
-                            kwargs={'user_id': msg[0],
-                                    'product_id': wb_product_id})
-            
-            _data = {
-                'user_id': msg[0],
-                'product_id': wb_product_id,
-                'product_marker': 'wb_product',
-                'job_id': job.id,
-            }
+                # try:
+                #     await session.commit()
+                # except Exception as ex:
+                #     print(ex)
+                # else:
+                    # scheduler.add_job()
+                #          user_id | marker | product_id
+                job_id = f'{msg[0]}.wb.{wb_product_id}'
+        
+                job = scheduler.add_job(push_check_wb_price,
+                                trigger='interval',
+                                minutes=15,
+                                id=job_id,
+                                coalesce=True,
+                                jobstore='sqlalchemy',
+                                kwargs={'user_id': msg[0],
+                                        'product_id': wb_product_id})
+                
+                _data = {
+                    'user_id': msg[0],
+                    'product_id': wb_product_id,
+                    'product_marker': 'wb_product',
+                    'job_id': job.id,
+                }
 
-            user_job = UserJob(**_data)
+                user_job = UserJob(**_data)
 
-            session.add(user_job)
+                session.add(user_job)
 
-            try:
-                await session.commit()
-            except Exception as ex:
-                print(ex)
-                _text = 'Что то пошло не так'
-                return True
-            else:
-                if is_first_product:
-                    # get request to yandex metrika
-                    utm_query = (
-                        select(
-                            UTM.client_id
-                        )\
-                        .where(
-                            UTM.user_id == int(msg[0])
+                try:
+                    await _session.commit()
+                except Exception as ex:
+                    print(ex)
+                    _text = 'Что то пошло не так'
+                    return True
+                else:
+                    if is_first_product:
+                        # get request to yandex metrika
+                        utm_query = (
+                            select(
+                                UTM.client_id
+                            )\
+                            .where(
+                                UTM.user_id == int(msg[0])
+                            )
                         )
-                    )
 
-                    utm_res = await session.execute(utm_query)
+                        utm_res = await _session.execute(utm_query)
 
-                    client_id = utm_res.scalar_one_or_none()
+                        client_id = utm_res.scalar_one_or_none()
 
-                    if client_id:
-                        await send_data_to_yandex_metica(client_id,
-                                                         goal_id='add_product')
+                        if client_id:
+                            await send_data_to_yandex_metica(client_id,
+                                                            goal_id='add_product')
 
-                    pass
+                        pass
 
-                _text = 'Wb товар успешно добавлен'
-                print(_text)
-            # else:
+                    _text = 'Wb товар успешно добавлен'
+                    print(_text)
+                # else:
             #     _text = 'Что то пошло не так'
             #     print(_text)
             #     return True
