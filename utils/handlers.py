@@ -37,9 +37,10 @@ from utils.scheduler import (push_check_ozon_price,
 from utils.storage import redis_client
 from utils.any import send_data_to_yandex_metica
 
-from keyboards import (add_back_btn, add_pagination_btn,
+from keyboards import (add_back_btn,
+                       add_pagination_btn,
                        create_or_add_exit_btn,
-                       create_product_list_for_page_kb)
+                       create_product_list_for_page_kb, new_create_product_list_for_page_kb)
 
 from config import DEV_ID
 
@@ -1080,6 +1081,77 @@ async def show_product_list(product_dict: dict,
                                     reply_markup=_kb.as_markup())
     
     await state.update_data(view_product_dict=product_dict)
+
+
+async def new_show_product_list(product_dict: dict,
+                            user_id: int,
+                            state: FSMContext):
+    data = await state.get_data()
+
+    # print('data' ,data)
+    # print('product_dict', product_dict)
+
+    current_page = product_dict.get('current_page')
+    product_list = product_dict.get('product_list')
+    len_product_list = product_dict.get('len_product_list')
+    wb_product_count = product_dict.get('wb_product_count')
+    ozon_product_count = product_dict.get('ozon_product_count')
+
+    list_msg: tuple = product_dict.get('list_msg')
+
+    if not product_list:
+        await delete_prev_subactive_msg(data)
+        sub_active_msg = await bot.send_message(chat_id=user_id,
+                                                text='Нет добавленных товаров')
+        await add_message_to_delete_dict(sub_active_msg,
+                                         state)
+
+        await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+        return
+
+    start_idx = (current_page - 1) * DEFAULT_PAGE_ELEMENT_COUNT
+    end_idx = current_page * DEFAULT_PAGE_ELEMENT_COUNT
+
+    product_list_for_page = product_list[start_idx:end_idx]
+
+    _kb = new_create_product_list_for_page_kb(product_list_for_page)
+    _kb = add_pagination_btn(_kb,
+                             product_dict)
+    _kb = create_or_add_exit_btn(_kb)
+
+    product_on_current_page_count = len(product_list_for_page)
+
+    _text = f'Ваши товары\n\nВсего товаров: {len_product_list}\nПоказано {product_on_current_page_count} товар(a/ов)'
+
+    _text = f'📝 Список ваших товаров:\n\n🔽 Всего товаров: {len_product_list}\n\n🔵 Товаров с Ozon: {ozon_product_count}\n🟣 Товаров с Wildberries: {wb_product_count}\n\nПоказано {product_on_current_page_count} товаров на странице, нажмите ▶, чтобы листать список'
+
+    if not list_msg:
+        list_msg: types.Message = await bot.send_message(chat_id=user_id,
+                            text=_text,
+                            reply_markup=_kb.as_markup())
+        
+        await add_message_to_delete_dict(list_msg,
+                                         state)
+        
+        product_dict['list_msg'] = (list_msg.chat.id, list_msg.message_id)
+
+        list_msg_on_delete: list = data.get('list_msg_on_delete')
+
+        if not list_msg_on_delete:
+            list_msg_on_delete = list()
+
+        list_msg_on_delete.append(list_msg.message_id)
+
+        await state.update_data(list_msg_on_delete=list_msg_on_delete)
+        
+    else:
+        await bot.edit_message_text(chat_id=user_id,
+                                    message_id=list_msg[-1],
+                                    text=_text,
+                                    reply_markup=_kb.as_markup())
+    
+    await state.update_data(view_product_dict=product_dict)
+
 
 
 async def try_delete_prev_list_msgs(chat_id: int,
