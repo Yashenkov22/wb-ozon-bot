@@ -879,30 +879,29 @@ async def save_product(user_data: dict,
                     print(ex)
                     _text = 'Что то пошло не так'
                     return True
-                else:
-                    if is_first_product:
-                        # get request to yandex metrika
-                        utm_query = (
-                            select(
-                                UTM.client_id
-                            )\
-                            .where(
-                                UTM.user_id == int(msg[0])
-                            )
-                        )
+                # else:
+        _text = 'Wb товар успешно добавлен'
+        print(_text)
 
-                        utm_res = await _session.execute(utm_query)
+        if is_first_product:
+            # get request to yandex metrika
+            utm_query = (
+                select(
+                    UTM.client_id
+                )\
+                .where(
+                    UTM.user_id == int(msg[0])
+                )
+            )
 
-                        client_id = utm_res.scalar_one_or_none()
+            async with session as _session:
+                utm_res = await _session.execute(utm_query)
 
-                        if client_id:
-                            await send_data_to_yandex_metica(client_id,
-                                                            goal_id='add_product')
+                client_id = utm_res.scalar_one_or_none()
 
-                        pass
-
-                    _text = 'Wb товар успешно добавлен'
-                    print(_text)
+                if client_id:
+                    await send_data_to_yandex_metica(client_id,
+                                                    goal_id='add_product')
                 # else:
             #     _text = 'Что то пошло не так'
             #     print(_text)
