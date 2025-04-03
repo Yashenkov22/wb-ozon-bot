@@ -480,7 +480,7 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
     
     data = await state.get_data()
 
-    if not message.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
+    if not message.from_user.id in (int(DEV_ID),):
 
         subquery_wb = (
             select(UserJob.job_id,
@@ -630,6 +630,8 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
             return
         
         len_product_list = len(product_list)
+
+        product_list = sorted(list(map(lambda el: tuple(el), product_list)))
         
         try:
             wb_product_count = sum(1 for product in product_list if product[6] == 'wb')
