@@ -11,6 +11,7 @@ from asyncio import sleep
 
 import pytz
 
+# import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
 from aiogram import types, Bot
@@ -368,12 +369,22 @@ async def generate_graphic(user_id: int,
         price_list.append(_price)
         date_list.append(_date.astimezone(tz=moscow_tz).strftime('%d-%m-%y %H:%M'))
 
-    # Создаем график
+    # plt.figure(figsize=(10, 5))
+    # plt.plot(date_list, price_list, marker='o', linestyle='-')
+    # plt.title(f'Изменение цены для города - {_city}')
+    # plt.xlabel('Дата')
+    # plt.ylabel('Цена')
+    # # plt.xticks(rotation=45)  # Поворачиваем метки по оси X для лучшей читаемости
+    # plt.grid()
+    # plt.tight_layout()  # Автоматически подгоняет график
+    
+    # plt.savefig(filename)
+    # plt.close()
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=date_list, y=price_list, mode='lines+markers', name=f'График цен для города - {_city}'))
+    fig.add_trace(go.Scatter(x=date_list, y=price_list, mode='lines+markers'))
 
     # Настраиваем заголовок и оси
-    fig.update_layout(title=f'График цен для города - {_city}',
+    fig.update_layout(title='Пример графика с Plotly',
                       xaxis_title='Дата',
                       xaxis_tickformat='%d-%m-%y %H:%M',
                       yaxis_title='Цена')
@@ -382,7 +393,7 @@ async def generate_graphic(user_id: int,
 
     # Сохраняем график как изображение
     filename = "plot.png"
-    fig.write_image(filename)
+    fig.write_image("plot.png")
 
     _kb = create_or_add_exit_btn()
 
