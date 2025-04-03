@@ -31,25 +31,30 @@ from keyboards import (create_or_add_exit_faq_btn,
                        create_faq_kb,
                        create_question_faq_kb,
                        create_back_to_faq_kb,
-                       create_or_add_exit_btn)
+                       create_or_add_exit_btn,
+                       new_create_or_add_return_to_product_list_btn,
+                       new_create_pagination_page_kb,
+                       new_create_remove_and_edit_sale_kb,
+                       add_graphic_btn)
 
 from states import (AnyProductStates,
                     EditSale,
-                    LocationState,
+                    LocationState, NewEditSale,
                     PunktState)
 
+from utils.exc import NotEnoughGraphicData
 from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
                             check_has_punkt,
                             check_input_link,
-                            delete_prev_subactive_msg,
+                            delete_prev_subactive_msg, generate_graphic,
                             generate_pretty_amount,
-                            check_user, new_show_product_list,
+                            check_user, new_check_has_punkt, new_show_product_list,
                             show_product_list,
                             try_delete_faq_messages,
                             try_delete_prev_list_msgs,
                             state_clear,
                             add_message_to_delete_dict)
-from utils.scheduler import add_product_task, add_punkt_by_user
+from utils.scheduler import add_product_task, add_punkt_by_user, new_add_product_task, new_add_punkt_by_user
 
 from utils.cities import city_index_dict
 
@@ -58,7 +63,7 @@ from utils.pics import start_pic, faq_pic_dict
 from utils.storage import redis_client
 
 from db.base import (OzonProduct as OzonProductModel,
-                     OzonPunkt,
+                     OzonPunkt, ProductCityGraphic, Punkt,
                      User,
                      UserJob,
                      WbProduct,
@@ -581,7 +586,7 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
                                 message.from_user.id,
                                 state)
     else:
-
+# new 
         query = (
             select(
                 UserProduct.id,
@@ -718,8 +723,12 @@ async def specific_settings_block(callback: types.CallbackQuery,
     match settings_marker:
         case 'punkt':
             async with session as _session:
-                city_punkt = await check_has_punkt(user_id=callback.from_user.id,
-                                                session=_session)
+                if callback.from_user.id == int(DEV_ID):
+                    city_punkt = await new_check_has_punkt(user_id=callback.from_user.id,
+                                                           session=_session)
+                else:
+                    city_punkt = await check_has_punkt(user_id=callback.from_user.id,
+                                                       session=_session)
 
             # _kb = create_specific_settings_block_kb(has_punkt=city_punkt)
             _kb = create_punkt_settings_block_kb(has_punkt=city_punkt)
@@ -791,7 +800,6 @@ async def specific_punkt_block(callback: types.CallbackQuery,
     match punkt_action:
         case 'add':
             await state.set_state(PunktState.city)
-            # _text = f'Введите название города, в котором хотите отслеживать цены\n\n{city_name_examples}'
             _text = '🏙 Введите название города, в формате "Город", в котором хотите отслеживать цены.\n\n❗Если ваш город не находит, введите название ближайшего крупного населённого пункта.'
 
             await bot.edit_message_text(text=_text,
@@ -801,7 +809,6 @@ async def specific_punkt_block(callback: types.CallbackQuery,
 
         case 'edit':
             await state.set_state(PunktState.city)
-            # _text = f'Введите название <b>нового</b> города, в котором хотите отслеживать цены\n\n{city_name_examples}'
             _text = '🏙 Введите название <b>нового</b> города, в формате "Город", в котором хотите отслеживать цены.\n\n❗Если ваш город не находит, введите название ближайшего крупного населённого пункта.'
 
             await bot.edit_message_text(text=_text,
@@ -810,45 +817,70 @@ async def specific_punkt_block(callback: types.CallbackQuery,
                                         reply_markup=_kb.as_markup())
 
         case 'delete':
-            wb_punkt_model = WbPunkt
-            ozon_punkt_model = OzonPunkt
-
-            wb_query = (
-                delete(
-                    wb_punkt_model
-                )\
-                .where(
-                    wb_punkt_model.user_id == callback.from_user.id,
+            if callback.from_user.id == int(DEV_ID):
+                query = (
+                    delete(
+                        Punkt
+                    )\
+                    .where(
+                        Punkt.user_id == callback.from_user.id,
+                    )
                 )
-            )
+                # *на всякий случай
+                _success_redirect = False
 
-            ozon_query = (
-                delete(
-                    ozon_punkt_model
-                )\
-                .where(
-                    ozon_punkt_model.user_id == callback.from_user.id,
+                async with session as _session:
+                    try:
+                        await _session.execute(query)
+                        await _session.commit()
+                    except Exception as ex:
+                        print(ex)
+                        await _session.rollback()
+                        await callback.answer(text=f'❌ Не получилось удалить пункт выдачи!',
+                                            show_alert=True)
+                    else:
+                        await callback.answer(text=f'✅ Пункт выдачи успешно удалён!',
+                                            show_alert=True)
+                        _success_redirect = True
+            else:
+                wb_punkt_model = WbPunkt
+                ozon_punkt_model = OzonPunkt
+
+                wb_query = (
+                    delete(
+                        wb_punkt_model
+                    )\
+                    .where(
+                        wb_punkt_model.user_id == callback.from_user.id,
+                    )
                 )
-            )
 
+                ozon_query = (
+                    delete(
+                        ozon_punkt_model
+                    )\
+                    .where(
+                        ozon_punkt_model.user_id == callback.from_user.id,
+                    )
+                )
 
-            # *на всякий случай
-            _success_redirect = False
+                # *на всякий случай
+                _success_redirect = False
 
-            async with session as _session:
-                try:
-                    await _session.execute(wb_query)
-                    await _session.execute(ozon_query)
-                    await _session.commit()
-                except Exception as ex:
-                    print(ex)
-                    await _session.rollback()
-                    await callback.answer(text=f'❌ Не получилось удалить пункт выдачи!',
-                                          show_alert=True)
-                else:
-                    await callback.answer(text=f'✅ Пункт выдачи успешно удалён!',
-                                          show_alert=True)
-                    _success_redirect = True
+                async with session as _session:
+                    try:
+                        await _session.execute(wb_query)
+                        await _session.execute(ozon_query)
+                        await _session.commit()
+                    except Exception as ex:
+                        print(ex)
+                        await _session.rollback()
+                        await callback.answer(text=f'❌ Не получилось удалить пункт выдачи!',
+                                            show_alert=True)
+                    else:
+                        await callback.answer(text=f'✅ Пункт выдачи успешно удалён!',
+                                            show_alert=True)
+                        _success_redirect = True
 
             if _success_redirect:
                 await get_settings(callback,
@@ -929,7 +961,10 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
 
     await state.set_state()
 
-    scheduler.add_job(add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
+    if message.from_user.id == int(DEV_ID):
+        scheduler.add_job(new_add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
+    else:
+        scheduler.add_job(add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
 
     await message.delete()
 
@@ -956,6 +991,28 @@ async def pagination_page(callback: types.Message | types.CallbackQuery,
     await callback.answer()
 
 
+@main_router.callback_query(F.data == 'new_pagination_page')
+async def pagination_page(callback: types.Message | types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot,
+                        scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    product_dict: dict = data.get('view_product_dict')
+
+    list_msg: tuple = product_dict.get('list_msg')
+
+    _kb = new_create_pagination_page_kb(product_dict)
+    _kb = new_create_or_add_return_to_product_list_btn(_kb)
+
+    await bot.edit_message_text(chat_id=list_msg[0],
+                                message_id=list_msg[-1],
+                                text='Выберите страницу, на которую хотите перейти',
+                                reply_markup=_kb.as_markup())
+    await callback.answer()
+
+
 @main_router.callback_query(F.data.startswith('go_to_page'))
 async def go_to_selected_page(callback: types.Message | types.CallbackQuery,
                               state: FSMContext,
@@ -973,6 +1030,26 @@ async def go_to_selected_page(callback: types.Message | types.CallbackQuery,
     await show_product_list(product_dict,
                             callback.from_user.id,
                             state)
+    await callback.answer()
+
+
+@main_router.callback_query(F.data.startswith('new_go_to_page'))
+async def go_to_selected_page(callback: types.Message | types.CallbackQuery,
+                              state: FSMContext,
+                              session: AsyncSession,
+                              bot: Bot,
+                              scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    selected_page = callback.data.split('_')[-1]
+    
+    product_dict: dict = data.get('view_product_dict')
+
+    product_dict['current_page'] = int(selected_page)
+
+    await new_show_product_list(product_dict,
+                                callback.from_user.id,
+                                state)
     await callback.answer()
 
 
@@ -1002,7 +1079,35 @@ async def switch_page(callback: types.Message | types.CallbackQuery,
                             callback.from_user.id,
                             state)
     await callback.answer()
+
+
+@main_router.callback_query(F.data.startswith('new_page'))
+async def switch_page(callback: types.Message | types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot,
+                        scheduler: AsyncIOScheduler):
+    callback_data = callback.data.split('_')[-1]
     
+    data = await state.get_data()
+    
+    product_dict = data.get('view_product_dict')
+
+    if not product_dict:
+        await callback.answer(text='Ошибка',
+                              show_alert=True)
+        return
+    
+    if callback_data == 'next':
+        product_dict['current_page'] += 1
+    else:
+        product_dict['current_page'] -= 1
+
+    await new_show_product_list(product_dict,
+                            callback.from_user.id,
+                            state)
+    await callback.answer()
+
 
 @main_router.callback_query(F.data == 'cancel')
 async def callback_cancel(callback: types.Message | types.CallbackQuery,
@@ -1063,6 +1168,133 @@ async def back_to_product_list(callback: types.Message | types.CallbackQuery,
     else:
         await callback.answer(text='Что то пошло не так',
                               show_alert=True)
+
+
+@main_router.callback_query(F.data == 'new_return_to_product_list')
+async def new_back_to_product_list(callback: types.Message | types.CallbackQuery,
+                                   state: FSMContext):
+    data = await state.get_data()
+
+    product_dict: dict = data.get('view_product_dict')
+    
+    if product_dict:
+            await new_show_product_list(product_dict=product_dict,
+                                        user_id=callback.from_user.id,
+                                        state=state)
+            await callback.answer()
+    else:
+        await callback.answer(text='Что то пошло не так',
+                              show_alert=True)
+
+
+@main_router.callback_query(F.data.startswith('delete.new'))
+async def new_delete_callback(callback: types.CallbackQuery,
+                        state: FSMContext,
+                        session: AsyncSession,
+                        bot: Bot,
+                        scheduler: AsyncIOScheduler):
+    with_redirect = True
+
+    data = await state.get_data()
+    
+    _callback_data = callback.data.split('_')
+
+    callback_prefix = _callback_data[0]
+
+    if callback_prefix.endswith('rd'):
+        with_redirect = False
+
+    callback_data = _callback_data[1:]
+    _, marker, user_id, product_id, job_id = callback_data
+
+    print('JOB ID', job_id)
+
+    query1 = (
+        delete(
+            UserProductJob
+        )\
+        .where(
+            and_(
+                UserProductJob.job_id == job_id,
+                UserProductJob.user_product_id == int(product_id),
+            )
+        )
+    )
+    query2 = (
+        delete(
+            UserProduct
+        )\
+        .where(
+            UserProduct.id == int(product_id),
+        )
+    )
+
+    async with session.begin():
+        await session.execute(query1)
+        await session.execute(query2)
+        try:
+            await session.commit()
+            
+            scheduler.remove_job(job_id=job_id,
+                                 jobstore='sqlalchemy')
+        except Exception as ex:
+            print(ex)
+            await session.rollback()
+        else:
+            await callback.answer('Товар успешно удален',
+                                  show_alert=True)
+            
+        if with_redirect:
+            product_dict: dict = data.get('view_product_dict')
+
+            pages: int = product_dict.get('pages')
+            current_page: int = product_dict.get('current_page')
+            product_list: list = product_dict.get('product_list')
+            ozon_product_count: int = product_dict.get('ozon_product_count')
+            wb_product_count: int = product_dict.get('wb_product_count')
+            list_msg: tuple = product_dict.get('list_msg')
+
+            for idx, product in enumerate(product_list):
+                # print(product)
+                # print(product[0], product_id)
+                # print(product[6], marker)
+
+                if product[0] == int(product_id) and product[6] == marker:
+                    del product_list[idx]
+            
+            if marker == 'wb':
+                wb_product_count -= 1
+            else:
+                ozon_product_count -= 1
+            
+            len_product_list = len(product_list)
+
+            pages = ceil(len_product_list / DEFAULT_PAGE_ELEMENT_COUNT)
+
+            if current_page > pages:
+                current_page -= 1
+
+            len_product_list = len(product_list)
+
+            view_product_dict = {
+                'len_product_list': len_product_list,
+                'pages': pages,
+                'current_page': current_page,
+                'product_list': product_list,
+                'ozon_product_count': ozon_product_count,
+                'wb_product_count': wb_product_count,
+                'list_msg': list_msg,
+            }
+
+            await state.update_data(view_product_dict=view_product_dict)
+
+            await new_back_to_product_list(callback,
+                                           state)
+        else:
+            try:
+                await callback.message.delete()
+            except Exception as ex:
+                print(ex)
 
 
 @main_router.callback_query(F.data.startswith('delete'))
@@ -1325,6 +1557,78 @@ async def edit_sale_callback(callback: types.CallbackQuery,
     await callback.answer()
 
 
+@main_router.callback_query(F.data.startswith('edit.new.sale'))
+async def new_edit_sale_callback(callback: types.CallbackQuery,
+                          state: FSMContext,
+                          session: AsyncSession,
+                          bot: Bot,
+                          scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+    
+    callback_data = callback.data.split('_')
+    callback_prefix = callback_data[0]
+
+    _, marker, user_id, product_id = callback_data[1:]
+
+    with_redirect = True
+
+    if callback_prefix.endswith('rd'):
+        with_redirect = False
+
+    if with_redirect:
+        _sale_data: dict = data.get('sale_data')
+
+        link = _sale_data.get('link')
+        sale = _sale_data.get('sale')
+        start_price = _sale_data.get('start_price')
+    else:
+        # product_model = WbProduct if marker == 'wb' else OzonProductModel
+        query = (
+            select(
+                UserProduct.link,
+                UserProduct.sale,
+                UserProduct.start_price,
+            )\
+            .where(
+                and_(
+                    UserProduct.id == int(product_id),
+                    UserProduct.user_id == callback.from_user.id,
+                    )
+                )
+        )
+        async with session as _session:
+            res = await _session.execute(query)
+        
+        _sale_data = res.fetchall()
+        link, sale, start_price = _sale_data[0]
+
+    await state.update_data(
+        sale_data={
+            'user_id': user_id,
+            'product_id': product_id,
+            'marker': marker,
+            'link': link,
+            'sale': sale,
+            'start_price': start_price,
+            'with_redirect': with_redirect,
+        }
+        )
+    await state.set_state(NewEditSale.new_sale)
+
+    _kb = create_or_add_cancel_btn()
+
+    msg = await bot.edit_message_text(text=f'<b>Установленная скидка на Ваш {marker.upper()} <a href="{link}">товар</a> {sale}</b>\n\nУкажите новую скидку <b>как число</b> в следующем сообщении',
+                                      chat_id=callback.from_user.id,
+                                      message_id=callback.message.message_id,
+                                      reply_markup=_kb.as_markup())
+    
+    await add_message_to_delete_dict(msg,
+                                     state)
+    
+    await state.update_data(msg=(msg.chat.id, msg.message_id))
+    await callback.answer()
+
+
 @main_router.message(and_f(EditSale.new_sale), F.content_type == types.ContentType.TEXT)
 async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
@@ -1444,7 +1748,207 @@ async def edit_sale_proccess(message: types.Message | types.CallbackQuery,
         await message.delete()
     except Exception:
         pass
+
+
+@main_router.message(and_f(NewEditSale.new_sale), F.content_type == types.ContentType.TEXT)
+async def new_edit_sale_proccess(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    new_sale = message.text.strip()
+
+    await delete_prev_subactive_msg(data)
+
+    if not new_sale.isdigit():
+        sub_active_msg = await message.answer(text=f'Невалидные данные\nОжидается число, передано: {new_sale}')
+
+        await add_message_to_delete_dict(sub_active_msg,
+                                        state)
+
+        await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+    
+        try:
+            await message.delete()
+        except Exception:
+            pass
+
+        return
+
+    product_dict: dict = data.get('view_product_dict')
+
+    msg: tuple = data.get('msg')
+
+    sale_data: dict = data.get('sale_data')
+
+    if not sale_data:
+        sub_active_msg = await message.answer('Ошибка')
+
+        await add_message_to_delete_dict(sub_active_msg,
+                                        state)
+
+        await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+
+        try:
+            await message.delete()
+        except Exception:
+            pass
+
+        return
+    
+    user_id = sale_data.get('user_id')
+    product_id = sale_data.get('product_id')
+    marker = sale_data.get('marker')
+    start_price = sale_data.get('start_price')
+    with_redirect = sale_data.get('with_redirect')
+
+    if start_price <= float(new_sale):
+        sub_active_msg = await message.answer(text=f'Невалидные данные\nСкидка не может быть больше или равной цене товара\nПередано {new_sale}, Начальная цена товара: {start_price}')
+        
+        await add_message_to_delete_dict(sub_active_msg,
+                                         state)
+
+        await state.update_data(_add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+
+        try:
+            await message.delete()
+        except Exception:
+            pass
+
+        return
+
+    query = (
+        update(
+            UserProduct
+        )\
+        .values(sale=float(new_sale))\
+        .where(
+            and_(
+                UserProduct.id == int(product_id),
+                UserProduct.user_id == int(user_id)
+            )
+        )
+    )
+
+    async with session as _session:
+        try:
+            await _session.execute(query)
+            await _session.commit()
+        except Exception as ex:
+            print(ex)
+            await session.rollback()
+            sub_active_msg = await message.answer('Не удалось обновить скидку')
+        else:
+            sub_active_msg = await message.answer('Скидка обновлена')
+
+    await add_message_to_delete_dict(sub_active_msg,
+                                     state)
+
+    await state.update_data(sale_data=None,
+                            _add_msg=(sub_active_msg.chat.id, sub_active_msg.message_id))
+    await state.set_state()
+
+    if with_redirect:
+        await new_show_product_list(product_dict=product_dict,
+                                user_id=message.from_user.id,
+                                state=state)
+    else:
+        try:
+            await bot.delete_message(chat_id=msg[0],
+                                     message_id=msg[-1])
+        except Exception as ex:
+            print('ERROR WITH TRY DELETE SCHEDULER EDIT SALE MESSAGE', ex)
             
+    try:
+        await message.delete()
+    except Exception:
+        pass
+            
+
+# graphic
+@main_router.callback_query(F.data.startswith('graphic'))
+async def view_graphic(callback: types.CallbackQuery,
+                       state: FSMContext,
+                       session: AsyncSession,
+                       bot: Bot,
+                       scheduler: AsyncIOScheduler):
+    callback_data = callback.data.split('_')
+
+    _, user_id, product_id = callback_data
+
+    default_value = 'МОСКВА'
+
+    city_subquery = (
+        select(
+            Punkt.city
+            )\
+        .where(
+            Punkt.user_id == int(user_id)
+        )\
+        .limit(1)
+    ).scalar_subquery()
+    
+    check_datetime = datetime.now().astimezone(tz=moscow_tz) - timedelta(days=1)
+
+    main_product_subquery = (
+        select(
+            Product.id
+        )\
+        .select_from(UserProduct)\
+        .join(Product,
+              UserProduct.product_id == Product.id)\
+        .where(
+            UserProduct.id == int(product_id)
+        )\
+        .limit(1)
+    ).scalar_subquery()
+
+    graphic_query = (
+        select(
+            ProductCityGraphic.photo_id,
+        )\
+        .where(
+            and_(
+                ProductCityGraphic.product_id == main_product_subquery,
+                ProductCityGraphic.city == func.coalesce(city_subquery, default_value),
+                ProductCityGraphic.time_create >= check_datetime,
+            )
+        )
+    )
+
+    async with session as _session:
+        res = await _session.execute(graphic_query)
+
+    graphic_photo_id = res.scalar_one_or_none()
+
+    try:
+        if not graphic_photo_id:
+            try:
+                await generate_graphic(user_id=int(user_id),
+                                    product_id=int(product_id),
+                                    city_subquery=city_subquery,
+                                    session=session,
+                                    state=state)
+            except NotEnoughGraphicData as ex:
+                print(ex)
+                await callback.answer(text='Недостаточно данных для построения графика',
+                                      show_alert=True)
+        else:
+            _kb = create_or_add_exit_btn()
+            photo_msg = await bot.send_photo(chat_id=user_id,
+                                            photo=graphic_photo_id,
+                                            reply_markup=_kb.as_markup())
+            
+            await add_message_to_delete_dict(photo_msg,
+                                            state)
+    except Exception as ex:
+        print(ex)
+        await callback.answer(text='Не удалось построить график',
+                                show_alert=True)
+
+
 
 @main_router.callback_query(F.data.startswith('view-product1'))
 async def view_product(callback: types.CallbackQuery,
@@ -1602,6 +2106,7 @@ async def view_product(callback: types.CallbackQuery,
     await callback.answer()            
 
 
+# new 
 @main_router.callback_query(F.data.startswith('view-product'))
 async def new_view_product(callback: types.CallbackQuery,
                         state: FSMContext,
@@ -1673,12 +2178,16 @@ async def new_view_product(callback: types.CallbackQuery,
         }
     )
 
-    _kb = create_remove_and_edit_sale_kb(user_id=callback.from_user.id,
-                                         product_id=product_id,
-                                         marker=marker,
-                                         job_id=job_id,
-                                         with_redirect=True)
-    _kb = create_or_add_return_to_product_list_btn(_kb)
+    _kb = new_create_remove_and_edit_sale_kb(user_id=callback.from_user.id,
+                                             product_id=product_id,
+                                             marker=marker,
+                                             job_id=job_id,
+                                             with_redirect=True)
+    _kb = add_graphic_btn(_kb,
+                          user_id,
+                          product_id)
+    # _kb = create_or_add_return_to_product_list_btn(_kb)
+    _kb = new_create_or_add_return_to_product_list_btn(_kb)
 
     if list_msg:
         await bot.edit_message_text(chat_id=list_msg[0],
@@ -1706,7 +2215,7 @@ async def photo_test(message: types.Message,
                     scheduler: AsyncIOScheduler):
     print(message.photo)
     print('*' * 10)
-    print(message.__dict__)
+    # print(message.__dict__)
 
 
 @main_router.message(F.content_type == types.ContentType.TEXT)
@@ -1742,7 +2251,11 @@ async def any_input(message: types.Message,
             'product_marker': check_link,
         }
 
-        scheduler.add_job(add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
+        if message.from_user.id == int(DEV_ID):
+            print('run new bg task')
+            scheduler.add_job(new_add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
+        else:
+            scheduler.add_job(add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
     else:
         sub_active_msg = await message.answer(text='Невалидная ссылка')
 

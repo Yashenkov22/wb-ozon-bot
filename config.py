@@ -69,3 +69,8 @@ FEEDBACK_REASON_PREFIX = 'feedback_reason'
 #Yandex metrika
 COUNTER_ID = os.environ.get('COUNTER_ID')
 YANDEX_TOKEN = os.environ.get('YANDEX_TOKEN')
+
+
+#API URL`s
+WB_API_URL = os.environ.get('WB_API_URL')
+OZON_API_URL = os.environ.get('OZON_API_URL')

@@ -143,6 +143,18 @@ class ProductPrice(Base):
     product = relationship(Product, back_populates="product_prices")
 
 
+class ProductCityGraphic(Base):
+    __tablename__ = 'product_city_graphics'
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(BigInteger, ForeignKey('products.id'))
+    time_create = Column(TIMESTAMP(timezone=True))
+    city = Column(String)
+    photo_id = Column(String, nullable=True, default=None)
+
+    product = relationship(Product, back_populates="product_city_graphic")
+
+
 class UserProductJob(Base):
     __tablename__ = 'user_product_job'
 

@@ -31,6 +31,10 @@ class EditSale(StatesGroup):
     new_sale = State()
 
 
+class NewEditSale(StatesGroup):
+    new_sale = State()
+
+
 class LocationState(StatesGroup):
     location = State()
 

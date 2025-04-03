@@ -11,26 +11,33 @@ from asyncio import sleep
 
 import pytz
 
+import plotly.graph_objects as go
+
 from aiogram import types, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from sqlalchemy import update, select, and_, or_, insert, exists
+from sqlalchemy import update, select, and_, or_, insert, exists, Subquery, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from bot22 import bot
 
-from db.base import (OzonPunkt,
+from db.base import (OzonPunkt, Punkt,
                      Subscription,
                      User,
                      WbProduct,
                      WbPunkt,
                      OzonProduct,
                      UserJob,
-                     UTM)
+                     UTM,
+                     ProductCityGraphic,
+                     ProductPrice,
+                     Product,
+                     UserProduct)
 
+from utils.exc import NotEnoughGraphicData
 from utils.scheduler import (push_check_ozon_price,
                              push_check_wb_price,
                              add_task_to_delete_old_message_for_users)
@@ -40,7 +47,7 @@ from utils.any import send_data_to_yandex_metica
 from keyboards import (add_back_btn,
                        add_pagination_btn,
                        create_or_add_exit_btn,
-                       create_product_list_for_page_kb, new_create_product_list_for_page_kb)
+                       create_product_list_for_page_kb, new_add_pagination_btn, new_create_product_list_for_page_kb)
 
 from config import DEV_ID
 
@@ -309,6 +316,109 @@ async def add_procent_to_product(user_data: dict,
             pass
         else:
             pass    
+
+
+async def generate_graphic(user_id: int,
+                           product_id: int,
+                           city_subquery: Subquery,
+                           session: AsyncSession,
+                           state: FSMContext):
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    default_value = 'МОСКВА'
+
+    query = (
+        select(
+            ProductPrice.price,
+            ProductPrice.time_price,
+            func.coalesce(ProductPrice.city, default_value),
+            Product.id,
+        )\
+        .select_from(ProductPrice)\
+        .join(Product,
+              ProductPrice.product_id == Product.id)\
+        .join(UserProduct,
+              UserProduct.product_id == Product.id)\
+        .outerjoin(Punkt,
+                   Punkt.user_id == user_id)\
+        .where(
+            and_(
+                UserProduct.id == product_id,
+                UserProduct.user_id == user_id,
+                ProductPrice.city == func.coalesce(city_subquery, default_value)
+            )
+        )
+        .order_by(ProductPrice.time_price)
+    )
+
+    async with session as _session:
+        res = await _session.execute(query)
+
+    res = res.fetchall()
+
+    # if not (res and len(res)) >= 3:
+    #     raise NotEnoughGraphicData()
+    
+    price_list = []
+    date_list = []
+    
+    for el in res:
+        _price, _date, _city, main_product_id = el
+        print(_city)
+        _date: datetime
+        price_list.append(_price)
+        date_list.append(_date.astimezone(tz=moscow_tz).strftime('%d-%m-%y %H:%M'))
+
+    # Создаем график
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=date_list, y=price_list, mode='lines+markers', name=f'График цен для города - {_city}'))
+
+    # Настраиваем заголовок и оси
+    fig.update_layout(title=f'График цен для города - {_city}',
+                      xaxis_title='Дата',
+                      xaxis_tickformat='%d-%m-%y %H:%M',
+                      yaxis_title='Цена')
+    
+    fig.update_xaxes(tickvals=date_list)
+
+    # Сохраняем график как изображение
+    filename = "plot.png"
+    fig.write_image(filename)
+
+    _kb = create_or_add_exit_btn()
+
+    photo_msg = await bot.send_photo(chat_id=user_id,
+                                     photo=types.FSInputFile(path=f'./{filename}'),
+                                     reply_markup=_kb.as_markup())
+
+    await add_message_to_delete_dict(photo_msg,
+                                     state)
+
+    if photo_msg.photo:
+        photo_id = photo_msg.photo[0].file_id
+
+        insert_data = {
+            'product_id': main_product_id,
+            'city': _city,
+            'photo_id': photo_id,
+            'time_create': datetime.now(),
+        }
+
+        insert_query = (
+            insert(
+                ProductCityGraphic
+            )\
+            .values(**insert_data)
+        )
+
+        async with session as _session:
+            await _session.execute(insert_query)
+            try:
+                await _session.commit()
+                print('add success')
+                return True
+            except Exception as ex:
+                await _session.rollback()
+                print('add error', ex)
 
         
 async def save_product(user_data: dict,
@@ -1013,6 +1123,25 @@ async def check_has_punkt(user_id: int,
     return city_punkt
 
 
+async def new_check_has_punkt(user_id: int,
+                              session: AsyncSession):
+
+    query = (
+        select(
+            Punkt.city,
+        )
+        .where(
+            Punkt.user_id == user_id
+        )
+    )
+
+    res = await session.execute(query)
+
+    city_punkt = res.scalar_one_or_none()
+    
+    return city_punkt
+
+
 async def show_product_list(product_dict: dict,
                             user_id: int,
                             state: FSMContext):
@@ -1083,6 +1212,7 @@ async def show_product_list(product_dict: dict,
     await state.update_data(view_product_dict=product_dict)
 
 
+# new 
 async def new_show_product_list(product_dict: dict,
                             user_id: int,
                             state: FSMContext):
@@ -1115,8 +1245,8 @@ async def new_show_product_list(product_dict: dict,
     product_list_for_page = product_list[start_idx:end_idx]
 
     _kb = new_create_product_list_for_page_kb(product_list_for_page)
-    _kb = add_pagination_btn(_kb,
-                             product_dict)
+    _kb = new_add_pagination_btn(_kb,
+                                 product_dict)
     _kb = create_or_add_exit_btn(_kb)
 
     product_on_current_page_count = len(product_list_for_page)

@@ -17,10 +17,10 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.job import Job
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import insert, select, and_, update, func, desc
 
-from sqlalchemy import insert, select, and_, update, func
-
-from db.base import (OzonPunkt,
+from db.base import (OzonPunkt, Product, Punkt,
                      Subscription,
                      WbProduct,
                      WbPunkt,
@@ -28,20 +28,26 @@ from db.base import (OzonPunkt,
                      get_session,
                      UserJob,
                      OzonProduct,
-                     UTM)
+                     UTM,
+                     UserProduct,
+                     UserProductJob,
+                     ProductPrice)
 
-from keyboards import add_or_create_close_kb, create_remove_and_edit_sale_kb, create_remove_kb
+from keyboards import (add_or_create_close_kb,
+                       create_remove_and_edit_sale_kb,
+                       create_remove_kb, new_create_remove_and_edit_sale_kb)
 
 from bot22 import bot
 
 from .storage import redis_client
-from .any import generate_pretty_amount, generate_sale_for_price, add_message_to_delete_dict, send_data_to_yandex_metica
+from .any import (generate_pretty_amount,
+                  generate_sale_for_price,
+                  add_message_to_delete_dict,
+                  send_data_to_yandex_metica)
 from .cities import city_index_dict
+from .exc import OzonAPICrashError, OzonProductExistsError, WbAPICrashError, WbProductExistsError
 
-from config import DEV_ID
-
-
-JOB_STORE_URL = "postgresql+psycopg2://postgres:22222@psql_db/postgres"
+from config import DEV_ID, WB_API_URL, OZON_API_URL, JOB_STORE_URL
 
 
 # Настройка хранилища задач
@@ -228,6 +234,30 @@ async def check_product_by_user_in_db(user_id: int,
     return bool(_check_product)
 
 
+async def new_check_product_by_user_in_db(user_id: int,
+                                          short_link: str,
+                                          session: AsyncSession):
+    query = (
+        select(
+            UserProduct.id
+        )\
+        .join(Product,
+              UserProduct.product_id == Product.id)
+        .where(
+            and_(
+                Product.short_link == short_link,
+                UserProduct.user_id == user_id,
+            )
+        )
+    )
+    async with session as _session:
+        res = await _session.execute(query)
+    
+    _check_product = res.scalar_one_or_none()
+
+    return bool(_check_product)
+
+
 async def check_subscription_limit(user_id: int,
                                    marker: Literal['wb', 'ozon'],
                                    session: AsyncSession):
@@ -274,6 +304,75 @@ async def check_subscription_limit(user_id: int,
             )\
             .group_by(Subscription.wb_product_limit)
         )
+
+    async with session as _session:
+        res = await _session.execute(query)
+    
+    _check_limit = res.fetchall()
+
+    if _check_limit:
+        _check_limit = _check_limit[0]
+
+        product_count, subscription_limit = _check_limit
+
+        print('SUBSCRIPTION TEST', product_count, subscription_limit)
+
+        if product_count >= subscription_limit:
+            return subscription_limit
+
+
+async def new_check_subscription_limit(user_id: int,
+                                       marker: Literal['wb', 'ozon'],
+                                       session: AsyncSession):
+    # product_model = OzonProduct if marker == 'ozon' else WbProduct
+    # print(marker)
+    marker = marker.lower()
+
+    if marker == 'wb':
+        subscription_limit = Subscription.wb_product_limit
+    else:
+        subscription_limit = Subscription.ozon_product_limit
+
+
+    query = (
+        select(
+            func.count(UserProduct.id),
+            subscription_limit,
+        )\
+        .join(User,
+              UserProduct.user_id == User.tg_id)\
+        .join(Subscription,
+              User.subscription_id == Subscription.id)\
+        .join(Product,
+              UserProduct.product_id == Product.id)\
+        .where(
+            and_(
+                # product_model.short_link == short_link,
+                Product.product_marker == marker,
+                UserProduct.user_id == user_id,
+            )
+        )\
+        .group_by(subscription_limit)
+    )
+    # else:
+    #     product_model = WbProduct
+    #     query = (
+    #         select(
+    #             func.count(product_model.id),
+    #             Subscription.wb_product_limit,
+    #         )\
+    #         .join(User,
+    #             product_model.user_id == User.tg_id)\
+    #         .join(Subscription,
+    #             User.subscription_id == Subscription.id)
+    #         .where(
+    #             and_(
+    #                 # product_model.short_link == short_link,
+    #                 product_model.user_id == user_id,
+    #             )
+    #         )\
+    #         .group_by(Subscription.wb_product_limit)
+    #     )
 
     async with session as _session:
         res = await _session.execute(query)
@@ -920,25 +1019,665 @@ async def save_product(user_data: dict,
         pass
 
 
+async def add_product_to_db(data: dict,
+                            marker: str,
+                            is_first_product: bool,
+                            session: AsyncSession):
+    short_link = data.get('short_link')
+    name = data.get('name')
+    user_id = data.get('user_id')
+
+    check_product_query = (
+        select(
+            Product
+        )\
+        .where(
+            Product.short_link == short_link,
+        )
+    )
+
+    async with session as _session:
+        res = await _session.execute(check_product_query)
+
+    _product = res.scalar_one_or_none()
+
+    if not _product:
+        insert_data = {
+            'product_marker': marker,
+            'name': name,
+            'short_link': short_link,
+        }
+
+        _product = Product(**insert_data)
+        _session.add(_product)
+
+        await session.flush()
+    
+    product_id = _product.id
+
+    user_product_data = {
+        'link': data.get('link'),
+        'product_id': product_id,
+        'user_id': user_id,
+        'start_price': data.get('start_price'),
+        'actual_price': data.get('actual_price'),
+        'sale': data.get('sale'),
+        'time_create': datetime.now(),
+    }
+
+    user_product = UserProduct(**user_product_data)
+
+    session.add(user_product)
+
+    await session.flush()
+
+    user_product_id = user_product.id
+
+    #          user_id | marker | product_id
+    job_id = f'{user_id}__{marker}__{user_product_id}'
+    # job_id = 'test_job_id'
+
+    if marker == 'wb':
+        scheduler_func = new_push_check_wb_price
+    else:
+        scheduler_func = new_push_check_ozon_price
+
+    job = scheduler.add_job(scheduler_func,
+                            trigger='interval',
+                            minutes=15,
+                            id=job_id,
+                            jobstore='sqlalchemy',
+                            coalesce=True,
+                            kwargs={'user_id': user_id,
+                                    'product_id': user_product_id})
+    
+    _data = {
+        'user_product_id': user_product_id,
+        'job_id': job.id,
+        # 'job_id': job_id,
+    }
+
+    user_job = UserProductJob(**_data)
+
+    session.add(user_job)
+
+    async with session as _session:
+        try:
+            await _session.commit()
+            _text = f'{marker} товар успешно добавлен'
+            print(_text)
+        except Exception as ex:
+            print(ex)
+            await _session.rollback()
+            _text = f'{marker} товар не был добавлен'
+            print(_text)
+        else:
+            if is_first_product:
+                # get request to yandex metrika
+                utm_query = (
+                    select(
+                        UTM.client_id
+                    )\
+                    .where(
+                        UTM.user_id == int(user_id)
+                    )
+                )
+
+                utm_res = await _session.execute(utm_query)
+
+                client_id = utm_res.scalar_one_or_none()
+
+                if client_id:
+                    await send_data_to_yandex_metica(client_id,
+                                                     goal_id='add_product')
+
+
+async def save_ozon_product(user_id: int,
+                            link: str,
+                            name: str | None,
+                            is_first_product: bool,
+                            session: AsyncSession):
+    if link.startswith('https://ozon.ru/t/'):
+        _idx = link.find('/t/')
+        _prefix = '/t/'
+        ozon_short_link = 'croppedLink|' + link[_idx+len(_prefix):]
+        print(ozon_short_link)
+    else:
+        _prefix = 'product/'
+        _idx = link.rfind('product/')
+        ozon_short_link = link[(_idx + len(_prefix)):]
+
+    query = (
+        select(
+            UserProduct.id,
+        )\
+        .where(
+            UserProduct.user_id == user_id,
+            UserProduct.link == link,
+        )
+    )
+    async with session as _session:
+        res = await _session.execute(query)
+
+    res = res.scalar_one_or_none()
+
+    if res:
+        raise OzonProductExistsError()
+
+    query = (
+        select(
+            Punkt.ozon_zone,
+            )\
+        .join(User,
+              Punkt.user_id == User.tg_id)\
+        .where(User.tg_id == user_id)
+    )
+    async with session as _session:
+        res = await _session.execute(query)
+
+    del_zone = res.scalar_one_or_none()
+
+    print('do request on OZON API (new version)')
+
+    # try:
+    timeout = aiohttp.ClientTimeout(total=30)
+    async with aiohttp.ClientSession() as aiosession:
+        # _url = f"http://5.61.53.235:1441/product/{message.text}"
+        if not del_zone:
+            _url = f"http://5.61.53.235:1441/product/{ozon_short_link}"
+            # _url = f"{OZON_API_URL}/product/{ozon_short_link}"
+        else:
+            _url = f"http://5.61.53.235:1441/product/{del_zone}/{ozon_short_link}"
+            # _url = f"{OZON_API_URL}/product/{del_zone}/{ozon_short_link}"
+
+        async with aiosession.get(url=_url,
+                                    timeout=timeout) as response:
+            _status_code = response.status
+            print(f'OZON RESPONSE CODE {_status_code}')
+
+            res = await response.text()
+
+    if _status_code == 404 or res == '408 Request Timeout':
+        raise OzonAPICrashError()
+
+    _new_short_link = res.split('|')[0]
+
+    check_product_by_user =  await new_check_product_by_user_in_db(user_id=user_id,
+                                                                short_link=_new_short_link,
+                                                                session=session)
+
+    if check_product_by_user:
+        raise OzonProductExistsError()
+
+    response_data = res.split('|')[-1]
+    json_data: dict = json.loads(response_data)
+
+    w = re.findall(r'\"cardPrice.*currency?', res)
+
+    if w:
+        w = w[0].split(',')[:3]
+
+        _d = {
+            'price': None,
+            'originalPrice': None,
+            'cardPrice': None,
+        }
+
+        for k in _d:
+            if not all(v for v in _d.values()):
+                for q in w:
+                    if q.find(k) != -1:
+                        _name, price = q.split(':')
+                        price = price.replace('\\', '').replace('"', '')
+                        price = float(''.join(price.split()[:-1]))
+                        print(price)
+                        _d[k] = price
+                        break
+            else:
+                break
+
+        print(_d)
+        start_price = int(_d.get('cardPrice', 0))
+        actual_price = int(_d.get('cardPrice', 0))
+        basic_price = int(_d.get('price', 0))
+
+    else:
+        # try:
+            script_list = json_data.get('seo').get('script')
+
+            inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
+
+            # try:
+            inner_html_json: dict = json.loads(inner_html)
+            offers = inner_html_json.get('offers')
+
+            _price = offers.get('price')
+
+            start_price = int(_price)
+            actual_price = int(_price)
+            basic_price = int(_price)
+
+            print('Price', _price)
+    
+    if not name:
+        name = ' '.join(json_data.get('seo').get('title').split()[:4])
+
+        print('NAMEEE FROM SEO', name)
+
+    _sale = generate_sale_for_price(start_price)
+
+    _data = {
+        'link': link,
+        'short_link': _new_short_link,
+        'name': name,
+        'actual_price': actual_price,
+        'start_price': start_price,
+        'basic_price': basic_price,
+        'sale': _sale,
+        'user_id': user_id,
+    }
+
+    await add_product_to_db(_data,
+                            'ozon',
+                            is_first_product,
+                            session)
+
+
+async def save_wb_product(user_id: int,
+                          link: str,
+                          name: str | None,
+                          is_first_product: bool,
+                          session: AsyncSession):
+    _prefix = 'catalog/'
+
+    _idx_prefix = link.find(_prefix)
+
+    short_link = link[_idx_prefix + len(_prefix):].split('/')[0]
+
+    query = (
+        select(
+            UserProduct.id,
+        )\
+        .where(
+            UserProduct.user_id == user_id,
+            UserProduct.link == link,
+        )
+    )
+    async with session as _session:
+        res = await _session.execute(query)
+
+    res = res.scalar_one_or_none()
+
+    if res:
+        raise WbProductExistsError()
+
+    query = (
+        select(
+            Punkt.wb_zone,
+            )\
+        .join(User,
+              Punkt.user_id == User.tg_id)\
+        .where(User.tg_id == user_id)
+    )
+    async with session as _session:
+        res = await _session.execute(query)
+
+    del_zone = res.scalar_one_or_none()
+
+    if not del_zone:
+        del_zone = -1281648
+
+    check_product_by_user =  await new_check_product_by_user_in_db(user_id=user_id,
+                                                                   short_link=short_link,
+                                                                   session=session)
+
+    if check_product_by_user:
+        raise WbProductExistsError()
+
+    timeout = aiohttp.ClientTimeout(total=15)
+    async with aiohttp.ClientSession() as aiosession:
+        # _url = f"http://172.18.0.7:8080/product/{del_zone}/{short_link}"
+        _url = f"http://5.61.53.235:1435/product/{del_zone}/{short_link}"
+        async with aiosession.get(url=_url,
+                        timeout=timeout) as response:
+
+                res = await response.json()
+
+    d = res.get('data')
+
+    sizes = d.get('products')[0].get('sizes')
+
+    _product_name = d.get('products')[0].get('name')
+
+    _basic_price = _product_price = None
+
+    for size in sizes:
+        _price = size.get('price')
+        if _price:
+            _basic_price = size.get('price').get('basic')
+            _product_price = size.get('price').get('product')
+
+            _basic_price = str(_basic_price)[:-2]
+            _product_price = str(_product_price)[:-2]
+
+            _product_price = float(_product_price)
+
+    print('WB price', _product_price)
+
+    _sale = generate_sale_for_price(float(_product_price))
+
+    _data_name = name if name else _product_name
+
+    _data = {
+        'link': link,
+        'short_link': short_link,
+        'start_price': _product_price,
+        'actual_price': _product_price,
+        'sale': _sale,
+        'name': _data_name,
+        'user_id': user_id,
+    }
+
+    await add_product_to_db(_data,
+                            'wb',
+                            is_first_product,
+                            session)
+
+
+async def new_save_product(user_data: dict,
+                           session: AsyncSession,
+                           scheduler: AsyncIOScheduler):
+    msg = user_data.get('msg')
+    _name = user_data.get('name')
+    link: str = user_data.get('link')
+    link = link.split('?')[0]
+
+    print('NAMEEE', _name)
+
+    query = (
+        select(
+            UserProduct.id
+        )\
+        .where(
+            UserProduct.user_id == msg[0]
+        )
+    )
+
+    async with session as _session:
+        res = await _session.execute(query)
+
+    products_by_user = res.scalars().all()
+
+    product_count_by_user = len(products_by_user)
+
+    is_first_product = not bool(product_count_by_user)
+
+    print(f'PRODUCT COUNT BY USER {msg[0]} {product_count_by_user}')
+
+    if link.find('ozon') > 0:
+        # save ozon product
+        await save_ozon_product(user_id=msg[0],
+                                link=link,
+                                name=_name,
+                                is_first_product=is_first_product,
+                                session=session)
+
+    elif link.find('wildberries') > 0:
+        # save wb product
+        await save_wb_product(user_id=msg[0],
+                              link=link,
+                              name=_name,
+                              is_first_product=is_first_product,
+                              session=session)
+
+
+async def test_migrate_on_new_sctucture_db():
+    wb_query = (
+        select(
+            WbProduct,
+            User,
+        )\
+        .join(User,
+              WbProduct.user_id == User.tg_id)
+    )
+    async for session in get_session():
+        async with session as _session:
+            res = await _session.execute(wb_query)
+
+        wb_products = res.fetchall()
+
+        for wb_product, user in wb_products:
+            wb_product: WbProduct
+            user: User
+            print(wb_product.name, f'{user.tg_id} {user.username}', sep='|')
+
+            product_data = {
+                'product_marker': 'wb',
+                'short_link': wb_product.short_link,
+                'name': wb_product.name,
+
+            }
+            if user.tg_id in (int(DEV_ID)):
+                product = Product(**product_data)
+
+                async with session as _session:
+                    _session.add(product)
+
+                    try:
+                        await _session.flush()
+                        await _session.commit()
+                        product_id = product.id
+                    except IntegrityError as ex:
+                        print('catch exc!!!!')
+                        print(ex)
+                        await _session.rollback()
+
+                        # async with session as _session:
+                        query = (
+                            select(
+                                Product.id
+                            )\
+                            .where(
+                                Product.short_link == wb_product.short_link
+                            )
+                        )
+                        res = await _session.execute(query)
+
+                        product_id = res.scalar_one_or_none()
+                    # else:
+                    print('ID PRODUCT', product_id)
+
+                    wb_data = {
+                        'product_id': product_id,
+                        'link': wb_product.link,
+                        'start_price': wb_product.start_price,
+                        'actual_price': wb_product.actual_price,
+                        'sale': wb_product.sale,
+                        'time_create': wb_product.time_create,
+                        'user_id': wb_product.user_id,
+                    }
+
+                    new_wb_product = UserProduct(**wb_data)
+
+                    session.add(new_wb_product)
+                    await session.flush()
+
+                    new_wb_product_id = new_wb_product.id
+
+                    #          user_id | marker | product_id
+                    job_id = f'{user.tg_id}__wb__{new_wb_product_id}'
+                    # job_id = 'test_job_id'
+
+                    # if marker == 'wb':
+                    scheduler_func = new_push_check_wb_price
+                    # else:
+                    #     scheduler_func = new_push_check_ozon_price
+
+                    job = scheduler.add_job(scheduler_func,
+                                            trigger='interval',
+                                            minutes=15,
+                                            id=job_id,
+                                            jobstore='sqlalchemy',
+                                            coalesce=True,
+                                            kwargs={'user_id': user.tg_id,
+                                                    'product_id': new_wb_product_id})
+                    
+                    _data = {
+                        'user_product_id': new_wb_product_id,
+                        'job_id': job.id,
+                        # 'job_id': job_id,
+                    }
+
+                    user_job = UserProductJob(**_data)
+
+                    session.add(user_job)
+
+                    async with session as _session:
+                        try:
+                            await _session.commit()
+                        except Exception as ex:
+                            print(ex)
+                            await _session.rollback()
+            else:
+                continue
+
+    ozon_query = (
+        select(
+            OzonProduct,
+            User,
+        )\
+        .join(User,
+              OzonProduct.user_id == User.tg_id)
+    )
+
+    async for session in get_session():
+        async with session as _session:
+            res = await _session.execute(ozon_query)
+
+        ozon_products = res.fetchall()
+
+        for ozon_product, user in ozon_products:
+            ozon_product: OzonProduct
+            user: User
+            print(ozon_product.name, f'{user.tg_id} {user.username}', sep='|')
+
+            product_data = {
+                'product_marker': 'ozon',
+                'short_link': ozon_product.short_link,
+                'name': ozon_product.name,
+
+            }
+
+            if user.tg_id in (686339126, 311364517):
+                product = Product(**product_data)
+
+                # async for session in get_session():
+                async with session as _session:
+                    _session.add(product)
+
+                    try:
+                        await _session.flush()
+                        await _session.commit()
+                        product_id = product.id
+                    except IntegrityError as ex:
+                        print('catch exc!!!!')
+                        print(ex)
+                        await _session.rollback()
+
+                        # async with session as _session:
+                        query = (
+                            select(
+                                Product.id
+                            )\
+                            .where(
+                                Product.short_link == ozon_product.short_link
+                            )
+                        )
+                        res = await _session.execute(query)
+
+                        product_id = res.scalar_one_or_none()
+                # else:
+                print('ID PRODUCT', product_id)
+
+                ozon_data = {
+                    'product_id': product_id,
+                    'link': ozon_product.link,
+                    'start_price': ozon_product.start_price,
+                    'actual_price': ozon_product.actual_price,
+                    'sale': ozon_product.sale,
+                    'time_create': ozon_product.time_create,
+                    'user_id': ozon_product.user_id,
+                }
+
+                new_ozon_product = UserProduct(**ozon_data)
+
+                _session.add(new_ozon_product)
+
+                await session.flush()
+
+                new_ozon_product_id = new_ozon_product.id
+
+                #          user_id | marker | product_id
+                job_id = f'{user.tg_id}__ozon__{new_ozon_product_id}'
+                # job_id = 'test_job_id'
+
+                # if marker == 'wb':
+                scheduler_func = new_push_check_ozon_price
+                # else:
+                #     scheduler_func = new_push_check_ozon_price
+
+                job = scheduler.add_job(scheduler_func,
+                                        trigger='interval',
+                                        minutes=15,
+                                        id=job_id,
+                                        jobstore='sqlalchemy',
+                                        coalesce=True,
+                                        kwargs={'user_id': user.tg_id,
+                                                'product_id': new_ozon_product_id})
+                
+                _data = {
+                    'user_product_id': new_ozon_product_id,
+                    'job_id': job.id,
+                    # 'job_id': job_id,
+                }
+
+                user_job = UserProductJob(**_data)
+
+                session.add(user_job)
+
+                try:
+                    await _session.commit()
+                except Exception as ex:
+                    print(ex)
+                    await _session.rollback()
+            else:
+                continue
+
+    print('DONE')
+
+
 def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     jobs: list[Job] = scheduler.get_jobs(jobstore='sqlalchemy')
 
     print('start up update scheduler jobs...')
-
     for job in jobs:
         if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
             if job.id.find('wb') > 0:
-                modify_func = push_check_wb_price
+                if job.id.find(DEV_ID) != 1:
+                    modify_func = new_push_check_wb_price
+                else:
+                    modify_func = push_check_wb_price
             else:
-                modify_func = push_check_ozon_price
+                if job.id.find(DEV_ID) != -1:
+                    modify_func = new_push_check_ozon_price
+                else:
+                    modify_func = push_check_ozon_price
             
             job.modify(func=modify_func)
         
         elif job.id.find('delete_msg_task') != -1:
-            # if job.id.find('686339126') != -1:
             modify_func = test_periodic_delete_old_message
-            # else:
-            #     modify_func = periodic_delete_old_message
+
             job.modify(func=modify_func,
                        trigger=scheduler_interval)
 
@@ -980,7 +1719,52 @@ async def add_product_task(user_data: dict):
             await bot.edit_message_text(chat_id=msg[0],
                                         message_id=_add_msg_id,
                                         text=f'{product_marker.upper()} не удалось добавить')
-            
+
+
+async def new_add_product_task(user_data: dict):
+        try:
+            product_marker: str = user_data.get('product_marker')
+            _add_msg_id: int = user_data.get('_add_msg_id')
+            msg: tuple = user_data.get('msg')
+
+            async for session in get_session():
+                check_product_limit = await new_check_subscription_limit(user_id=msg[0],
+                                                                     marker=product_marker,
+                                                                     session=session)
+            if check_product_limit:
+                _text = f'⛔ Достигнут лимит {product_marker.upper()} товаров по Вашей подписке ⛔\n\nЛимит товаров: {check_product_limit}'
+                msg = await bot.edit_message_text(chat_id=msg[0],
+                                                  message_id=_add_msg_id,
+                                                  text=_text)
+                await add_message_to_delete_dict(msg)
+                return
+            try:
+                async for session in get_session():
+                    await new_save_product(user_data=user_data,
+                                           session=session,
+                                           scheduler=scheduler)
+            except (OzonProductExistsError, WbProductExistsError) as ex:
+                print('PRODUCT EXISTS', ex)
+                _text = f'❗️ {product_marker} товар уже есть в Вашем списке'
+            except OzonAPICrashError as ex:
+                print('OZON API CRASH', ex)
+                pass
+            except Exception as ex:
+                print(ex)
+                _text = f'‼️ Возникла ошибка при добавлении {product_marker} товара\n\nПопробуйте повторить позже'
+            else:
+                _text = f'{product_marker} товар добавлен к отслеживанию✅'
+
+            await bot.edit_message_text(chat_id=msg[0],
+                                        message_id=_add_msg_id,
+                                        text=_text)
+                
+        except Exception as ex:
+            print('SCHEDULER ADD ERROR', ex)
+            await bot.edit_message_text(chat_id=msg[0],
+                                        message_id=_add_msg_id,
+                                        text=f'{product_marker.upper()} не удалось добавить')
+
 
 async def add_punkt_by_user(punkt_data: dict):
     punkt_action: str = punkt_data.get('punkt_action')
@@ -999,9 +1783,9 @@ async def add_punkt_by_user(punkt_data: dict):
         timeout = aiohttp.ClientTimeout(total=30)
         async with aiohttp.ClientSession() as aiosession:
             # if punkt_marker == 'wb':
-            wb_url = f"http://172.18.0.7:8080/pickUpPoint/{city_index}"
+            wb_url = f"{WB_API_URL}/pickUpPoint/{city_index}"
             # else:
-            ozon_url = f"http://172.18.0.6:8080/pickUpPoint/{city_index}"
+            ozon_url = f"{OZON_API_URL}/pickUpPoint/{city_index}"
 
             # Wb
             async with aiosession.get(url=wb_url,
@@ -1117,6 +1901,109 @@ async def add_punkt_by_user(punkt_data: dict):
                                         message_id=settings_msg[-1])
 
     pass
+
+
+async def new_add_punkt_by_user(punkt_data: dict):
+    punkt_action: str = punkt_data.get('punkt_action')
+    city: str = punkt_data.get('city')
+    city_index: str = punkt_data.get('index')
+    settings_msg: tuple = punkt_data.get('settings_msg')
+    user_id: int = punkt_data.get('user_id')
+
+    try:
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession() as aiosession:
+            wb_url = f"{WB_API_URL}/pickUpPoint/{city_index}"
+            ozon_url = f"{OZON_API_URL}/pickUpPoint/{city_index}"
+            # wb_url = f"http://5.61.53.235:1435/pickUpPoint/{city_index}"
+            # ozon_url = f"http://5.61.53.235:1441/pickUpPoint/{city_index}"
+
+            # Wb
+            async with aiosession.get(url=wb_url,
+                                      timeout=timeout) as response:
+                wb_del_zone = await response.text()
+
+                print('WB DEL ZONE', wb_del_zone)
+            # Ozon
+            async with aiosession.get(url=ozon_url,
+                                      timeout=timeout) as response:
+                ozon_del_zone = await response.text()
+
+                print('OZON DEL ZONE', ozon_del_zone)
+
+    except Exception as ex:
+        print('DEL ZONE REQUEST ERRROR', ex)
+        await bot.edit_message_text(text='Что то пошло не так, просим прощения\n\nПопробуйте повторить позже',
+                                    chat_id=settings_msg[0],
+                                    message_id=settings_msg[-1])
+        return
+    
+    try:
+        wb_del_zone = int(wb_del_zone)
+        ozon_del_zone = int(ozon_del_zone)
+    except Exception as ex:
+        print('RESPONSE ERROR WITH CONVERT DEL ZONE', ex)
+        await bot.edit_message_text(text='Что то пошло не так, просим прощения\n\nПопробуйте повторить позже',
+                                    chat_id=settings_msg[0],
+                                    message_id=settings_msg[-1])
+        return
+    
+    if punkt_action == 'add':
+        insert_data = {
+            'user_id': user_id,
+            'index': int(city_index),
+            'city': city,
+            'ozon_zone': ozon_del_zone,
+            'wb_zone': wb_del_zone,
+            'time_create': datetime.now(),
+        }
+
+        query = (
+            insert(
+                Punkt
+            )\
+            .values(**insert_data)
+        )
+        success_text = f'✅ Пункт выдачи успешно добавлен (Установленный город - {city}).'
+        error_text = f'❌ Не получилось добавить пункт выдачи (Переданный город - {city})'
+
+    elif punkt_action == 'edit':
+        update_data = {
+            'city': city,
+            'index': int(city_index),
+            'ozon_zone': ozon_del_zone,
+            'wb_zone': wb_del_zone,
+            'time_create': datetime.now(),
+        }
+        query = (
+            update(
+                Punkt
+            )\
+            .values(**update_data)\
+            .where(Punkt.user_id == user_id)
+        )
+        
+        success_text = f'✅ Пункт выдачи успешно изменён (Новый установленный город - {city}).'
+        error_text = f'❌ Не получилось изменить пункт выдачи (Переданный город - {city})'
+
+    else:
+        print('!!!!!!!!Такого не должно быть!!!!!!!!')
+        return
+    
+    async for session in get_session():
+        try:
+            await session.execute(query)
+            await session.commit()
+        except Exception as ex:
+            await session.rollback()
+            print('ADD/EDIT PUNKT BY USER ERRROR', ex)
+            await bot.edit_message_text(text=error_text,
+                                        chat_id=settings_msg[0],
+                                        message_id=settings_msg[-1])
+        else:
+            await bot.edit_message_text(text=success_text,
+                                        chat_id=settings_msg[0],
+                                        message_id=settings_msg[-1])
 
 
 async def push_check_wb_price(user_id: str,
@@ -1449,9 +2336,399 @@ async def push_check_ozon_price(user_id: str,
             print('OZON SCHEDULER ERROR', ex)
 
 
+async def try_add_product_price_to_db(product_id: int,
+                                      city: str | None,
+                                      price: float):
 
-async def test_scheduler(user_id: str):
-    # user_id = message.from_user.id
+    city = city if city else 'МОСКВА'
 
-    await bot.send_message(chat_id=user_id,
-                           text='test scheduler every 30 sec')
+    check_monitoring_price_query = (
+        select(
+            ProductPrice.time_price,
+        )\
+        .where(
+            and_(
+                ProductPrice.product_id == product_id,
+                ProductPrice.city == city,
+            )
+        )\
+        .order_by(
+            desc(ProductPrice.time_price)
+            )
+    )
+
+    async for session in get_session():
+        async with session as _session:
+            res = await _session.execute(check_monitoring_price_query)
+    
+    first_element_date = res.scalars().first()
+
+    if first_element_date:
+        print('first_element_date', first_element_date)
+        check_date = datetime.now().astimezone(tz=timezone) - timedelta(hours=12)
+
+        if first_element_date > check_date:
+            print('early yet')
+            return
+
+    monitoring_price_data = {
+        'product_id': product_id,
+        'city': city,
+        'price': price,
+        'time_price': datetime.now(),
+    }
+
+    monitoring_price_query = (
+        insert(
+            ProductPrice
+        )\
+        .values(**monitoring_price_data)
+    )
+
+    async for session in get_session():
+        async with session as _session:
+            try:
+                await session.execute(monitoring_price_query)
+                await session.commit()
+            except Exception as ex:
+                await session.rollback()
+                print(ex)
+
+
+async def new_push_check_ozon_price(user_id: str,
+                                    product_id: str):
+    
+    print(f'new фоновая задача ozon {user_id}')
+
+    async for session in get_session():
+        async with session as _session:
+            try:
+                query = (
+                    select(
+                        Product.id,
+                        UserProduct.link,
+                        Product.short_link,
+                        UserProduct.actual_price,
+                        UserProduct.start_price,
+                        Product.name,
+                        UserProduct.sale,
+                        Punkt.ozon_zone,
+                        Punkt.city,
+                        UserProductJob.job_id,
+                    )\
+                    .select_from(UserProduct)\
+                    .join(Product,
+                          UserProduct.product_id == Product.id)\
+                    .outerjoin(Punkt,
+                               Punkt.user_id == int(user_id))\
+                    .outerjoin(UserProductJob,
+                               UserProductJob.user_product_id == UserProduct.id)\
+                    .where(
+                        and_(
+                            UserProduct.id == int(product_id),
+                            UserProduct.user_id == int(user_id),
+                        )
+                    )
+                )
+
+                res = await _session.execute(query)
+
+                res = res.fetchall()
+            finally:
+                try:
+                    await _session.close()
+                except Exception:
+                    pass
+    if res:
+        main_product_id, link, short_link, actual_price, start_price, name, sale, zone, city, job_id = res[0]
+
+        name = name if name is not None else 'Отсутствует'
+        try:
+            timeout = aiohttp.ClientTimeout(total=30)
+            async with aiohttp.ClientSession() as aiosession:
+                if zone:
+                    _url = f"{OZON_API_URL}/product/{zone}/{short_link}"
+                    # _url = f"http://5.61.53.235:1441/product/{zone}/{short_link}"
+                else:
+                    _url = f"{OZON_API_URL}/product/{short_link}"
+                    # _url = f"http://5.61.53.235:1441/product/{short_link}"
+                async with aiosession.get(url=_url,
+                            timeout=timeout) as response:
+                    _status_code = response.status
+
+                    print(_status_code)
+
+                    res = await response.text()
+                
+                if _status_code == 404:
+                    raise OzonAPICrashError()
+
+            w = re.findall(r'\"cardPrice.*currency?', res)
+
+            if w:
+                w = w[0].split(',')[:3]
+
+                _d = {
+                    'price': None,
+                    'originalPrice': None,
+                    'cardPrice': None,
+                }
+
+                for k in _d:
+                    if not all(v for v in _d.values()):
+                        for q in w:
+                            if q.find(k) != -1:
+                                _name, price = q.split(':')
+                                price = price.replace('\\', '').replace('"', '')
+                                price = float(''.join(price.split()[:-1]))
+                                # print(price)
+                                _d[k] = price
+                                break
+                    else:
+                        break
+
+                print(_d)
+
+                _product_price = _d.get('cardPrice', 0)
+            else:
+                try:
+                    response_data = res.split('|')[-1]
+
+                    json_data: dict = json.loads(response_data)
+
+                    script_list = json_data.get('seo').get('script')
+
+                    inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
+
+                    inner_html_json: dict = json.loads(inner_html)
+                    offers = inner_html_json.get('offers')
+
+                    _price = offers.get('price')
+
+                    _product_price = _price
+                    
+                    print('Price', _price)
+                except Exception as ex:
+                    print('scheduler parse inner html error', ex)
+                    return
+
+            _product_price = float(_product_price)
+
+            await try_add_product_price_to_db(product_id=main_product_id,
+                                              city=city,
+                                              price=_product_price)
+
+            check_price = _product_price == actual_price
+
+            if check_price:
+                _text = 'цена не изменилась'
+                print(f'{_text} user {user_id} product {name}')
+                return
+            else:
+                _waiting_price = start_price - sale
+
+                update_query = (
+                    update(
+                        UserProduct
+                    )\
+                    .values(actual_price=_product_price)\
+                    .where(UserProduct.id == product_id)
+                )
+
+                async for session in get_session():
+                    async with session as _session:
+                        try:
+                            await session.execute(update_query)
+                            await session.commit()
+                        except Exception as ex:
+                            await session.rollback()
+                            print(ex)
+
+                pretty_product_price = generate_pretty_amount(_product_price)
+                pretty_actual_price = generate_pretty_amount(actual_price)
+                pretty_sale = generate_pretty_amount(sale)
+                pretty_start_price = generate_pretty_amount(start_price)
+
+                if _waiting_price >= _product_price:
+
+                    if actual_price < _product_price:
+                        _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _disable_notification = True
+                    else:
+                        _text = f'🚨 Изменилась цена на <a href="{link}">{name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _disable_notification = False
+
+                    _kb = new_create_remove_and_edit_sale_kb(user_id=user_id,
+                                                             product_id=product_id,
+                                                             marker='ozon',
+                                                             job_id=job_id,
+                                                             with_redirect=False)
+
+                    _kb = add_or_create_close_kb(_kb)
+
+                    msg = await bot.send_message(chat_id=user_id,
+                                                 text=_text,
+                                                 disable_notification=_disable_notification,
+                                                 reply_markup=_kb.as_markup())
+                    await add_message_to_delete_dict(msg)
+                    return
+
+        except OzonAPICrashError as ex:
+            print('SCHEDULER OZON API CRUSH', ex)
+
+        except Exception as ex:
+            print('OZON SCHEDULER ERROR', ex, ex.args)
+
+
+async def new_push_check_wb_price(user_id: str,
+                                  product_id: str):
+    print(f'new фоновая задача wb {user_id}')
+
+    async for session in get_session():
+        async with session as _session:
+            try:
+                query = (
+                    select(
+                        Product.id,
+                        UserProduct.link,
+                        Product.short_link,
+                        UserProduct.actual_price,
+                        UserProduct.start_price,
+                        Product.name,
+                        UserProduct.sale,
+                        Punkt.wb_zone,
+                        Punkt.city,
+                        UserProductJob.job_id,
+                    )\
+                    .select_from(UserProduct)\
+                    .join(Product,
+                          UserProduct.product_id == Product.id)\
+                    .outerjoin(Punkt,
+                               Punkt.user_id == int(user_id))\
+                    .outerjoin(UserProductJob,
+                               UserProductJob.user_product_id == UserProduct.id)\
+                    .where(
+                        and_(
+                            UserProduct.id == int(product_id),
+                            UserProduct.user_id == int(user_id),
+                        )
+                    )
+                )
+
+                res = await _session.execute(query)
+
+                res = res.fetchall()
+            finally:
+                try:
+                    await _session.close()
+                except Exception:
+                    pass
+    if res:
+        main_product_id, link, short_link, actual_price, start_price, name, sale, zone, city, job_id = res[0]
+
+        name = name if name is not None else 'Отсутствует'
+
+        if not zone:
+            zone = -1281648
+
+        try:
+            timeout = aiohttp.ClientTimeout(total=15)
+            async with aiohttp.ClientSession() as aiosession:
+                _url = f"{WB_API_URL}/product/{zone}/{short_link}"
+                # _url = f"http://5.61.53.235:1435/product/{zone}/{short_link}"
+                
+                async with aiosession.get(url=_url,
+                                          timeout=timeout) as response:
+                    _status_code = response.status
+
+                    res = await response.json()
+
+            if _status_code == 404:
+                raise WbAPICrashError()
+
+            d = res.get('data')
+
+            sizes = d.get('products')[0].get('sizes')
+
+            _basic_price = _product_price = None
+            
+            for size in sizes:
+                _price = size.get('price')
+                
+                if _price:
+                    _basic_price = size.get('price').get('basic')
+                    _product_price = size.get('price').get('product')
+
+                    _basic_price = str(_basic_price)[:-2]
+                    _product_price = str(_product_price)[:-2]
+
+            _product_price = float(_product_price)
+
+            print('Wb price', _product_price)
+
+            await try_add_product_price_to_db(product_id=main_product_id,
+                                              city=city,
+                                              price=_product_price)
+            
+            check_price = _product_price == actual_price
+
+            if check_price:
+                _text = 'цена не изменилась'
+                print(f'{_text} user {user_id} product {name}')
+                return
+            
+            else:
+                update_query = (
+                    update(
+                        UserProduct
+                    )\
+                    .values(actual_price=_product_price)\
+                    .where(UserProduct.id == product_id)
+                )
+
+                async for session in get_session():
+                    async with session as _session:
+                        try:
+                            await session.execute(update_query)
+                            await session.commit()
+                        except Exception as ex:
+                            await session.rollback()
+                            print(ex)
+
+                _waiting_price = start_price - sale
+
+                pretty_product_price = generate_pretty_amount(_product_price)
+                pretty_actual_price = generate_pretty_amount(actual_price)
+                pretty_sale = generate_pretty_amount(sale)
+                pretty_start_price = generate_pretty_amount(start_price)
+                
+                if _waiting_price >= _product_price:
+
+                    if actual_price < _product_price:
+                        _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _disable_notification = True
+                    else:
+                        _text = f'🚨 Изменилась цена на <a href="{link}">{name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                        _disable_notification = False
+
+                    _kb = new_create_remove_and_edit_sale_kb(user_id=user_id,
+                                                             product_id=product_id,
+                                                             marker='wb',
+                                                             job_id=job_id,
+                                                             with_redirect=False)
+
+                    _kb = add_or_create_close_kb(_kb)
+
+                    msg = await bot.send_message(chat_id=user_id,
+                                                 text=_text,
+                                                 disable_notification=_disable_notification,
+                                                 reply_markup=_kb.as_markup())
+                    await add_message_to_delete_dict(msg)
+                    return
+
+        except WbAPICrashError as ex:
+            print('SCHEDULER WB API CRUSH', ex)
+
+        except Exception as ex:
+            print(ex)
+            pass

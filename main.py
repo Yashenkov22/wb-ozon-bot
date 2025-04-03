@@ -34,7 +34,10 @@ from db.base import UserJob, engine, session, Base, db_url, get_session
 from middlewares.db import DbSessionMiddleware
 
 from utils.storage import redis_client, storage
-from utils.scheduler import scheduler
+from utils.scheduler import (scheduler,
+                             test_migrate_on_new_sctucture_db,
+                             startup_update_scheduler_jobs,
+                             add_task_to_delete_old_message_for_users)
 from utils.utm import add_utm_to_db
 
 from schemas import UTMSchema
@@ -52,8 +55,6 @@ from config import (TOKEN,
 from handlers.base import main_router
 from handlers.ozon import ozon_router
 from handlers.wb import wb_router
-
-from utils.scheduler import startup_update_scheduler_jobs, add_task_to_delete_old_message_for_users
 
 from bot22 import bot
 
@@ -156,6 +157,7 @@ async def on_startup():
     # await init_db()
     scheduler.start()
 
+    await test_migrate_on_new_sctucture_db()
     startup_update_scheduler_jobs(scheduler)
     # await add_task_to_delete_old_message_for_users()
 
