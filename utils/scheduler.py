@@ -1568,7 +1568,7 @@ async def test_migrate_on_new_sctucture_db():
 
             }
 
-            if user.tg_id in (686339126, 311364517):
+            if user.tg_id in (int(DEV_ID)):
                 product = Product(**product_data)
 
                 # async for session in get_session():
