@@ -618,6 +618,8 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
 
         product_list = res.fetchall()
 
+        print('LIIIST',product_list)
+
         if not product_list:
             await delete_prev_subactive_msg(data)
 

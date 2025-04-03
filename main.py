@@ -157,7 +157,7 @@ async def on_startup():
     # await init_db()
     scheduler.start()
 
-    # await test_migrate_on_new_sctucture_db()
+    await test_migrate_on_new_sctucture_db()
     startup_update_scheduler_jobs(scheduler)
     # await add_task_to_delete_old_message_for_users()
 
