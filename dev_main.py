@@ -53,7 +53,11 @@ from handlers.base import main_router
 from handlers.ozon import ozon_router
 from handlers.wb import wb_router
 
-from utils.scheduler import startup_update_scheduler_jobs, add_task_to_delete_old_message_for_users, scheduler, test_migrate_on_new_sctucture_db
+from utils.scheduler import (startup_update_scheduler_jobs,
+                             add_task_to_delete_old_message_for_users,
+                             scheduler,
+                             test_migrate_on_new_sctucture_db,
+                             test_add_photo_to_exist_products)
 
 from bot22 import bot
 
@@ -309,8 +313,9 @@ async def main():
 
     scheduler.start()
 
-    startup_update_scheduler_jobs(scheduler)
     # await test_migrate_on_new_sctucture_db()
+    # await test_add_photo_to_exist_products()
+    startup_update_scheduler_jobs(scheduler)
 
 #     # #Add session and database connection in handlers 
     dp.update.middleware(DbSessionMiddleware(session_pool=session,

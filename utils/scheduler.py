@@ -3,6 +3,8 @@ import re
 import pytz
 import aiohttp
 import asyncio
+import aiofiles
+import base64
 
 from math import ceil
 from datetime import datetime, timedelta
@@ -33,7 +35,7 @@ from db.base import (OzonPunkt, Product, Punkt,
                      UserProductJob,
                      ProductPrice)
 
-from keyboards import (add_or_create_close_kb,
+from keyboards import (add_graphic_btn, add_or_create_close_kb,
                        create_remove_and_edit_sale_kb,
                        create_remove_kb, new_create_remove_and_edit_sale_kb)
 
@@ -44,10 +46,11 @@ from .any import (generate_pretty_amount,
                   generate_sale_for_price,
                   add_message_to_delete_dict,
                   send_data_to_yandex_metica)
+from .pics import DEFAULT_PRODUCT_LIST_PHOTO_ID, DEFAULT_PRODUCT_PHOTO_ID
 from .cities import city_index_dict
 from .exc import OzonAPICrashError, OzonProductExistsError, WbAPICrashError, WbProductExistsError
 
-from config import DEV_ID, WB_API_URL, OZON_API_URL, JOB_STORE_URL
+from config import DEV_ID, WB_API_URL, OZON_API_URL, JOB_STORE_URL, TEST_PHOTO_ID
 
 
 # Настройка хранилища задач
@@ -1026,6 +1029,7 @@ async def add_product_to_db(data: dict,
     short_link = data.get('short_link')
     name = data.get('name')
     user_id = data.get('user_id')
+    photo_id = data.get('photo_id')
 
     check_product_query = (
         select(
@@ -1046,6 +1050,7 @@ async def add_product_to_db(data: dict,
             'product_marker': marker,
             'name': name,
             'short_link': short_link,
+            'photo_id': photo_id,
         }
 
         _product = Product(**insert_data)
@@ -1074,7 +1079,7 @@ async def add_product_to_db(data: dict,
     user_product_id = user_product.id
 
     #          user_id | marker | product_id
-    job_id = f'{user_id}__{marker}__{user_product_id}'
+    job_id = f'{user_id}:{marker}:{user_product_id}'
     # job_id = 'test_job_id'
 
     if marker == 'wb':
@@ -1132,6 +1137,114 @@ async def add_product_to_db(data: dict,
                                                      goal_id='add_product')
 
 
+async def try_update_ozon_product_photo(product_id: int,
+                                        short_link: str,
+                                        session: AsyncSession):
+    timeout = aiohttp.ClientTimeout(total=35)
+    async with aiohttp.ClientSession() as aiosession:
+        # _url = f"http://5.61.53.235:1441/product/{message.text}"
+        # if not del_zone:
+        _url = f"http://5.61.53.235:1441/product/{short_link}"
+            # _url = f"{OZON_API_URL}/product/{ozon_short_link}"
+        # else:
+        #     _url = f"http://5.61.53.235:1441/product/{del_zone}/{ozon_short_link}"
+            # _url = f"{OZON_API_URL}/product/{del_zone}/{ozon_short_link}"
+
+        async with aiosession.get(url=_url,
+                                    timeout=timeout) as response:
+            _status_code = response.status
+            print(f'OZON RESPONSE CODE {_status_code}')
+
+            text_data = await response.text()
+
+    
+    photo_url_pattern = r'images\\":\[{\\"src\\":\\"https:\/\/cdn1\.ozone\.ru\/s3\/multimedia-[a-z0-9]*(-\w*)?\/\d+\.jpg'
+    
+    match = re.search(photo_url_pattern, text_data)
+
+    if match:
+        # print('search',match.group())
+        photo_url_match = re.search(r'https.*\.jpg?', match.group())
+        if photo_url_match:
+            photo_url = photo_url_match.group()
+            # print('RESULT URL',photo_url)
+
+            api_check_id_channel = -1002558196527
+
+            photo_msg = await bot.send_photo(chat_id=api_check_id_channel,
+                                             photo=types.URLInputFile(url=photo_url))
+            _photo = photo_msg.photo
+            
+            if _photo:
+                photo_id = _photo[0].file_id
+    else:
+        # photo_id = TEST_PHOTO_ID
+        photo_id = DEFAULT_PRODUCT_PHOTO_ID
+
+    update_query = (
+        update(
+            Product
+        )\
+        .values(photo_id=photo_id)\
+        .where(
+            Product.id == product_id
+        )
+    )
+
+    await session.execute(update_query)
+
+
+async def try_get_ozon_product_photo(short_link: str,
+                                     text_data: str,
+                                     session: AsyncSession):
+    check_query = (
+        select(
+            Product.photo_id,
+        )\
+        .where(
+            Product.short_link == short_link,
+        )
+    )
+
+    async with session as _session:
+        res = await _session.execute(check_query)
+
+    product_photo = res.scalar_one_or_none()
+
+    if product_photo:
+        return product_photo
+
+    # photo_url_pattern = r'image\\":\\"https:\/\/cdn1\.ozone\.ru\/s3\/multimedia-\d+(-\w+)?\/\d+\.jpg'
+
+    photo_url_pattern = r'images\\":\[{\\"src\\":\\"https:\/\/cdn1\.ozone\.ru\/s3\/multimedia-[a-z0-9]*(-\w*)?\/\d+\.jpg'
+    
+    match = re.search(photo_url_pattern, text_data)
+
+    if match:
+        # print('search',match.group())
+        photo_url_match = re.search(r'https.*\.jpg?', match.group())
+        if photo_url_match:
+            photo_url = photo_url_match.group()
+            # print('RESULT URL',photo_url)
+
+            api_check_id_channel = -1002558196527
+
+            photo_msg = await bot.send_photo(chat_id=api_check_id_channel,
+                                             photo=types.URLInputFile(url=photo_url))
+            _photo = photo_msg.photo
+            
+            if _photo:
+                photo_id = _photo[0].file_id
+
+                return photo_id
+                # print('PHOTO ID',photo_id)
+            
+            # await bot.delete_message(chat_id=user_id,
+            #                          message_id=photo_msg.message_id)
+    else:
+        print("URL не найден")
+
+
 async def save_ozon_product(user_id: int,
                             link: str,
                             name: str | None,
@@ -1180,7 +1293,7 @@ async def save_ozon_product(user_id: int,
     print('do request on OZON API (new version)')
 
     # try:
-    timeout = aiohttp.ClientTimeout(total=30)
+    timeout = aiohttp.ClientTimeout(total=35)
     async with aiohttp.ClientSession() as aiosession:
         # _url = f"http://5.61.53.235:1441/product/{message.text}"
         if not del_zone:
@@ -1211,6 +1324,14 @@ async def save_ozon_product(user_id: int,
 
     response_data = res.split('|')[-1]
     json_data: dict = json.loads(response_data)
+
+    photo_id = await try_get_ozon_product_photo(short_link=_new_short_link,
+                                                text_data=res,
+                                                session=session)
+
+    if not photo_id:
+        print('Не удалось спарсить фото OZON товара')
+        raise Exception()
 
     w = re.findall(r'\"cardPrice.*currency?', res)
 
@@ -1275,12 +1396,105 @@ async def save_ozon_product(user_id: int,
         'basic_price': basic_price,
         'sale': _sale,
         'user_id': user_id,
+        'photo_id': photo_id,
     }
 
     await add_product_to_db(_data,
                             'ozon',
                             is_first_product,
                             session)
+    
+
+async def try_update_wb_product_photo(product_id: int,
+                                      short_link: str,
+                                      session: AsyncSession):
+    api_check_id_channel = -1002558196527
+
+    # _url = f"{WB_API_URL}/product/image/{short_link}"
+    _url = f"http://5.61.53.235:1435/product/image/{short_link}"
+    timeout = aiohttp.ClientTimeout(total=15)
+    async with aiohttp.ClientSession() as aiosession:
+        async with aiosession.get(url=_url,
+                                    timeout=timeout) as response:
+            _status_code = response.status
+
+            res = await response.text()
+    try:
+        image_data = base64.b64decode(res)
+
+        image_name = 'test_image.png'
+
+        async with aiofiles.open(image_name, 'wb') as file:
+            await file.write(image_data)
+
+        photo_msg = await bot.send_photo(chat_id=api_check_id_channel,
+                                        photo=types.FSInputFile(path=f'./{image_name}'))
+        
+        if photo_msg.photo:
+            photo_id = photo_msg.photo[0].file_id
+    except Exception as ex:
+        print(ex)
+        # photo_id = TEST_PHOTO_ID
+        photo_id = DEFAULT_PRODUCT_PHOTO_ID
+    
+    update_query = (
+        update(
+            Product
+        )\
+        .values(photo_id=photo_id)\
+        .where(Product.id == product_id)
+    )
+
+    await session.execute(update_query)
+
+    
+
+
+
+async def try_get_wb_product_photo(short_link: str,
+                                   session: AsyncSession):
+    check_query = (
+        select(
+            Product.photo_id,
+        )\
+        .where(
+            Product.short_link == short_link,
+        )
+    )
+
+    async with session as _session:
+        res = await _session.execute(check_query)
+
+    product_photo = res.scalar_one_or_none()
+
+    if product_photo:
+        return product_photo
+
+    api_check_id_channel = -1002558196527
+
+    _url = f"http://5.61.53.235:1435/product/image/{short_link}"
+    timeout = aiohttp.ClientTimeout(total=15)
+    async with aiohttp.ClientSession() as aiosession:
+        async with aiosession.get(url=_url,
+                                    timeout=timeout) as response:
+            _status_code = response.status
+
+            res = await response.text()
+    
+    image_data = base64.b64decode(res)
+
+    image_name = 'test_image.png'
+
+    async with aiofiles.open(image_name, 'wb') as file:
+        await file.write(image_data)
+
+    photo_msg = await bot.send_photo(chat_id=api_check_id_channel,
+                                     photo=types.FSInputFile(path=f'./{image_name}'))
+    
+    if photo_msg.photo:
+        photo_id = photo_msg.photo[0].file_id
+
+        return photo_id
 
 
 async def save_wb_product(user_id: int,
@@ -1343,6 +1557,13 @@ async def save_wb_product(user_id: int,
 
                 res = await response.json()
 
+    photo_id = await try_get_wb_product_photo(short_link=short_link,
+                                              session=session)
+
+    if not photo_id:
+        print('Не удалось спарсить фото WB товара')
+        raise Exception()
+
     d = res.get('data')
 
     sizes = d.get('products')[0].get('sizes')
@@ -1376,6 +1597,7 @@ async def save_wb_product(user_id: int,
         'sale': _sale,
         'name': _data_name,
         'user_id': user_id,
+        'photo_id': photo_id,
     }
 
     await add_product_to_db(_data,
@@ -1429,6 +1651,43 @@ async def new_save_product(user_data: dict,
                               name=_name,
                               is_first_product=is_first_product,
                               session=session)
+
+
+async def test_add_photo_to_exist_products():
+    product_query = (
+        select(
+            Product.id,
+            Product.product_marker,
+            Product.short_link,
+            Product.photo_id,
+        )
+    )
+
+    async for session in get_session():
+        async with session as _session:
+            res = await _session.execute(product_query)
+    
+            for product in res:
+                _id, marker, short_link, photo_id = product
+                print('PRODUCT', product)
+
+                if marker == 'wb':
+                    if not photo_id:
+                        await try_update_wb_product_photo(product_id=_id,
+                                                            short_link=short_link,
+                                                            session=_session)
+                elif marker == 'ozon':
+                    if not photo_id:
+                        await try_update_ozon_product_photo(product_id=_id,
+                                                            short_link=short_link,
+                                                            session=_session)
+                await asyncio.sleep(1.5)
+            
+            try:
+                await _session.commit()
+            except Exception as ex:
+                print(ex)
+                await _session.rollback()
 
 
 async def test_migrate_on_new_sctucture_db():
@@ -1505,7 +1764,7 @@ async def test_migrate_on_new_sctucture_db():
                     new_wb_product_id = new_wb_product.id
 
                     #          user_id | marker | product_id
-                    job_id = f'{user.tg_id}__wb__{new_wb_product_id}'
+                    job_id = f'{user.tg_id}:wb:{new_wb_product_id}'
                     # job_id = 'test_job_id'
 
                     # if marker == 'wb':
@@ -1618,7 +1877,7 @@ async def test_migrate_on_new_sctucture_db():
                 new_ozon_product_id = new_ozon_product.id
 
                 #          user_id | marker | product_id
-                job_id = f'{user.tg_id}__ozon__{new_ozon_product_id}'
+                job_id = f'{user.tg_id}:ozon:{new_ozon_product_id}'
                 # job_id = 'test_job_id'
 
                 # if marker == 'wb':
@@ -1749,6 +2008,8 @@ async def new_add_product_task(user_data: dict):
             except OzonAPICrashError as ex:
                 print('OZON API CRASH', ex)
                 pass
+            except aiohttp.ClientError as ex:
+                print('Таймаут по запросу к OZON API', ex)
             except Exception as ex:
                 print(ex)
                 _text = f'‼️ Возникла ошибка при добавлении {product_marker} товара\n\nПопробуйте повторить позже'
@@ -2406,6 +2667,7 @@ async def new_push_check_ozon_price(user_id: str,
                 query = (
                     select(
                         Product.id,
+                        UserProduct.id,
                         UserProduct.link,
                         Product.short_link,
                         UserProduct.actual_price,
@@ -2415,6 +2677,7 @@ async def new_push_check_ozon_price(user_id: str,
                         Punkt.ozon_zone,
                         Punkt.city,
                         UserProductJob.job_id,
+                        Product.photo_id,
                     )\
                     .select_from(UserProduct)\
                     .join(Product,
@@ -2440,18 +2703,18 @@ async def new_push_check_ozon_price(user_id: str,
                 except Exception:
                     pass
     if res:
-        main_product_id, link, short_link, actual_price, start_price, name, sale, zone, city, job_id = res[0]
+        main_product_id, _id, link, short_link, actual_price, start_price, name, sale, zone, city, job_id, photo_id = res[0]
 
         name = name if name is not None else 'Отсутствует'
         try:
             timeout = aiohttp.ClientTimeout(total=30)
             async with aiohttp.ClientSession() as aiosession:
                 if zone:
-                    _url = f"{OZON_API_URL}/product/{zone}/{short_link}"
-                    # _url = f"http://5.61.53.235:1441/product/{zone}/{short_link}"
+                    # _url = f"{OZON_API_URL}/product/{zone}/{short_link}"
+                    _url = f"http://5.61.53.235:1441/product/{zone}/{short_link}"
                 else:
-                    _url = f"{OZON_API_URL}/product/{short_link}"
-                    # _url = f"http://5.61.53.235:1441/product/{short_link}"
+                    # _url = f"{OZON_API_URL}/product/{short_link}"
+                    _url = f"http://5.61.53.235:1441/product/{short_link}"
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
                     _status_code = response.status
@@ -2563,13 +2826,23 @@ async def new_push_check_ozon_price(user_id: str,
                                                              marker='ozon',
                                                              job_id=job_id,
                                                              with_redirect=False)
+                    
+                    _kb = add_graphic_btn(_kb,
+                                          user_id=user_id,
+                                          product_id=_id)
 
                     _kb = add_or_create_close_kb(_kb)
 
-                    msg = await bot.send_message(chat_id=user_id,
-                                                 text=_text,
-                                                 disable_notification=_disable_notification,
-                                                 reply_markup=_kb.as_markup())
+                    # msg = await bot.send_message(chat_id=user_id,
+                    #                              text=_text,
+                    #                              disable_notification=_disable_notification,
+                    #                              reply_markup=_kb.as_markup())
+                    msg = await bot.send_photo(chat_id=user_id,
+                                               photo=photo_id,
+                                               caption=_text,
+                                               disable_notification=_disable_notification,
+                                               reply_markup=_kb.as_markup())
+
                     await add_message_to_delete_dict(msg)
                     return
 
@@ -2590,6 +2863,7 @@ async def new_push_check_wb_price(user_id: str,
                 query = (
                     select(
                         Product.id,
+                        UserProduct.id,
                         UserProduct.link,
                         Product.short_link,
                         UserProduct.actual_price,
@@ -2599,6 +2873,7 @@ async def new_push_check_wb_price(user_id: str,
                         Punkt.wb_zone,
                         Punkt.city,
                         UserProductJob.job_id,
+                        Product.photo_id,
                     )\
                     .select_from(UserProduct)\
                     .join(Product,
@@ -2624,7 +2899,7 @@ async def new_push_check_wb_price(user_id: str,
                 except Exception:
                     pass
     if res:
-        main_product_id, link, short_link, actual_price, start_price, name, sale, zone, city, job_id = res[0]
+        main_product_id, _id, link, short_link, actual_price, start_price, name, sale, zone, city, job_id, photo_id = res[0]
 
         name = name if name is not None else 'Отсутствует'
 
@@ -2716,13 +2991,22 @@ async def new_push_check_wb_price(user_id: str,
                                                              marker='wb',
                                                              job_id=job_id,
                                                              with_redirect=False)
+                    _kb = add_graphic_btn(_kb,
+                                          user_id=user_id,
+                                          product_id=_id)
 
                     _kb = add_or_create_close_kb(_kb)
 
-                    msg = await bot.send_message(chat_id=user_id,
-                                                 text=_text,
-                                                 disable_notification=_disable_notification,
-                                                 reply_markup=_kb.as_markup())
+                    # msg = await bot.send_message(chat_id=user_id,
+                    #                              text=_text,
+                    #                              disable_notification=_disable_notification,
+                    #                              reply_markup=_kb.as_markup())
+                    msg = await bot.send_photo(chat_id=user_id,
+                                               photo=photo_id,
+                                               caption=_text,
+                                               disable_notification=_disable_notification,
+                                               reply_markup=_kb.as_markup())
+
                     await add_message_to_delete_dict(msg)
                     return
 

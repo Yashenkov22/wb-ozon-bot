@@ -44,13 +44,14 @@ from utils.scheduler import (push_check_ozon_price,
                              add_task_to_delete_old_message_for_users)
 from utils.storage import redis_client
 from utils.any import send_data_to_yandex_metica
+from utils.pics import DEFAULT_PRODUCT_LIST_PHOTO_ID
 
 from keyboards import (add_back_btn,
-                       add_pagination_btn,
+                       add_pagination_btn, create_back_to_product_btn,
                        create_or_add_exit_btn,
                        create_product_list_for_page_kb, new_add_pagination_btn, new_create_product_list_for_page_kb)
 
-from config import DEV_ID
+from config import DEV_ID, TEST_PHOTO_LIST
 
 
 DEFAULT_PAGE_ELEMENT_COUNT = 5
@@ -322,6 +323,7 @@ async def add_procent_to_product(user_data: dict,
 async def generate_graphic(user_id: int,
                            product_id: int,
                            city_subquery: Subquery,
+                           list_msg: tuple,
                            session: AsyncSession,
                            state: FSMContext):
     moscow_tz = pytz.timezone('Europe/Moscow')
@@ -333,6 +335,7 @@ async def generate_graphic(user_id: int,
             ProductPrice.time_price,
             func.coalesce(ProductPrice.city, default_value),
             Product.id,
+            Product.name,
         )\
         .select_from(ProductPrice)\
         .join(Product,
@@ -356,14 +359,14 @@ async def generate_graphic(user_id: int,
 
     res = res.fetchall()
 
-    # if not (res and len(res)) >= 3:
+    # if not (res and len(res) >= 3):
     #     raise NotEnoughGraphicData()
     
     price_list = []
     date_list = []
     
     for el in res:
-        _price, _date, _city, main_product_id = el
+        _price, _date, _city, main_product_id, name = el
         print(_city)
         _date: datetime
         price_list.append(_price)
@@ -384,7 +387,8 @@ async def generate_graphic(user_id: int,
     fig.add_trace(go.Scatter(x=date_list, y=price_list, mode='lines+markers'))
 
     # Настраиваем заголовок и оси
-    fig.update_layout(title='Пример графика с Plotly',
+    title_name = f'Изменение цен товара {name} по городу {_city}'
+    fig.update_layout(title=title_name,
                       xaxis_title='Дата',
                       xaxis_tickformat='%d-%m-%y %H:%M',
                       yaxis_title='Цена')
@@ -395,11 +399,16 @@ async def generate_graphic(user_id: int,
     filename = "plot.png"
     fig.write_image("plot.png")
 
-    _kb = create_or_add_exit_btn()
+    _kb = create_back_to_product_btn()
+    _kb = create_or_add_exit_btn(_kb)
 
-    photo_msg = await bot.send_photo(chat_id=user_id,
-                                     photo=types.FSInputFile(path=f'./{filename}'),
-                                     reply_markup=_kb.as_markup())
+    # photo_msg = await bot.send_photo(chat_id=user_id,
+    #                                  photo=types.FSInputFile(path=f'./{filename}'),
+    #                                  reply_markup=_kb.as_markup())
+    photo_msg = await bot.edit_message_media(chat_id=user_id,
+                                             message_id=list_msg[-1],
+                                             media=types.InputMediaPhoto(media=types.FSInputFile(path=f'./{filename}')),
+                                             reply_markup=_kb.as_markup())
 
     await add_message_to_delete_dict(photo_msg,
                                      state)
@@ -1267,10 +1276,15 @@ async def new_show_product_list(product_dict: dict,
     _text = f'📝 Список ваших товаров:\n\n🔽 Всего товаров: {len_product_list}\n\n🔵 Товаров с Ozon: {ozon_product_count}\n🟣 Товаров с Wildberries: {wb_product_count}\n\nПоказано {product_on_current_page_count} товаров на странице, нажмите ▶, чтобы листать список'
 
     if not list_msg:
-        list_msg: types.Message = await bot.send_message(chat_id=user_id,
-                            text=_text,
-                            reply_markup=_kb.as_markup())
-        
+        # list_msg: types.Message = await bot.send_message(chat_id=user_id,
+        #                                                  text=_text,
+        #                                                  reply_markup=_kb.as_markup())
+
+        list_msg: types.Message = await bot.send_photo(chat_id=user_id,
+                                                       photo=DEFAULT_PRODUCT_LIST_PHOTO_ID,
+                                                       caption=_text,
+                                                       reply_markup=_kb.as_markup())
+
         await add_message_to_delete_dict(list_msg,
                                          state)
         
@@ -1286,11 +1300,16 @@ async def new_show_product_list(product_dict: dict,
         await state.update_data(list_msg_on_delete=list_msg_on_delete)
         
     else:
-        await bot.edit_message_text(chat_id=user_id,
-                                    message_id=list_msg[-1],
-                                    text=_text,
-                                    reply_markup=_kb.as_markup())
-    
+        # await bot.edit_message_text(chat_id=user_id,
+        #                             message_id=list_msg[-1],
+        #                             text=_text,
+        #                             reply_markup=_kb.as_markup())
+        await bot.edit_message_media(chat_id=user_id,
+                                     media=types.InputMediaPhoto(media=DEFAULT_PRODUCT_LIST_PHOTO_ID,
+                                                                 caption=_text),
+                                     message_id=list_msg[-1],
+                                     reply_markup=_kb.as_markup())
+
     await state.update_data(view_product_dict=product_dict)
 
 

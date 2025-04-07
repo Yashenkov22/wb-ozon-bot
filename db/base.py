@@ -112,6 +112,7 @@ class Product(Base):
     short_link = Column(String, unique=True)
     seller = Column(String, nullable=True)
     rate = Column(String, nullable=True)
+    photo_id = Column(String, nullable=True)
 
 
 class UserProduct(Base):

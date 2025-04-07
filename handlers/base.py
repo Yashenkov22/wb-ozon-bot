@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.date import DateTrigger
 
-from keyboards import (create_or_add_exit_faq_btn,
+from keyboards import (create_back_to_product_btn, create_or_add_exit_faq_btn,
                        create_or_add_return_to_product_list_btn,
                        create_pagination_page_kb,
                        create_or_add_cancel_btn,
@@ -58,7 +58,7 @@ from utils.scheduler import add_product_task, add_punkt_by_user, new_add_product
 
 from utils.cities import city_index_dict
 
-from utils.pics import start_pic, faq_pic_dict
+from utils.pics import start_pic, faq_pic_dict, DEFAULT_PRODUCT_LIST_PHOTO_ID
 
 from utils.storage import redis_client
 
@@ -654,8 +654,8 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
         }
 
         await new_show_product_list(view_product_dict,
-                                message.from_user.id,
-                                state)
+                                    message.from_user.id,
+                                    state)
 
     try:
         await message.delete()
@@ -1008,10 +1008,15 @@ async def pagination_page(callback: types.Message | types.CallbackQuery,
     _kb = new_create_pagination_page_kb(product_dict)
     _kb = new_create_or_add_return_to_product_list_btn(_kb)
 
-    await bot.edit_message_text(chat_id=list_msg[0],
-                                message_id=list_msg[-1],
-                                text='Выберите страницу, на которую хотите перейти',
-                                reply_markup=_kb.as_markup())
+    # await bot.edit_message_text(chat_id=list_msg[0],
+    #                             message_id=list_msg[-1],
+    #                             text='Выберите страницу, на которую хотите перейти',
+    #                             reply_markup=_kb.as_markup())
+    await bot.edit_message_caption(chat_id=list_msg[0],
+                                   message_id=list_msg[-1],
+                                   caption='Выберите страницу, на которую хотите перейти',
+                                   reply_markup=_kb.as_markup())
+
     await callback.answer()
 
 
@@ -1153,6 +1158,21 @@ async def callback_close(callback: types.Message | types.CallbackQuery,
         print(ex)
     finally:
         await callback.answer()
+
+
+@main_router.callback_query(F.data == 'return_to_product')
+async def back_to_product(callback: types.CallbackQuery,
+                          state: FSMContext,
+                          session: AsyncSession,
+                          bot: Bot,
+                          scheduler: AsyncIOScheduler):
+    await new_view_product(callback,
+                           state,
+                           session,
+                           bot,
+                           scheduler,
+                           is_back=True)
+    await callback.answer()
 
 
 @main_router.callback_query(F.data == 'return_to_product_list')
@@ -1619,11 +1639,15 @@ async def new_edit_sale_callback(callback: types.CallbackQuery,
 
     _kb = create_or_add_cancel_btn()
 
-    msg = await bot.edit_message_text(text=f'<b>Установленная скидка на Ваш {marker.upper()} <a href="{link}">товар</a> {sale}</b>\n\nУкажите новую скидку <b>как число</b> в следующем сообщении',
-                                      chat_id=callback.from_user.id,
-                                      message_id=callback.message.message_id,
-                                      reply_markup=_kb.as_markup())
-    
+    # msg = await bot.edit_message_text(text=f'<b>Установленная скидка на Ваш {marker.upper()} <a href="{link}">товар</a> {sale}</b>\n\nУкажите новую скидку <b>как число</b> в следующем сообщении',
+    #                                   chat_id=callback.from_user.id,
+    #                                   message_id=callback.message.message_id,
+    #                                   reply_markup=_kb.as_markup())
+    msg = await bot.edit_message_caption(caption=f'<b>Установленная скидка на Ваш {marker.upper()} <a href="{link}">товар</a> {sale}</b>\n\nУкажите новую скидку <b>как число</b> в следующем сообщении',
+                                         chat_id=callback.from_user.id,
+                                         message_id=callback.message.message_id,
+                                         reply_markup=_kb.as_markup())
+
     await add_message_to_delete_dict(msg,
                                      state)
     
@@ -1876,6 +1900,12 @@ async def view_graphic(callback: types.CallbackQuery,
                        session: AsyncSession,
                        bot: Bot,
                        scheduler: AsyncIOScheduler):
+    data = await state.get_data()
+
+    product_dict: dict = data.get('view_product_dict')
+
+    list_msg: tuple = product_dict.get('list_msg')
+
     callback_data = callback.data.split('_')
 
     _, user_id, product_id = callback_data
@@ -1929,27 +1959,32 @@ async def view_graphic(callback: types.CallbackQuery,
         if not graphic_photo_id:
             try:
                 await generate_graphic(user_id=int(user_id),
-                                    product_id=int(product_id),
-                                    city_subquery=city_subquery,
-                                    session=session,
-                                    state=state)
+                                       product_id=int(product_id),
+                                       city_subquery=city_subquery,
+                                       list_msg=list_msg,
+                                       session=session,
+                                       state=state)
             except NotEnoughGraphicData as ex:
                 print(ex)
                 await callback.answer(text='Недостаточно данных для построения графика',
                                       show_alert=True)
         else:
-            _kb = create_or_add_exit_btn()
-            photo_msg = await bot.send_photo(chat_id=user_id,
-                                            photo=graphic_photo_id,
-                                            reply_markup=_kb.as_markup())
+            _kb = create_back_to_product_btn()
+            _kb = create_or_add_exit_btn(_kb)
+            # photo_msg = await bot.send_photo(chat_id=user_id,
+            #                                 photo=graphic_photo_id,
+            #                                 reply_markup=_kb.as_markup())
+            photo_msg = await bot.edit_message_media(chat_id=user_id,
+                                                     message_id=list_msg[-1],
+                                                     media=types.InputMediaPhoto(media=graphic_photo_id),
+                                                     reply_markup=_kb.as_markup())
             
             await add_message_to_delete_dict(photo_msg,
-                                            state)
+                                             state)
     except Exception as ex:
         print(ex)
         await callback.answer(text='Не удалось построить график',
                                 show_alert=True)
-
 
 
 @main_router.callback_query(F.data.startswith('view-product1'))
@@ -2115,52 +2150,72 @@ async def new_view_product(callback: types.CallbackQuery,
                         session: AsyncSession,
                         bot: Bot,
                         scheduler: AsyncIOScheduler,
-                        marker: str = None):
+                        is_back: bool = False):
     data = await state.get_data()
 
     product_dict: dict = data.get('view_product_dict')
 
     list_msg: tuple = product_dict.get('list_msg')
 
-    callback_data = callback.data.split('_')[1:]
+    if not is_back:
+        callback_data = callback.data.split('_')[1:]
 
-    user_id, marker, product_id = callback_data
+        user_id, marker, product_id = callback_data
 
-    query = (
-        select(
-            UserProduct.id,
-            UserProduct.link,
-            UserProduct.actual_price,
-            UserProduct.start_price,
-            UserProduct.user_id,
-            UserProduct.time_create,
-            Product.name,
-            UserProduct.sale,
-            Product.product_marker,
-            UserProductJob.job_id,
-        )\
-        .select_from(UserProduct)\
-        .join(Product,
-              UserProduct.product_id == Product.id)\
-        .outerjoin(UserProductJob,
-                   UserProductJob.user_product_id == UserProduct.id)\
-        .where(
-            UserProduct.id == int(product_id),
+        query = (
+            select(
+                UserProduct.id,
+                UserProduct.link,
+                UserProduct.actual_price,
+                UserProduct.start_price,
+                UserProduct.user_id,
+                # UserProduct.time_create,
+                Product.name,
+                UserProduct.sale,
+                Product.product_marker,
+                UserProductJob.job_id,
+                Product.photo_id,
+            )\
+            .select_from(UserProduct)\
+            .join(Product,
+                UserProduct.product_id == Product.id)\
+            .outerjoin(UserProductJob,
+                    UserProductJob.user_product_id == UserProduct.id)\
+            .where(
+                UserProduct.id == int(product_id),
+            )
         )
-    )
 
-    async with session as _session:
-        res = await _session.execute(query)
+        async with session as _session:
+            res = await _session.execute(query)
 
-        _data = res.fetchall()
-    
-    if _data:
-        _product = _data[0]
-        product_id, link, actaul_price, start_price, user_id, time_create, name, sale, product_marker, job_id = _product
+            _data = res.fetchall()
+        
+        if _data:
+            _product = _data[0]
+            # product_id, link, actaul_price, start_price, user_id, time_create, name, sale, product_marker, job_id, photo_id = _product
+            product_id, link, actaul_price, start_price, user_id, name, sale, product_marker, job_id, photo_id = _product
 
-    time_create: datetime
-    moscow_tz = pytz.timezone('Europe/Moscow')
-    moscow_time = time_create.astimezone(moscow_tz)
+        current_product = (
+            product_id,
+            link,
+            actaul_price,
+            start_price,
+            user_id,
+            name,
+            sale,
+            product_marker,
+            job_id,
+            photo_id,
+        )
+        await state.update_data(current_product=current_product)
+    else:
+        _product = data.get('current_product')
+        product_id, link, actaul_price, start_price, user_id, name, sale, product_marker, job_id, photo_id = _product
+
+    # time_create: datetime
+    # moscow_tz = pytz.timezone('Europe/Moscow')
+    # moscow_time = time_create.astimezone(moscow_tz)
     
     waiting_price = start_price - sale
 
@@ -2182,7 +2237,7 @@ async def new_view_product(callback: types.CallbackQuery,
 
     _kb = new_create_remove_and_edit_sale_kb(user_id=callback.from_user.id,
                                              product_id=product_id,
-                                             marker=marker,
+                                             marker=product_marker,
                                              job_id=job_id,
                                              with_redirect=True)
     _kb = add_graphic_btn(_kb,
@@ -2192,10 +2247,20 @@ async def new_view_product(callback: types.CallbackQuery,
     _kb = new_create_or_add_return_to_product_list_btn(_kb)
 
     if list_msg:
-        await bot.edit_message_text(chat_id=list_msg[0],
+        # await bot.edit_message_text(chat_id=list_msg[0],
+        #                             message_id=list_msg[-1],
+        #                             text=_text,
+        #                             reply_markup=_kb.as_markup())
+        await bot.edit_message_media(chat_id=list_msg[0],
                                     message_id=list_msg[-1],
-                                    text=_text,
+                                    media=types.InputMediaPhoto(media=photo_id,
+                                                                caption=_text),
                                     reply_markup=_kb.as_markup())
+        # await bot.edit_message_caption(chat_id=list_msg[0],
+        #                                message_id=list_msg[-1],
+        #                                caption=_text,
+        #                                reply_markup=_kb.as_markup())
+
     else:
         list_msg: types.Message =  bot.send_message(chat_id=callback.from_user.id,
                                                     text=_text,

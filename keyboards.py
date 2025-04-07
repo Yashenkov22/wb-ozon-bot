@@ -235,6 +235,15 @@ def new_create_remove_and_edit_sale_kb(user_id: int,
     return _kb
 
 
+def create_back_to_product_btn():
+    _kb = InlineKeyboardBuilder()
+
+    _kb.row(types.InlineKeyboardButton(text='Вернуться к товару',
+                                       callback_data='return_to_product'))
+    
+    return _kb
+
+
 def create_photo_keyboard(kb_init: str):
     product_kb = InlineKeyboardBuilder()
     match kb_init:
