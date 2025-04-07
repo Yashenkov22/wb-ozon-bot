@@ -50,7 +50,7 @@ from .pics import DEFAULT_PRODUCT_LIST_PHOTO_ID, DEFAULT_PRODUCT_PHOTO_ID
 from .cities import city_index_dict
 from .exc import OzonAPICrashError, OzonProductExistsError, WbAPICrashError, WbProductExistsError
 
-from config import DEV_ID, WB_API_URL, OZON_API_URL, JOB_STORE_URL, TEST_PHOTO_ID
+from config import DEV_ID, SUB_DEV_ID, WB_API_URL, OZON_API_URL, JOB_STORE_URL, TEST_PHOTO_ID
 
 
 # Настройка хранилища задач
@@ -1716,7 +1716,7 @@ async def test_migrate_on_new_sctucture_db():
                 'name': wb_product.name,
 
             }
-            if user.tg_id in (int(DEV_ID),):
+            if user.tg_id in (int(SUB_DEV_ID),):
                 product = Product(**product_data)
 
                 async with session as _session:
@@ -1827,7 +1827,7 @@ async def test_migrate_on_new_sctucture_db():
 
             }
 
-            if user.tg_id in (int(DEV_ID),):
+            if user.tg_id in (int(SUB_DEV_ID),):
                 product = Product(**product_data)
 
                 # async for session in get_session():

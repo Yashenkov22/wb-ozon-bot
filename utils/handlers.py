@@ -359,8 +359,8 @@ async def generate_graphic(user_id: int,
 
     res = res.fetchall()
 
-    # if not (res and len(res) >= 3):
-    #     raise NotEnoughGraphicData()
+    if not (res and len(res) >= 3):
+        raise NotEnoughGraphicData()
     
     price_list = []
     date_list = []
@@ -387,7 +387,7 @@ async def generate_graphic(user_id: int,
     fig.add_trace(go.Scatter(x=date_list, y=price_list, mode='lines+markers'))
 
     # Настраиваем заголовок и оси
-    title_name = f'Изменение цен товара {name} по городу {_city}'
+    title_name = f'{name} - {_city}'
     fig.update_layout(title=title_name,
                       xaxis_title='Дата',
                       xaxis_tickformat='%d-%m-%y %H:%M',
@@ -416,22 +416,53 @@ async def generate_graphic(user_id: int,
     if photo_msg.photo:
         photo_id = photo_msg.photo[0].file_id
 
-        insert_data = {
-            'product_id': main_product_id,
-            'city': _city,
-            'photo_id': photo_id,
-            'time_create': datetime.now(),
-        }
-
-        insert_query = (
-            insert(
-                ProductCityGraphic
+        check_graphic_query = (
+            select(
+                ProductCityGraphic.id
             )\
-            .values(**insert_data)
+            .where(
+                and_(
+                    ProductCityGraphic.city == _city,
+                    ProductCityGraphic.product_id == main_product_id,
+                )
+            )
         )
+        async with session as _session:
+            check_res = await _session.execute(check_graphic_query)
+
+        graphic_id = check_res.scalar_one_or_none()
+
+        if not graphic_id:
+
+            insert_data = {
+                'product_id': main_product_id,
+                'city': _city,
+                'photo_id': photo_id,
+                'time_create': datetime.now(),
+            }
+
+            final_query = (
+                insert(
+                    ProductCityGraphic
+                )\
+                .values(**insert_data)
+            )
+        else:
+            final_query = (
+                update(
+                    ProductCityGraphic
+                )\
+                .values(
+                    photo_id=photo_id,
+                    time_create=datetime.now(),
+                )\
+                .where(
+                    ProductCityGraphic.id == graphic_id,
+                )
+            )
 
         async with session as _session:
-            await _session.execute(insert_query)
+            await _session.execute(final_query)
             try:
                 await _session.commit()
                 print('add success')
