@@ -1660,6 +1660,9 @@ async def test_add_photo_to_exist_products():
             Product.product_marker,
             Product.short_link,
             Product.photo_id,
+        )\
+        .where(
+            Product.photo_id.is_(None),
         )
     )
 
