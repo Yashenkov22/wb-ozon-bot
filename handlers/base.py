@@ -480,7 +480,7 @@ async def get_all_products_by_user(message: types.Message | types.CallbackQuery,
     
     data = await state.get_data()
 
-    if not message.from_user.id in (int(DEV_ID),):
+    if not message.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
 
         subquery_wb = (
             select(UserJob.job_id,
@@ -725,7 +725,7 @@ async def specific_settings_block(callback: types.CallbackQuery,
     match settings_marker:
         case 'punkt':
             async with session as _session:
-                if callback.from_user.id == int(DEV_ID):
+                if callback.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
                     city_punkt = await new_check_has_punkt(user_id=callback.from_user.id,
                                                            session=_session)
                 else:
@@ -819,7 +819,7 @@ async def specific_punkt_block(callback: types.CallbackQuery,
                                         reply_markup=_kb.as_markup())
 
         case 'delete':
-            if callback.from_user.id == int(DEV_ID):
+            if callback.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
                 query = (
                     delete(
                         Punkt
@@ -963,7 +963,7 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
 
     await state.set_state()
 
-    if message.from_user.id == int(DEV_ID):
+    if message.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
         scheduler.add_job(new_add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
     else:
         scheduler.add_job(add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
@@ -2318,7 +2318,7 @@ async def any_input(message: types.Message,
             'product_marker': check_link,
         }
 
-        if message.from_user.id == int(DEV_ID):
+        if message.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
             print('run new bg task')
             scheduler.add_job(new_add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
         else:
