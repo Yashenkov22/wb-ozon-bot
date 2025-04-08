@@ -1227,12 +1227,12 @@ async def new_delete_callback(callback: types.CallbackQuery,
     
     _callback_data = callback.data.split('_')
 
-    callback_prefix = _callback_data[1]
+    callback_prefix = _callback_data[0]
 
     if callback_prefix.endswith('rd'):
         with_redirect = False
 
-    callback_data = _callback_data[2:]
+    callback_data = _callback_data[1:]
     _, marker, user_id, product_id, job_id = callback_data
 
     print('JOB ID', job_id)
@@ -1970,6 +1970,7 @@ async def view_graphic(callback: types.CallbackQuery,
                                        session=session,
                                        state=state,
                                        is_background=is_background_message)
+                await callback.answer()
             except NotEnoughGraphicData as ex:
                 print(ex)
                 await callback.answer(text='Недостаточно данных для построения графика',
@@ -1989,6 +1990,7 @@ async def view_graphic(callback: types.CallbackQuery,
             
             await add_message_to_delete_dict(photo_msg,
                                              state)
+            await callback.answer()
     except Exception as ex:
         print(ex)
         await callback.answer(text='Не удалось построить график',
