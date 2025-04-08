@@ -1227,6 +1227,8 @@ async def new_delete_callback(callback: types.CallbackQuery,
     
     _callback_data = callback.data.split('_')
 
+    print(_callback_data)
+
     callback_prefix = _callback_data[0]
 
     if callback_prefix.endswith('rd'):
