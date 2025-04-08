@@ -1227,12 +1227,12 @@ async def new_delete_callback(callback: types.CallbackQuery,
     
     _callback_data = callback.data.split('_')
 
-    callback_prefix = _callback_data[0]
+    callback_prefix = _callback_data[1]
 
     if callback_prefix.endswith('rd'):
         with_redirect = False
 
-    callback_data = _callback_data[1:]
+    callback_data = _callback_data[2:]
     _, marker, user_id, product_id, job_id = callback_data
 
     print('JOB ID', job_id)
