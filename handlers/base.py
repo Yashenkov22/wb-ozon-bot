@@ -2260,6 +2260,8 @@ async def new_view_product(callback: types.CallbackQuery,
         #                       product_id)
         # _kb = create_or_add_return_to_product_list_btn(_kb)
         if is_background:
+            _kb = create_or_add_exit_btn(_kb)
+            
             await bot.edit_message_media(chat_id=callback.from_user.id,
                                         message_id=callback.message.message_id,
                                         media=types.InputMediaPhoto(media=photo_id,
