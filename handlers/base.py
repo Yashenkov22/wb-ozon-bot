@@ -72,7 +72,7 @@ from db.base import (OzonProduct as OzonProductModel,
                      UserProduct,
                      UserProductJob)
 
-from config import DEV_ID, SUB_DEV_ID
+from config import DEV_ID, SUB_DEV_ID, TEST_PHOTO_ID, TEST_PHOTO_LIST
 
 
 main_router = Router()
@@ -1160,18 +1160,24 @@ async def callback_close(callback: types.Message | types.CallbackQuery,
         await callback.answer()
 
 
-@main_router.callback_query(F.data == 'return_to_product')
+@main_router.callback_query(F.data.startswith('back_to_product'))
 async def back_to_product(callback: types.CallbackQuery,
                           state: FSMContext,
                           session: AsyncSession,
                           bot: Bot,
                           scheduler: AsyncIOScheduler):
+    _callback_data = callback.data.split('_')
+    print('from back_to_product',_callback_data)
+    _callback_marker = '_'.join(_callback_data[-2:])
+    user_id, product_id = _callback_data[-2], _callback_data[-1]
+    is_background_message = _callback_marker.endswith('bg')
+
     await new_view_product(callback,
                            state,
                            session,
                            bot,
                            scheduler,
-                           is_back=True)
+                           is_background=is_background_message)
     await callback.answer()
 
 
@@ -1900,15 +1906,14 @@ async def view_graphic(callback: types.CallbackQuery,
                        session: AsyncSession,
                        bot: Bot,
                        scheduler: AsyncIOScheduler):
-    data = await state.get_data()
-
-    product_dict: dict = data.get('view_product_dict')
-
-    list_msg: tuple = product_dict.get('list_msg')
+    chat_id = callback.from_user.id
+    message_id = callback.message.message_id
 
     callback_data = callback.data.split('_')
 
-    _, user_id, product_id = callback_data
+    callback_marker, user_id, product_id = callback_data
+
+    is_background_message = callback_marker.endswith('bg')
 
     default_value = 'МОСКВА'
 
@@ -1961,21 +1966,24 @@ async def view_graphic(callback: types.CallbackQuery,
                 await generate_graphic(user_id=int(user_id),
                                        product_id=int(product_id),
                                        city_subquery=city_subquery,
-                                       list_msg=list_msg,
+                                       message_id=message_id,
                                        session=session,
-                                       state=state)
+                                       state=state,
+                                       is_background=is_background_message)
             except NotEnoughGraphicData as ex:
                 print(ex)
                 await callback.answer(text='Недостаточно данных для построения графика',
                                       show_alert=True)
         else:
-            _kb = create_back_to_product_btn()
+            _kb = create_back_to_product_btn(user_id=user_id,
+                                             product_id=product_id,
+                                             is_background_task=is_background_message)
             _kb = create_or_add_exit_btn(_kb)
             # photo_msg = await bot.send_photo(chat_id=user_id,
             #                                 photo=graphic_photo_id,
             #                                 reply_markup=_kb.as_markup())
             photo_msg = await bot.edit_message_media(chat_id=user_id,
-                                                     message_id=list_msg[-1],
+                                                     message_id=message_id,
                                                      media=types.InputMediaPhoto(media=graphic_photo_id),
                                                      reply_markup=_kb.as_markup())
             
@@ -2150,127 +2158,143 @@ async def new_view_product(callback: types.CallbackQuery,
                         session: AsyncSession,
                         bot: Bot,
                         scheduler: AsyncIOScheduler,
-                        is_back: bool = False):
+                        is_background: bool = False):
+    print(callback.data)
+
     data = await state.get_data()
 
     product_dict: dict = data.get('view_product_dict')
 
     list_msg: tuple = product_dict.get('list_msg')
 
-    if not is_back:
-        callback_data = callback.data.split('_')[1:]
+    callback_data = callback.data.split('_')
 
-        user_id, marker, product_id = callback_data
-
-        query = (
-            select(
-                UserProduct.id,
-                UserProduct.link,
-                UserProduct.actual_price,
-                UserProduct.start_price,
-                UserProduct.user_id,
-                # UserProduct.time_create,
-                Product.name,
-                UserProduct.sale,
-                Product.product_marker,
-                UserProductJob.job_id,
-                Product.photo_id,
-            )\
-            .select_from(UserProduct)\
-            .join(Product,
-                UserProduct.product_id == Product.id)\
-            .outerjoin(UserProductJob,
-                    UserProductJob.user_product_id == UserProduct.id)\
-            .where(
-                UserProduct.id == int(product_id),
-            )
-        )
-
-        async with session as _session:
-            res = await _session.execute(query)
-
-            _data = res.fetchall()
-        
-        if _data:
-            _product = _data[0]
-            # product_id, link, actaul_price, start_price, user_id, time_create, name, sale, product_marker, job_id, photo_id = _product
-            product_id, link, actaul_price, start_price, user_id, name, sale, product_marker, job_id, photo_id = _product
-
-        current_product = (
-            product_id,
-            link,
-            actaul_price,
-            start_price,
-            user_id,
-            name,
-            sale,
-            product_marker,
-            job_id,
-            photo_id,
-        )
-        await state.update_data(current_product=current_product)
+    if not is_background:
+        if len(callback_data) == 4:
+            user_id, marker, product_id = callback_data[1:]
+        else:
+            user_id, product_id = callback_data[-2], callback_data[-1]
     else:
-        _product = data.get('current_product')
+        user_id, product_id = callback_data[-2], callback_data[-1]
+
+    query = (
+        select(
+            UserProduct.id,
+            UserProduct.link,
+            UserProduct.actual_price,
+            UserProduct.start_price,
+            UserProduct.user_id,
+            # UserProduct.time_create,
+            Product.name,
+            UserProduct.sale,
+            Product.product_marker,
+            UserProductJob.job_id,
+            Product.photo_id,
+        )\
+        .select_from(UserProduct)\
+        .join(Product,
+            UserProduct.product_id == Product.id)\
+        .outerjoin(UserProductJob,
+                UserProductJob.user_product_id == UserProduct.id)\
+        .where(
+            UserProduct.id == int(product_id),
+        )
+    )
+
+    async with session as _session:
+        res = await _session.execute(query)
+
+        _data = res.fetchall()
+    
+    if _data:
+        _product = _data[0]
+        # product_id, link, actaul_price, start_price, user_id, time_create, name, sale, product_marker, job_id, photo_id = _product
         product_id, link, actaul_price, start_price, user_id, name, sale, product_marker, job_id, photo_id = _product
+
+    #     current_product = (
+    #         product_id,
+    #         link,
+    #         actaul_price,
+    #         start_price,
+    #         user_id,
+    #         name,
+    #         sale,
+    #         product_marker,
+    #         job_id,
+    #         photo_id,
+    #     )
+    #     await state.update_data(current_product=current_product)
+    # else:
+    #     _product = data.get('current_product')
+    #     product_id, link, actaul_price, start_price, user_id, name, sale, product_marker, job_id, photo_id = _product
 
     # time_create: datetime
     # moscow_tz = pytz.timezone('Europe/Moscow')
     # moscow_time = time_create.astimezone(moscow_tz)
     
-    waiting_price = start_price - sale
+        waiting_price = start_price - sale
 
-    _text_start_price = generate_pretty_amount(start_price)
-    _text_product_price = generate_pretty_amount(actaul_price)
+        _text_start_price = generate_pretty_amount(start_price)
+        _text_product_price = generate_pretty_amount(actaul_price)
 
-    _text_sale = generate_pretty_amount(sale)
-    _text_price_with_sale = generate_pretty_amount((start_price - sale))
-    
-    _text = f'Название: <a href="{link}">{name}</a>\nМаркетплейс: {product_marker}\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {_text_sale}\nОжидаемая цена: {_text_price_with_sale}'
-
-    await state.update_data(
-        sale_data={
-            'link': link,
-            'sale': sale,
-            'start_price': start_price,
-        }
-    )
-
-    _kb = new_create_remove_and_edit_sale_kb(user_id=callback.from_user.id,
-                                             product_id=product_id,
-                                             marker=product_marker,
-                                             job_id=job_id,
-                                             with_redirect=True)
-    _kb = add_graphic_btn(_kb,
-                          user_id,
-                          product_id)
-    # _kb = create_or_add_return_to_product_list_btn(_kb)
-    _kb = new_create_or_add_return_to_product_list_btn(_kb)
-
-    if list_msg:
-        # await bot.edit_message_text(chat_id=list_msg[0],
-        #                             message_id=list_msg[-1],
-        #                             text=_text,
-        #                             reply_markup=_kb.as_markup())
-        await bot.edit_message_media(chat_id=list_msg[0],
-                                    message_id=list_msg[-1],
-                                    media=types.InputMediaPhoto(media=photo_id,
-                                                                caption=_text),
-                                    reply_markup=_kb.as_markup())
-        # await bot.edit_message_caption(chat_id=list_msg[0],
-        #                                message_id=list_msg[-1],
-        #                                caption=_text,
-        #                                reply_markup=_kb.as_markup())
-
-    else:
-        list_msg: types.Message =  bot.send_message(chat_id=callback.from_user.id,
-                                                    text=_text,
-                                                    reply_markup=_kb.as_markup())
-
-        await add_message_to_delete_dict(list_msg,
-                                         state)
-
-        await state.update_data(list_msg=(list_msg.chat.id, list_msg.message_id))
+        _text_sale = generate_pretty_amount(sale)
+        _text_price_with_sale = generate_pretty_amount((start_price - sale))
         
+        _text = f'Название: <a href="{link}">{name}</a>\nМаркетплейс: {product_marker}\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {_text_sale}\nОжидаемая цена: {_text_price_with_sale}'
+
+        await state.update_data(
+            sale_data={
+                'link': link,
+                'sale': sale,
+                'start_price': start_price,
+            }
+        )
+
+        _kb = new_create_remove_and_edit_sale_kb(user_id=callback.from_user.id,
+                                                product_id=product_id,
+                                                marker=product_marker,
+                                                job_id=job_id,
+                                                with_redirect=not is_background)
+        # _kb = add_graphic_btn(_kb,
+        #                       user_id,
+        #                       product_id)
+        # _kb = create_or_add_return_to_product_list_btn(_kb)
+        if is_background:
+            await bot.edit_message_media(chat_id=callback.from_user.id,
+                                        message_id=callback.message.message_id,
+                                        media=types.InputMediaPhoto(media=photo_id,
+                                                                    caption=_text),
+                                        reply_markup=_kb.as_markup())
+            await callback.answer()
+            return
+
+        _kb = new_create_or_add_return_to_product_list_btn(_kb)
+
+        if list_msg:
+            # await bot.edit_message_text(chat_id=list_msg[0],
+            #                             message_id=list_msg[-1],
+            #                             text=_text,
+            #                             reply_markup=_kb.as_markup())
+            await bot.edit_message_media(chat_id=list_msg[0],
+                                        message_id=list_msg[-1],
+                                        media=types.InputMediaPhoto(media=photo_id,
+                                                                    caption=_text),
+                                        reply_markup=_kb.as_markup())
+            # await bot.edit_message_caption(chat_id=list_msg[0],
+            #                                message_id=list_msg[-1],
+            #                                caption=_text,
+            #                                reply_markup=_kb.as_markup())
+
+        else:
+            list_msg: types.Message =  bot.send_message(chat_id=callback.from_user.id,
+                                                        text=_text,
+                                                        reply_markup=_kb.as_markup())
+
+            await add_message_to_delete_dict(list_msg,
+                                            state)
+
+            await state.update_data(list_msg=(list_msg.chat.id, list_msg.message_id))
+            
     await callback.answer()            
 
 

@@ -2355,6 +2355,8 @@ async def push_check_wb_price(user_id: str,
                     print('актупльная:', _product_price)
 
             _product_price = float(_product_price)
+
+            print(f'TEST PRICE PROBLEM {_product_price} | {actual_price}')
             
             check_price = _product_price == actual_price
 
@@ -2540,6 +2542,8 @@ async def push_check_ozon_price(user_id: str,
 
 #
             _product_price = float(_product_price)
+
+            print(f'TEST PRICE PROBLEM {_product_price} | {actual_price}')
             
             check_price = _product_price == actual_price
 
@@ -2830,9 +2834,9 @@ async def new_push_check_ozon_price(user_id: str,
                                                              job_id=job_id,
                                                              with_redirect=False)
                     
-                    _kb = add_graphic_btn(_kb,
-                                          user_id=user_id,
-                                          product_id=_id)
+                    # _kb = add_graphic_btn(_kb,
+                    #                       user_id=user_id,
+                    #                       product_id=_id)
 
                     _kb = add_or_create_close_kb(_kb)
 
@@ -2994,9 +2998,9 @@ async def new_push_check_wb_price(user_id: str,
                                                              marker='wb',
                                                              job_id=job_id,
                                                              with_redirect=False)
-                    _kb = add_graphic_btn(_kb,
-                                          user_id=user_id,
-                                          product_id=_id)
+                    # _kb = add_graphic_btn(_kb,
+                    #                       user_id=user_id,
+                    #                       product_id=_id)
 
                     _kb = add_or_create_close_kb(_kb)
 

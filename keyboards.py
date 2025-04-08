@@ -223,24 +223,34 @@ def new_create_remove_and_edit_sale_kb(user_id: int,
     if with_redirect:
         delete_callback_data = f'delete.new_{_callback_data}_{job_id}'
         edit_sale_callback_data = f'edit.new.sale_{_callback_data}'
+        graphic_callback_data = f'graphic_{user_id}_{product_id}'
     else:
         delete_callback_data = f'delete.new.no.rd_{_callback_data}_{job_id}'
         edit_sale_callback_data = f'edit.new.sale.no.rd_{_callback_data}'
+        graphic_callback_data = f'graphic.bg_{user_id}_{product_id}'
     
     _kb.row(types.InlineKeyboardButton(text='Изменить сумму скидки',
                                        callback_data=edit_sale_callback_data))
+    _kb.row(types.InlineKeyboardButton(text='График изменение цен',
+                                       callback_data=graphic_callback_data))    
     _kb.row(types.InlineKeyboardButton(text='Перестать отслеживать',
                                        callback_data=delete_callback_data))
     
     return _kb
 
 
-def create_back_to_product_btn():
+def create_back_to_product_btn(user_id: int,
+                               product_id: int,
+                               is_background_task: bool = False):
     _kb = InlineKeyboardBuilder()
 
-    _kb.row(types.InlineKeyboardButton(text='Вернуться к товару',
-                                       callback_data='return_to_product'))
-    
+    if not is_background_task:
+        _kb.row(types.InlineKeyboardButton(text='Вернуться к товару',
+                                        callback_data=f'back_to_product_{user_id}_{product_id}'))
+    else:
+        _kb.row(types.InlineKeyboardButton(text='Вернуться к товару',
+                                        callback_data=f'back_to_product.bg_{user_id}_{product_id}'))
+
     return _kb
 
 

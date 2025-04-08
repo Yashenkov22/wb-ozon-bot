@@ -323,9 +323,10 @@ async def add_procent_to_product(user_data: dict,
 async def generate_graphic(user_id: int,
                            product_id: int,
                            city_subquery: Subquery,
-                           list_msg: tuple,
+                           message_id: int,
                            session: AsyncSession,
-                           state: FSMContext):
+                           state: FSMContext,
+                           is_background: bool = False):
     moscow_tz = pytz.timezone('Europe/Moscow')
     default_value = 'МОСКВА'
 
@@ -399,14 +400,16 @@ async def generate_graphic(user_id: int,
     filename = "plot.png"
     fig.write_image("plot.png")
 
-    _kb = create_back_to_product_btn()
+    _kb = create_back_to_product_btn(user_id=user_id,
+                                     product_id=product_id,
+                                     is_background_task=is_background)
     _kb = create_or_add_exit_btn(_kb)
 
     # photo_msg = await bot.send_photo(chat_id=user_id,
     #                                  photo=types.FSInputFile(path=f'./{filename}'),
     #                                  reply_markup=_kb.as_markup())
     photo_msg = await bot.edit_message_media(chat_id=user_id,
-                                             message_id=list_msg[-1],
+                                             message_id=message_id,
                                              media=types.InputMediaPhoto(media=types.FSInputFile(path=f'./{filename}')),
                                              reply_markup=_kb.as_markup())
 
