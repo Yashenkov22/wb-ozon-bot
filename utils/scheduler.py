@@ -1924,7 +1924,7 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     print('start up update scheduler jobs...')
     for job in jobs:
         if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
-            if job.id.find('wb') > 0:
+            if job.id.find('wb') != -1:
                 if job.id.find(DEV_ID) != 1 or job.id.find(SUB_DEV_ID) != 1:
                     modify_func = new_push_check_wb_price
                 else:
