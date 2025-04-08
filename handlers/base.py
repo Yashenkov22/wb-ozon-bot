@@ -1168,7 +1168,7 @@ async def back_to_product(callback: types.CallbackQuery,
                           scheduler: AsyncIOScheduler):
     _callback_data = callback.data.split('_')
     print('from back_to_product',_callback_data)
-    _callback_marker = '_'.join(_callback_data[-2:])
+    _callback_marker = '_'.join(_callback_data[:-2])
     user_id, product_id = _callback_data[-2], _callback_data[-1]
     is_background_message = _callback_marker.endswith('bg')
 
