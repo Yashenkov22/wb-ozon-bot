@@ -1918,9 +1918,46 @@ async def test_migrate_on_new_sctucture_db():
     print('DONE')
 
 
+async def recreate_my_scheduler_jobs():
+    query = (
+        select(
+            UserProductJob.job_id
+        )\
+        .where(
+            UserProductJob.job_id.like('686339126:%')
+        )
+    )
+    async for session in get_session():
+        async with session as _session:
+            res = await _session.execute(query)
+
+    res = res.fetchall()
+
+    for data in res:
+        _job_id = data[0]
+
+        user_id, marker, user_product_id = _job_id.split(':')
+
+        if marker == 'wb':
+            scheduler_func = new_push_check_wb_price
+        else:
+            scheduler_func = new_push_check_ozon_price
+
+        job = scheduler.add_job(scheduler_func,
+                                trigger='interval',
+                                minutes=15,
+                                id=_job_id,
+                                jobstore='sqlalchemy',
+                                coalesce=True,
+                                kwargs={'user_id': int(user_id),
+                                        'product_id': int(user_product_id)})
+        if job:
+            print('TASK CREATED')
+
+
+
 def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     jobs: list[Job] = scheduler.get_jobs(jobstore='sqlalchemy')
-    print(jobs)
 
     print('start up update scheduler jobs...')
     for job in jobs:
