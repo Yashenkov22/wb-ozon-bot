@@ -2663,6 +2663,27 @@ async def try_add_product_price_to_db(product_id: int,
                 print(ex)
 
 
+async def update_last_send_price_by_user_product(last_send_price: float,
+                                                 user_product_id: int):
+    update_query = (
+        update(
+            UserProduct
+        )\
+        .values(last_send_price=last_send_price)\
+        .where(
+            UserProduct.id == user_product_id,
+        )
+    )
+    async for session in get_session():
+        async with session as _session:
+            await _session.execute(update_query)
+            try:
+                await _session.commit()
+            except Exception as ex:
+                print('UPDATE LAST SEND PRICE ERROR', ex)
+                await _session.rollback()
+
+
 async def new_push_check_ozon_price(user_id: str,
                                     product_id: str):
     
@@ -2685,6 +2706,7 @@ async def new_push_check_ozon_price(user_id: str,
                         Punkt.city,
                         UserProductJob.job_id,
                         Product.photo_id,
+                        UserProduct.last_send_price,
                     )\
                     .select_from(UserProduct)\
                     .join(Product,
@@ -2710,7 +2732,7 @@ async def new_push_check_ozon_price(user_id: str,
                 except Exception:
                     pass
     if res:
-        main_product_id, _id, link, short_link, actual_price, start_price, name, sale, zone, city, job_id, photo_id = res[0]
+        main_product_id, _id, link, short_link, actual_price, start_price, name, sale, zone, city, job_id, photo_id, last_send_price = res[0]
 
         name = name if name is not None else 'Отсутствует'
         try:
@@ -2820,6 +2842,11 @@ async def new_push_check_ozon_price(user_id: str,
                 pretty_start_price = generate_pretty_amount(start_price)
 
                 if _waiting_price >= _product_price:
+                    
+                    # проверка, отправлялось ли уведомление с такой ценой в прошлый раз
+                    if last_send_price is not None and (last_send_price == _product_price):
+                        print(f'LAST SEND PRICE VALIDATION STOP {last_send_price} | {_product_price}')
+                        return
 
                     if actual_price < _product_price:
                         _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{name}</a>\n\nМаркетплейс: Ozon\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
@@ -2849,6 +2876,9 @@ async def new_push_check_ozon_price(user_id: str,
                                                caption=_text,
                                                disable_notification=_disable_notification,
                                                reply_markup=_kb.as_markup())
+                    
+                    await update_last_send_price_by_user_product(last_send_price=_product_price,
+                                                                 user_product_id=_id)
 
                     await add_message_to_delete_dict(msg)
                     return
@@ -2881,6 +2911,7 @@ async def new_push_check_wb_price(user_id: str,
                         Punkt.city,
                         UserProductJob.job_id,
                         Product.photo_id,
+                        UserProduct.last_send_price,
                     )\
                     .select_from(UserProduct)\
                     .join(Product,
@@ -2906,7 +2937,7 @@ async def new_push_check_wb_price(user_id: str,
                 except Exception:
                     pass
     if res:
-        main_product_id, _id, link, short_link, actual_price, start_price, name, sale, zone, city, job_id, photo_id = res[0]
+        main_product_id, _id, link, short_link, actual_price, start_price, name, sale, zone, city, job_id, photo_id, last_send_price = res[0]
 
         name = name if name is not None else 'Отсутствует'
 
@@ -2986,6 +3017,11 @@ async def new_push_check_wb_price(user_id: str,
                 
                 if _waiting_price >= _product_price:
 
+                    # проверка, отправлялось ли уведомление с такой ценой в прошлый раз
+                    if last_send_price is not None and (last_send_price == _product_price):
+                        print(f'LAST SEND PRICE VALIDATION STOP {last_send_price} | {_product_price}')
+                        return
+
                     if actual_price < _product_price:
                         _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{name}</a>\n\nМаркетплейс: Wb\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
                         _disable_notification = True
@@ -3013,6 +3049,10 @@ async def new_push_check_wb_price(user_id: str,
                                                caption=_text,
                                                disable_notification=_disable_notification,
                                                reply_markup=_kb.as_markup())
+                    
+                    await update_last_send_price_by_user_product(last_send_price=_product_price,
+                                                                 user_product_id=_id)
+
 
                     await add_message_to_delete_dict(msg)
                     return

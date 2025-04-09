@@ -126,6 +126,7 @@ class UserProduct(Base):
     actual_price = Column(Integer)
     sale = Column(Integer)
     time_create = Column(TIMESTAMP(timezone=True))
+    last_send_price = Column(Integer, nullable=True, default=None)
 
     user = relationship(User, back_populates="products")
     product = relationship(Product, back_populates="user_products")
