@@ -1920,6 +1920,7 @@ async def test_migrate_on_new_sctucture_db():
 
 def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     jobs: list[Job] = scheduler.get_jobs(jobstore='sqlalchemy')
+    print(jobs)
 
     print('start up update scheduler jobs...')
     for job in jobs:
