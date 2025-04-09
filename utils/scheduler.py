@@ -3101,3 +3101,79 @@ async def new_push_check_wb_price(user_id: str,
         except Exception as ex:
             print(ex)
             pass
+
+
+async def create_new_punkts_from_old():
+    counter = 0
+    user_query = (
+        select(
+            User.tg_id
+        )
+    )
+    async for session in get_session():
+        async with session as _session:
+            user_res = await _session.execute(user_query)
+        
+            user_ids = user_res.scalars().all()
+
+            for user_id in user_ids:
+                
+                if user_id in (int(DEV_ID), int(SUB_DEV_ID)):
+                    continue
+
+                punkt_query = (
+                    select(
+                        WbPunkt.city,
+                        WbPunkt.index,
+                        WbPunkt.time_create,
+                        WbPunkt.zone,
+                        OzonPunkt.zone,
+                    )\
+                    .select_from(User)\
+                    .join(WbPunkt,
+                        WbPunkt.user_id == User.tg_id)\
+                    .join(OzonPunkt,
+                        OzonPunkt.user_id == User.tg_id)\
+                    .where(
+                        User.tg_id == user_id,
+                    )
+                )
+
+                # async with session as _session:
+                punkt_res = await _session.execute(punkt_query)
+
+                punkt_data = punkt_res.fetchall()
+                print(punkt_data, user_id)
+
+                if punkt_data:
+                    counter += 1
+
+                    city, index, time_create, wb_zone, ozon_zone = punkt_data[0]
+
+                    insert_data = {
+                        'city': city,
+                        'index': index,
+                        'time_create': time_create,
+                        'wb_zone': wb_zone,
+                        'ozon_zone': ozon_zone,
+                        'user_id': user_id,
+                    }
+
+                    insert_query = (
+                        insert(
+                            Punkt
+                        )\
+                        .values(**insert_data)
+                    )
+
+                    await _session.execute(insert_query)
+                    # await _session.commit()
+        # print(_session.new)
+        # print("Dirty objects before commit:", _session.dirty)
+            try:
+                await _session.commit()
+            except Exception as ex:
+                print(ex)
+                await _session.rollback()
+
+    print('COUNTER', counter)

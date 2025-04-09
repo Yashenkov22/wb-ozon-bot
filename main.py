@@ -34,7 +34,7 @@ from db.base import UserJob, engine, session, Base, db_url, get_session
 from middlewares.db import DbSessionMiddleware
 
 from utils.storage import redis_client, storage
-from utils.scheduler import (recreate_my_scheduler_jobs, scheduler, test_add_photo_to_exist_products,
+from utils.scheduler import (create_new_punkts_from_old, recreate_my_scheduler_jobs, scheduler, test_add_photo_to_exist_products,
                              test_migrate_on_new_sctucture_db,
                              startup_update_scheduler_jobs,
                              add_task_to_delete_old_message_for_users)
@@ -159,8 +159,9 @@ async def on_startup():
 
     # await test_migrate_on_new_sctucture_db()
     # await test_add_photo_to_exist_products()
+    await create_new_punkts_from_old()
     startup_update_scheduler_jobs(scheduler)
-    await recreate_my_scheduler_jobs()
+    # await recreate_my_scheduler_jobs()
     # await add_task_to_delete_old_message_for_users()
 
 

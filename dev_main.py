@@ -34,7 +34,7 @@ from db.base import UserJob, engine, session, Base, db_url, get_session
 from middlewares.db import DbSessionMiddleware
 
 from utils.storage import redis_client, storage
-from utils.scheduler import scheduler
+from utils.scheduler import create_new_punkts_from_old, scheduler
 from utils.utm import add_utm_to_db
 
 from schemas import UTMSchema
@@ -310,6 +310,7 @@ async def main():
     # scheduler = AsyncIOScheduler()
 
     # scheduler.add_jobstore('sqlalchemy', url=JOB_STORE_URL)
+    # await create_new_punkts_from_old()
 
     scheduler.start()
 
