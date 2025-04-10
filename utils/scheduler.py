@@ -1970,15 +1970,15 @@ def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     for job in jobs:
         if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
             if job.id.find('wb') != -1:
-                if job.id.find(DEV_ID) != -1 or job.id.find(SUB_DEV_ID) != -1:
-                    modify_func = new_push_check_wb_price
-                else:
-                    modify_func = push_check_wb_price
+                # if job.id.find(DEV_ID) != -1 or job.id.find(SUB_DEV_ID) != -1:
+                modify_func = new_push_check_wb_price
+                # else:
+                #     modify_func = push_check_wb_price
             else:
-                if job.id.find(DEV_ID) != -1 or job.id.find(SUB_DEV_ID) != -1:
-                    modify_func = new_push_check_ozon_price
-                else:
-                    modify_func = push_check_ozon_price
+                # if job.id.find(DEV_ID) != -1 or job.id.find(SUB_DEV_ID) != -1:
+                modify_func = new_push_check_ozon_price
+                # else:
+                #     modify_func = push_check_ozon_price
             
             job.modify(func=modify_func)
         
