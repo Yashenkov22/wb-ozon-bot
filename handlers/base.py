@@ -2244,7 +2244,7 @@ async def new_view_product(callback: types.CallbackQuery,
         _text_sale = generate_pretty_amount(sale)
         _text_price_with_sale = generate_pretty_amount((start_price - sale))
         
-        _text = f'Название: <a href="{link}">{name}</a>\nМаркетплейс: {product_marker}\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {_text_sale}\nОжидаемая цена: {_text_price_with_sale}'
+        _text = f'Название: <a href="{link}">{name}</a>\n\nМаркетплейс: {product_marker}\n\nНачальная цена: {_text_start_price}\nАктуальная цена: {_text_product_price}\n\nОтслеживается изменение цены на: {_text_sale}\nОжидаемая цена: {_text_price_with_sale}'
 
         await state.update_data(
             sale_data={
