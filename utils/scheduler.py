@@ -1335,8 +1335,9 @@ async def save_ozon_product(user_id: int,
                                                 session=session)
 
     if not photo_id:
-        print('Не удалось спарсить фото OZON товара')
-        raise Exception()
+        photo_id = DEFAULT_PRODUCT_PHOTO_ID
+        # print('Не удалось спарсить фото OZON товара')
+        # raise Exception()
 
     w = re.findall(r'\"cardPrice.*currency?', res)
 
@@ -1566,8 +1567,9 @@ async def save_wb_product(user_id: int,
                                               session=session)
 
     if not photo_id:
-        print('Не удалось спарсить фото WB товара')
-        raise Exception()
+        photo_id = DEFAULT_PRODUCT_PHOTO_ID
+        # print('Не удалось спарсить фото WB товара')
+        # raise Exception()
 
     d = res.get('data')
 
