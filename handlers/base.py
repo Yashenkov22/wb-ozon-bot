@@ -233,7 +233,7 @@ async def get_faq(callback: types.Message | types.CallbackQuery,
     _kb = create_question_faq_kb()
     _kb = create_or_add_exit_btn(_kb)
 
-    _text = '❓Часто задаваемые вопросы❓\n\n👇 Выберите ниже интересующий вас пункт👇'
+    _text = '❓Часто задаваемые вопросы❓\n\n👇 Выберите ниже интересующий вас пункт'
 
     faq_msg = await bot.send_message(chat_id=callback.from_user.id,
                                      text=_text,
@@ -677,7 +677,7 @@ async def get_settings(message: types.Message | types.CallbackQuery,
     data = await state.get_data()
 
     settings_msg: tuple = data.get('settings_msg')
-    faq_msg: tuple = data.get('faq_msg')    
+    faq_msg: tuple = data.get('faq_msg')
 
     if settings_msg:
         try:

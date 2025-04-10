@@ -1377,7 +1377,7 @@ async def delete_prev_subactive_msg(data: dict):
 
 async def try_delete_faq_messages(data: dict):
     try:
-        question_msg_list: list[int] = data.get('question_msg_list')
+        question_msg_list: list[int] = data.get('question_msg_list', list())
         back_to_faq_msg: tuple = data.get('back_to_faq_msg')
 
         _chat_id, _message_id = back_to_faq_msg
