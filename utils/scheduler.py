@@ -1719,7 +1719,7 @@ async def test_migrate_on_new_sctucture_db():
                 'name': wb_product.name,
 
             }
-            if user.tg_id in (int(SUB_DEV_ID),):
+            if user.tg_id not in (int(DEV_ID), int(SUB_DEV_ID)):
                 product = Product(**product_data)
 
                 async with session as _session:
@@ -1829,8 +1829,8 @@ async def test_migrate_on_new_sctucture_db():
                 'name': ozon_product.name,
 
             }
-
-            if user.tg_id in (int(SUB_DEV_ID),):
+            
+            if user.tg_id not in (int(DEV_ID), int(SUB_DEV_ID)):
                 product = Product(**product_data)
 
                 # async for session in get_session():
