@@ -1379,11 +1379,16 @@ async def try_delete_faq_messages(data: dict):
     try:
         question_msg_list: list[int] = data.get('question_msg_list', list())
         back_to_faq_msg: tuple = data.get('back_to_faq_msg')
+        faq_msg: tuple = data.get('faq_msg')
+
 
         _chat_id, _message_id = back_to_faq_msg
 
         question_msg_list.append(_message_id)
 
+        if faq_msg:
+            _, _message_id = faq_msg
+            question_msg_list.append(_message_id)
         # print(question_msg_list)
 
         try:
