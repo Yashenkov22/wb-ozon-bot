@@ -1679,12 +1679,14 @@ async def test_add_photo_to_exist_products():
                         await try_update_wb_product_photo(product_id=_id,
                                                             short_link=short_link,
                                                             session=_session)
+                        await asyncio.sleep(1.5)
+
                 elif marker == 'ozon':
                     if not photo_id:
                         await try_update_ozon_product_photo(product_id=_id,
                                                             short_link=short_link,
                                                             session=_session)
-                await asyncio.sleep(1.5)
+                        await asyncio.sleep(1.5)
             
             try:
                 await _session.commit()
