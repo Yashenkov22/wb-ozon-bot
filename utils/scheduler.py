@@ -1140,46 +1140,50 @@ async def add_product_to_db(data: dict,
 async def try_update_ozon_product_photo(product_id: int,
                                         short_link: str,
                                         session: AsyncSession):
-    timeout = aiohttp.ClientTimeout(total=35)
-    async with aiohttp.ClientSession() as aiosession:
-        # _url = f"http://5.61.53.235:1441/product/{message.text}"
-        # if not del_zone:
-        # _url = f"http://5.61.53.235:1441/product/{short_link}"
-        _url = f"{OZON_API_URL}/product/{short_link}"
-        # else:
-        #     _url = f"http://5.61.53.235:1441/product/{del_zone}/{ozon_short_link}"
-            # _url = f"{OZON_API_URL}/product/{del_zone}/{ozon_short_link}"
+    try:
+        timeout = aiohttp.ClientTimeout(total=35)
+        async with aiohttp.ClientSession() as aiosession:
+            # _url = f"http://5.61.53.235:1441/product/{message.text}"
+            # if not del_zone:
+            # _url = f"http://5.61.53.235:1441/product/{short_link}"
+            _url = f"{OZON_API_URL}/product/{short_link}"
+            # else:
+            #     _url = f"http://5.61.53.235:1441/product/{del_zone}/{ozon_short_link}"
+                # _url = f"{OZON_API_URL}/product/{del_zone}/{ozon_short_link}"
 
-        async with aiosession.get(url=_url,
-                                    timeout=timeout) as response:
-            _status_code = response.status
-            print(f'OZON RESPONSE CODE {_status_code}')
+            async with aiosession.get(url=_url,
+                                        timeout=timeout) as response:
+                _status_code = response.status
+                print(f'OZON RESPONSE CODE {_status_code}')
 
-            text_data = await response.text()
+                text_data = await response.text()
 
-    
-    # photo_url_pattern = r'images\\":\[{\\"src\\":\\"https:\/\/cdn1\.ozone\.ru\/s3\/multimedia-[a-z0-9]*(-\w*)?\/\d+\.jpg'
-    photo_url_pattern = r'images\\":\[{\\"src\\":\\"https:\/\/cdn1\.ozone\.ru\/s3\/multimedia-[a-z0-9]*(-\w*)?(\/*[a-z0-9]*\/*)?\/\d+\.jpg'
-    
-    match = re.search(photo_url_pattern, text_data)
+        
+        # photo_url_pattern = r'images\\":\[{\\"src\\":\\"https:\/\/cdn1\.ozone\.ru\/s3\/multimedia-[a-z0-9]*(-\w*)?\/\d+\.jpg'
+        photo_url_pattern = r'images\\":\[{\\"src\\":\\"https:\/\/cdn1\.ozone\.ru\/s3\/multimedia-[a-z0-9]*(-\w*)?(\/*[a-z0-9]*\/*)?\/\d+\.jpg'
+        
+        match = re.search(photo_url_pattern, text_data)
 
-    if match:
-        # print('search',match.group())
-        photo_url_match = re.search(r'https.*\.jpg?', match.group())
-        if photo_url_match:
-            photo_url = photo_url_match.group()
-            # print('RESULT URL',photo_url)
+        if match:
+            # print('search',match.group())
+            photo_url_match = re.search(r'https.*\.jpg?', match.group())
+            if photo_url_match:
+                photo_url = photo_url_match.group()
+                # print('RESULT URL',photo_url)
 
-            api_check_id_channel = -1002558196527
+                api_check_id_channel = -1002558196527
 
-            photo_msg = await bot.send_photo(chat_id=api_check_id_channel,
-                                             photo=types.URLInputFile(url=photo_url))
-            _photo = photo_msg.photo
-            
-            if _photo:
-                photo_id = _photo[0].file_id
-    else:
-        # photo_id = TEST_PHOTO_ID
+                photo_msg = await bot.send_photo(chat_id=api_check_id_channel,
+                                                photo=types.URLInputFile(url=photo_url))
+                _photo = photo_msg.photo
+                
+                if _photo:
+                    photo_id = _photo[0].file_id
+        else:
+            # photo_id = TEST_PHOTO_ID
+            photo_id = DEFAULT_PRODUCT_PHOTO_ID
+    except Exception as ex:
+        print(ex)
         photo_id = DEFAULT_PRODUCT_PHOTO_ID
 
     update_query = (
