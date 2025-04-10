@@ -1144,8 +1144,8 @@ async def try_update_ozon_product_photo(product_id: int,
     async with aiohttp.ClientSession() as aiosession:
         # _url = f"http://5.61.53.235:1441/product/{message.text}"
         # if not del_zone:
-        _url = f"http://5.61.53.235:1441/product/{short_link}"
-            # _url = f"{OZON_API_URL}/product/{ozon_short_link}"
+        # _url = f"http://5.61.53.235:1441/product/{short_link}"
+        _url = f"{OZON_API_URL}/product/{short_link}"
         # else:
         #     _url = f"http://5.61.53.235:1441/product/{del_zone}/{ozon_short_link}"
             # _url = f"{OZON_API_URL}/product/{del_zone}/{ozon_short_link}"
@@ -1410,8 +1410,8 @@ async def try_update_wb_product_photo(product_id: int,
                                       session: AsyncSession):
     api_check_id_channel = -1002558196527
 
-    # _url = f"{WB_API_URL}/product/image/{short_link}"
-    _url = f"http://5.61.53.235:1435/product/image/{short_link}"
+    _url = f"{WB_API_URL}/product/image/{short_link}"
+    # _url = f"http://5.61.53.235:1435/product/image/{short_link}"
     timeout = aiohttp.ClientTimeout(total=15)
     async with aiohttp.ClientSession() as aiosession:
         async with aiosession.get(url=_url,
@@ -1829,7 +1829,7 @@ async def test_migrate_on_new_sctucture_db():
                 'name': ozon_product.name,
 
             }
-            
+
             if user.tg_id not in (int(DEV_ID), int(SUB_DEV_ID)):
                 product = Product(**product_data)
 
