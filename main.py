@@ -158,7 +158,7 @@ async def on_startup():
     scheduler.start()
 
     # await test_migrate_on_new_sctucture_db()
-    await test_add_photo_to_exist_products()
+    # await test_add_photo_to_exist_products()
     # await create_new_punkts_from_old()
     startup_update_scheduler_jobs(scheduler)
     # await recreate_my_scheduler_jobs()
