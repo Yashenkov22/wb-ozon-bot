@@ -207,7 +207,7 @@ async def send_utm_data(data: UTMSchema):
     await add_utm_to_db(data)
 
 
-@app.post('/send_fake_notification')
+@app.get('/send_fake_notification')
 async def send_fake_notification_by_user(user_id: int,
                         product_id: int,
                         fake_price: int,
