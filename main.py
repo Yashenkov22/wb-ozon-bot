@@ -34,10 +34,14 @@ from db.base import UserJob, engine, session, Base, db_url, get_session
 from middlewares.db import DbSessionMiddleware
 
 from utils.storage import redis_client, storage
-from utils.scheduler import (create_new_punkts_from_old, recreate_my_scheduler_jobs, scheduler, test_add_photo_to_exist_products,
+from utils.scheduler import (create_new_punkts_from_old,
+                             recreate_my_scheduler_jobs,
+                             scheduler,
+                             test_add_photo_to_exist_products,
                              test_migrate_on_new_sctucture_db,
                              startup_update_scheduler_jobs,
-                             add_task_to_delete_old_message_for_users)
+                             add_task_to_delete_old_message_for_users,
+                             send_fake_price)
 from utils.utm import add_utm_to_db
 
 from schemas import UTMSchema
@@ -49,7 +53,8 @@ from config import (TOKEN,
                     API_HASH,
                     REDIS_HOST,
                     REDIS_PASSWORD,
-                    JOB_STORE_URL)
+                    JOB_STORE_URL,
+                    FAKE_NOTIFICATION_SECRET)
 # from handlers import main_router
 
 from handlers.base import main_router
@@ -200,6 +205,21 @@ async def bot_webhook(update: dict):
 async def send_utm_data(data: UTMSchema):
     print('CATCH UTM', data.__dict__)
     await add_utm_to_db(data)
+
+
+@app.post('/send_fake_notification')
+async def send_fake_notification_by_user(user_id: int,
+                        product_id: int,
+                        fake_price: int,
+                        secret: str):
+    
+    if secret == FAKE_NOTIFICATION_SECRET:
+    # print('CATCH UTM', data.__dict__)
+        async for session in get_session():
+            await send_fake_price(user_id,
+                                product_id,
+                                fake_price,
+                                session)
 
 
 if __name__ == '__main__':

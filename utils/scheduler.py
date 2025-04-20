@@ -1964,6 +1964,96 @@ async def recreate_my_scheduler_jobs():
             print('TASK CREATED')
 
 
+async def send_fake_price(user_id: int,
+                          product_id: int,
+                          fake_price: int,
+                          session: AsyncSession):
+    async with session as _session:
+        try:
+            query = (
+                select(
+                    Product.id,
+                    UserProduct.id,
+                    UserProduct.link,
+                    Product.short_link,
+                    Product.product_marker,
+                    UserProduct.actual_price,
+                    UserProduct.start_price,
+                    Product.name,
+                    UserProduct.sale,
+                    Punkt.ozon_zone,
+                    Punkt.city,
+                    UserProductJob.job_id,
+                    Product.photo_id,
+                    UserProduct.last_send_price,
+                )\
+                .select_from(UserProduct)\
+                .join(Product,
+                        UserProduct.product_id == Product.id)\
+                .outerjoin(Punkt,
+                            Punkt.user_id == int(user_id))\
+                .outerjoin(UserProductJob,
+                            UserProductJob.user_product_id == UserProduct.id)\
+                .where(
+                    and_(
+                        UserProduct.id == int(product_id),
+                        UserProduct.user_id == int(user_id),
+                    )
+                )
+            )
+
+            res = await _session.execute(query)
+
+            res = res.fetchall()
+        finally:
+            try:
+                await _session.close()
+            except Exception:
+                pass
+    if res:
+        main_product_id, _id, link, short_link, product_marker, actual_price, start_price, name, sale, zone, city, job_id, photo_id, last_send_price = res[0]
+
+        _waiting_price = start_price - sale
+
+        pretty_product_price = generate_pretty_amount(fake_price)
+        pretty_actual_price = generate_pretty_amount(actual_price)
+        pretty_sale = generate_pretty_amount(sale)
+        pretty_start_price = generate_pretty_amount(start_price)
+
+        if _waiting_price >= fake_price:
+            
+            # проверка, отправлялось ли уведомление с такой ценой в прошлый раз
+            # if last_send_price is not None and (last_send_price == _product_price):
+            #     print(f'LAST SEND PRICE VALIDATION STOP {last_send_price} | {_product_price}')
+            #     return
+
+            if actual_price < fake_price:
+                _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{name}</a>\n\nМаркетплейс: Ozon\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - fake_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                _disable_notification = True
+            else:
+                _text = f'🚨 Изменилась цена на <a href="{link}">{name}</a>\n\nМаркетплейс: {product_marker}\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - fake_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                _disable_notification = False
+
+            _kb = new_create_remove_and_edit_sale_kb(user_id=user_id,
+                                                        product_id=product_id,
+                                                        marker=product_marker,
+                                                        job_id=job_id,
+                                                        with_redirect=False)
+            
+            _kb = add_or_create_close_kb(_kb)
+
+            msg = await bot.send_photo(chat_id=user_id,
+                                        photo=photo_id,
+                                        caption=_text,
+                                        disable_notification=_disable_notification,
+                                        reply_markup=_kb.as_markup())
+            
+            # await update_last_send_price_by_user_product(last_send_price=_product_price,
+            #                                                 user_product_id=_id)
+
+            await add_message_to_delete_dict(msg)
+            return
+
 
 def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     jobs: list[Job] = scheduler.get_jobs(jobstore='sqlalchemy')
