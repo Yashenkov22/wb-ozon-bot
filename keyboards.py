@@ -159,7 +159,7 @@ def add_graphic_btn(_kb: InlineKeyboardBuilder,
                     product_id: int):
     _callback_data = f'graphic_{user_id}_{product_id}'
 
-    _kb.row(types.InlineKeyboardButton(text='График изменение цен',
+    _kb.row(types.InlineKeyboardButton(text='График изменения цен',
                                        callback_data=_callback_data))
     
     return _kb
@@ -231,7 +231,7 @@ def new_create_remove_and_edit_sale_kb(user_id: int,
     
     _kb.row(types.InlineKeyboardButton(text='Изменить сумму скидки',
                                        callback_data=edit_sale_callback_data))
-    _kb.row(types.InlineKeyboardButton(text='График изменение цен',
+    _kb.row(types.InlineKeyboardButton(text='График изменения цен',
                                        callback_data=graphic_callback_data))    
     _kb.row(types.InlineKeyboardButton(text='Перестать отслеживать',
                                        callback_data=delete_callback_data))
