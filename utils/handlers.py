@@ -320,6 +320,29 @@ async def add_procent_to_product(user_data: dict,
             pass    
 
 
+def filter_price(price_data: list):
+    first = price_data[0]
+    last = price_data[-1]
+    other_data = price_data[1:-1]
+
+    current_price = first[0]
+
+    new_data = [first,]
+
+    for data in other_data:
+        _price, _date, _city, main_product_id, name = data
+
+        if _price != current_price:
+            new_data.append(data)
+            current_price = _price
+    
+    if new_data[-1][0] == last[0]:
+        new_data.pop()
+        new_data.append(last)
+
+    return new_data
+
+
 async def generate_graphic(user_id: int,
                            product_id: int,
                            city_subquery: Subquery,
@@ -365,13 +388,15 @@ async def generate_graphic(user_id: int,
     
     price_list = []
     date_list = []
+
+    price_data = filter_price(res)
     
-    for el in res:
+    for el in price_data:
         _price, _date, _city, main_product_id, name = el
-        print(_city)
+        # print(_city)
         _date: datetime
         price_list.append(_price)
-        date_list.append(_date.astimezone(tz=moscow_tz).strftime('%d-%m-%y %H:%M'))
+        date_list.append(_date.astimezone(tz=moscow_tz).strftime('%d-%m-%y'))
 
     # plt.figure(figsize=(10, 5))
     # plt.plot(date_list, price_list, marker='o', linestyle='-')
@@ -391,10 +416,10 @@ async def generate_graphic(user_id: int,
     title_name = f'{name} - {_city}'
     fig.update_layout(title=title_name,
                       xaxis_title='Дата',
-                      xaxis_tickformat='%d-%m-%y %H:%M',
+                      xaxis_tickformat='%d-%m-%y',
                       yaxis_title='Цена')
     
-    fig.update_xaxes(tickvals=date_list)
+    # fig.update_xaxes(tickvals=date_list)
 
     # Сохраняем график как изображение
     filename = "plot.png"
