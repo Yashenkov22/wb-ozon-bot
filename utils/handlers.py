@@ -343,6 +343,13 @@ def filter_price(price_data: list):
                 new_data.append(data)
                 current_price = _price
                 current_idx = idx
+
+    if new_data[-1][0] == price_data[-1][0]:
+        
+        if new_data[-1][1] == price_data[-1][1]:
+            new_data.pop()
+        
+        new_data.append(price_data[-1])
     
     return new_data
 
