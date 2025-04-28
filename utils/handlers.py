@@ -432,7 +432,10 @@ async def generate_graphic(user_id: int,
                       yaxis_title='Цена')
     
     fig.update_xaxes(tickvals=date_list,
-                     tickformat='%d-%m-%y')
+                     tickformat='%d-%m-%y',
+                     dtick="D1",
+                     tickangle=-45,
+                     tickvals=date_list[::3])
 
     # Сохраняем график как изображение
     filename = "plot.png"
