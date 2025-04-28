@@ -321,25 +321,29 @@ async def add_procent_to_product(user_data: dict,
 
 
 def filter_price(price_data: list):
-    first = price_data[0]
-    last = price_data[-1]
-    other_data = price_data[1:-1]
+    current_price = None
+    current_idx = None
 
-    current_price = first[0]
+    new_data = []
 
-    new_data = [first,]
-
-    for data in other_data:
+    for idx, data in enumerate(price_data):
         _price, _date, _city, main_product_id, name = data
 
-        if _price != current_price:
+        if current_price is None:
             new_data.append(data)
             current_price = _price
+            current_idx = idx
+        else:
+            if _price != current_price:
+                
+                prev_idx = idx - 1
+                if idx > 1 and current_idx != prev_idx and current_price == price_data[prev_idx][0]:
+                    new_data.append(price_data[prev_idx])
+                
+                new_data.append(data)
+                current_price = _price
+                current_idx = idx
     
-    if new_data[-1][0] == last[0]:
-        new_data.pop()
-        new_data.append(last)
-
     return new_data
 
 
