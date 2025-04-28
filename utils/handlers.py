@@ -396,7 +396,8 @@ async def generate_graphic(user_id: int,
         # print(_city)
         _date: datetime
         price_list.append(_price)
-        date_list.append(_date.astimezone(tz=moscow_tz).strftime('%d-%m-%y'))
+        # date_list.append(_date.astimezone(tz=moscow_tz).strftime('%d-%m-%y'))
+        date_list.append(_date.astimezone(tz=moscow_tz))
 
     # plt.figure(figsize=(10, 5))
     # plt.plot(date_list, price_list, marker='o', linestyle='-')
@@ -416,7 +417,7 @@ async def generate_graphic(user_id: int,
     title_name = f'{name} - {_city}'
     fig.update_layout(title=title_name,
                       xaxis_title='Дата',
-                      xaxis_tickformat='%d-%m-%y',
+                    #   xaxis_tickformat='%d-%m-%y',
                       yaxis_title='Цена')
     
     fig.update_xaxes(tickvals=date_list,
