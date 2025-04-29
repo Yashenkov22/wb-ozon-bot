@@ -438,8 +438,10 @@ async def generate_graphic(user_id: int,
                      dtick="D1",
                      tickangle=-45)
 
-    fig.update_yaxes(tickvals=price_list,
-                     ticktext=[f'{price:,}'.replace(',', ' ') for price in price_list])
+    # fig.update_yaxes(tickvals=price_list,
+    #                  ticktext=[f'{price:,}'.replace(',', ' ') for price in price_list])
+
+    fig.update_yaxes(ticktext=[f'{price:,}'.replace(',', ' ') for price in price_list])
 
 
     # fig.update_layout(
