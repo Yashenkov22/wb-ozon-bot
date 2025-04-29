@@ -425,8 +425,9 @@ async def generate_graphic(user_id: int,
     fig.add_trace(go.Scatter(x=date_list, y=price_list, mode='lines+markers'))
 
     # Настраиваем заголовок и оси
-    title_name = f'{name} - {_city}'
-    fig.update_layout(title=title_name,
+    title_name = f'{name}<br>{_city}'
+    fig.update_layout(title={'text':title_name,
+                             'xanchor': 'center'},
                       xaxis_title='Дата',
                     #   xaxis_tickformat='%d-%m-%y',
                       yaxis_title='Цена')
@@ -435,6 +436,17 @@ async def generate_graphic(user_id: int,
                      tickformat='%d-%m-%y',
                      dtick="D1",
                      tickangle=-45)
+
+    fig.update_yaxes(tickvals=price_list,
+                     ticktext=[f'{price:,}'.replace(',', ' ') for price in price_list])
+
+
+    # fig.update_layout(
+    #     yaxis=dict(
+    #         tickvals=y_data,  # Указываем значения для отображения
+    #         ticktext=[f"{price:.5f}" for price in y_data]  # Форматируем текст для отображения
+    #     )
+    # )
 
     # Сохраняем график как изображение
     filename = "plot.png"
