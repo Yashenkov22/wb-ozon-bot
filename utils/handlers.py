@@ -427,6 +427,7 @@ async def generate_graphic(user_id: int,
     # Настраиваем заголовок и оси
     title_name = f'{name}<br>{_city}'
     fig.update_layout(title={'text':title_name,
+                             'x': 0.5,
                              'xanchor': 'center'},
                       xaxis_title='Дата',
                     #   xaxis_tickformat='%d-%m-%y',
