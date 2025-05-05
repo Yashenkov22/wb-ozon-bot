@@ -327,7 +327,7 @@ def filter_price(price_data: list):
     new_data = []
 
     for idx, data in enumerate(price_data):
-        _price, _date, _city, main_product_id, name = data
+        _price, _date, _city, main_product_id, name, product_marker = data
 
         if current_price is None:
             new_data.append(data)
