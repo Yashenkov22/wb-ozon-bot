@@ -354,7 +354,7 @@ def filter_price(price_data: list):
     return new_data
 
 
-def generate_date_view_list(date_list: list):
+def generate_date_view_list(date_list: list[datetime]):
     first = date_list[0]
     last = date_list[-1]
     len_date_list = len(date_list)
@@ -367,8 +367,20 @@ def generate_date_view_list(date_list: list):
 
     filtered_list = date_list[1:-1][::step]
 
+    new_date_list = [first, ]
+
+    for el in filtered_list:
+        if new_date_list[-1].day != el.day:
+            new_date_list.append(el)
+
+    if new_date_list[-1].day == last.day:
+        new_date_list.pop()
+
+    new_date_list.append(last)
+
+    return new_date_list
     # return date_list[::step]
-    return [first, ] + filtered_list + [last, ]
+    # return [first, ] + filtered_list + [last, ]
 
 
 async def generate_graphic(user_id: int,
