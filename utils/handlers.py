@@ -368,7 +368,7 @@ def generate_date_view_list(date_list: list):
     filtered_list = date_list[1:-1][::step]
 
     # return date_list[::step]
-    return list(first) + filtered_list + list(last)
+    return [first, ] + filtered_list + [last, ]
 
 
 async def generate_graphic(user_id: int,
