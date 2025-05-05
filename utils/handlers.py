@@ -354,6 +354,23 @@ def filter_price(price_data: list):
     return new_data
 
 
+def generate_date_view_list(date_list: list):
+    first = date_list[0]
+    last = date_list[-1]
+    len_date_list = len(date_list)
+
+    if 10 < len_date_list <= 14:
+        step = 2
+    else:
+        step = round(len(date_list) / 10)
+        step = 1 if step == 0 else step
+
+    filtered_list = date_list[1:-1][::step]
+
+    # return date_list[::step]
+    return list(first) + filtered_list + list(last)
+
+
 async def generate_graphic(user_id: int,
                            product_id: int,
                            city_subquery: Subquery,
@@ -371,6 +388,7 @@ async def generate_graphic(user_id: int,
             func.coalesce(ProductPrice.city, default_value),
             Product.id,
             Product.name,
+            Product.product_marker,
         )\
         .select_from(ProductPrice)\
         .join(Product,
@@ -403,7 +421,7 @@ async def generate_graphic(user_id: int,
     price_data = filter_price(res)
     
     for el in price_data:
-        _price, _date, _city, main_product_id, name = el
+        _price, _date, _city, main_product_id, name, product_marker = el
         # print(_city)
         _date: datetime
         price_list.append(_price)
@@ -424,8 +442,10 @@ async def generate_graphic(user_id: int,
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=date_list, y=price_list, mode='lines+markers'))
 
-    # Настраиваем заголовок и оси
-    title_name = f'{name}<br>{_city}'
+    title_name = f'{name}<br>{product_marker.upper()} | {_city}'
+
+    date_view_list = generate_date_view_list(date_list)
+
     fig.update_layout(title={'text':title_name,
                              'x': 0.5,
                              'xanchor': 'center'},
@@ -433,7 +453,7 @@ async def generate_graphic(user_id: int,
                     #   xaxis_tickformat='%d-%m-%y',
                       yaxis_title='Цена')
     
-    fig.update_xaxes(tickvals=date_list[::3],
+    fig.update_xaxes(tickvals=date_view_list,
                      tickformat='%d-%m-%y',
                      dtick="D1",
                      tickangle=-45)
