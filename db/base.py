@@ -37,7 +37,10 @@ class User(Base):
     last_action_time = Column(TIMESTAMP(timezone=True), nullable=True, default=None)
     subscription_id = Column(BigInteger, ForeignKey('subscriptions.id'), nullable=True, default=None)
     utm_source = Column(String, nullable=True, default=None)
-
+    #
+    wb_total_count = Column(Integer, default=0)
+    ozon_total_count = Column(Integer, default=0)
+    #
     subscription = relationship(Subscription, back_populates="users")
     ozon_products = relationship("OzonProduct", back_populates="user")
     wb_punkts = relationship("WbPunkt", back_populates="user")
