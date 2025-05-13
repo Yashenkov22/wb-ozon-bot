@@ -220,67 +220,67 @@ async def start(message: types.Message | types.CallbackQuery,
 #     await message.delete()
 
 
-@main_router.message(Command('dev_func'))
-async def dev_func(message: types.Message | types.CallbackQuery,
-                   state: FSMContext,
-                   session: AsyncSession,
-                   bot: Bot,
-                   scheduler: AsyncIOScheduler):
-    if not message.from_user.id == int(DEV_ID):
-        return 
+# @main_router.message(Command('dev_func'))
+# async def dev_func(message: types.Message | types.CallbackQuery,
+#                    state: FSMContext,
+#                    session: AsyncSession,
+#                    bot: Bot,
+#                    scheduler: AsyncIOScheduler):
+#     if not message.from_user.id == int(DEV_ID):
+#         return 
     
-    query = (
-        select(
-            UserProduct.user_id,
-            Product.product_marker,
-        )\
-        .join(Product,
-              UserProduct.product_id == Product.id)
-    )
+#     query = (
+#         select(
+#             UserProduct.user_id,
+#             Product.product_marker,
+#         )\
+#         .join(Product,
+#               UserProduct.product_id == Product.id)
+#     )
 
-    async with session as _session:
-        res = await _session.execute(query)
+#     async with session as _session:
+#         res = await _session.execute(query)
 
-    user_products = res.fetchall()
+#     user_products = res.fetchall()
 
-    if not user_products:
-        print('not UserProducts data')
-        return
+#     if not user_products:
+#         print('not UserProducts data')
+#         return
     
-    async with session as _session:
+#     async with session as _session:
         
-        for user_id, product_marker in user_products:
-            if product_marker == 'wb':
-                update_query = (
-                    update(
-                        User
-                    )\
-                    .values(
-                        wb_total_count=User.wb_total_count + 1,
-                    )\
-                    .where(
-                        User.tg_id == user_id,
-                    )
-                )
-            else:
-                update_query = (
-                    update(
-                        User
-                    )\
-                    .values(
-                        ozon_total_count=User.ozon_total_count + 1,
-                    )\
-                    .where(
-                        User.tg_id == user_id,
-                    )
-                )
+#         for user_id, product_marker in user_products:
+#             if product_marker == 'wb':
+#                 update_query = (
+#                     update(
+#                         User
+#                     )\
+#                     .values(
+#                         wb_total_count=User.wb_total_count + 1,
+#                     )\
+#                     .where(
+#                         User.tg_id == user_id,
+#                     )
+#                 )
+#             else:
+#                 update_query = (
+#                     update(
+#                         User
+#                     )\
+#                     .values(
+#                         ozon_total_count=User.ozon_total_count + 1,
+#                     )\
+#                     .where(
+#                         User.tg_id == user_id,
+#                     )
+#                 )
 
-            await _session.execute(update_query)
-        try:
-            await _session.commit()
-        except Exception as ex:
-            print(ex)
-            _session.rollback()
+#             await _session.execute(update_query)
+#         try:
+#             await _session.commit()
+#         except Exception as ex:
+#             print(ex)
+#             _session.rollback()
 
 
 @main_router.callback_query(F.data == 'faq')

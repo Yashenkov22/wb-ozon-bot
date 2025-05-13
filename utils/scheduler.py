@@ -1106,8 +1106,34 @@ async def add_product_to_db(data: dict,
 
     session.add(user_job)
 
+    if marker == 'wb':
+        update_count_query = (
+            update(
+                User
+            )\
+            .values(
+                wb_total_count=User.wb_total_count + 1,
+            )\
+            .where(
+                User.tg_id == user_id,
+            )
+        )
+    else:
+        update_count_query = (
+            update(
+                User
+            )\
+            .values(
+                ozon_total_count=User.ozon_total_count + 1,
+            )\
+            .where(
+                User.tg_id == user_id,
+            )
+        )
+
     async with session as _session:
         try:
+            await _session.execute(update_count_query)
             await _session.commit()
             _text = f'{marker} товар успешно добавлен'
             print(_text)
