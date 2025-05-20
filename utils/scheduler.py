@@ -69,7 +69,7 @@ timezone = pytz.timezone('Europe/Moscow')
 # scheduler_cron = CronTrigger(minute=1,
 #                              timezone=timezone)
 
-scheduler_cron = IntervalTrigger(minutes=1,
+scheduler_cron = IntervalTrigger(minutes=15,
                              timezone=timezone)
 
 
@@ -2155,6 +2155,9 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 modify_func = new_push_check_ozon_price
                 # else:
                 #     modify_func = push_check_ozon_price
+            job.modify(func=modify_func,
+                       trigger=scheduler_cron)
+
             
         
         elif job.id.find('delete_msg_task') != -1:
