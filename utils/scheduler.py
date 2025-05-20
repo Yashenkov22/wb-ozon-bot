@@ -1361,7 +1361,7 @@ async def save_ozon_product(user_id: int,
         raise OzonProductExistsError()
 
     response_data = res.split('|', maxsplit=1)[-1]
-    # print(response_data)
+    print(response_data[:10])
     json_data: dict = json.loads(response_data)
 
     photo_id = await try_get_ozon_product_photo(short_link=_new_short_link,
