@@ -2156,10 +2156,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 # else:
                 #     modify_func = push_check_ozon_price
             job.modify(func=modify_func,
-                       trigger=scheduler_cron)
-
-            
-        
+                       trigger=scheduler_cron)   
         elif job.id.find('delete_msg_task') != -1:
             modify_func = test_periodic_delete_old_message
 
