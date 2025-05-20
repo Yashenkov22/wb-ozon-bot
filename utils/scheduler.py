@@ -2959,11 +2959,11 @@ async def new_push_check_ozon_price(user_id: str,
             timeout = aiohttp.ClientTimeout(total=30)
             async with aiohttp.ClientSession() as aiosession:
                 if zone:
-                    # _url = f"{OZON_API_URL}/product/{zone}/{short_link}"
-                    _url = f"http://5.61.53.235:1441/product/{zone}/{short_link}"
+                    _url = f"{OZON_API_URL}/product/{zone}/{short_link}"
+                    # _url = f"http://5.61.53.235:1441/product/{zone}/{short_link}"
                 else:
-                    # _url = f"{OZON_API_URL}/product/{short_link}"
-                    _url = f"http://5.61.53.235:1441/product/{short_link}"
+                    _url = f"{OZON_API_URL}/product/{short_link}"
+                    # _url = f"http://5.61.53.235:1441/product/{short_link}"
                 async with aiosession.get(url=_url,
                             timeout=timeout) as response:
                     _status_code = response.status
@@ -3004,7 +3004,7 @@ async def new_push_check_ozon_price(user_id: str,
                 _product_price = _d.get('cardPrice', 0)
             else:
                 try:
-                    response_data = res.split('|')[-1]
+                    response_data = res.split('|', maxsplit=1)[-1]
 
                     json_data: dict = json.loads(response_data)
 

@@ -2439,15 +2439,15 @@ async def any_input(message: types.Message,
         }
 
         # if message.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
-        print('run new bg task')
-        if message.from_user.id == int(DEV_ID):
-            print('arq test...')
-            await redis_pool.enqueue_job('new_add_product_task',
-                                         user_data,
-                                         _queue_name='arq:high')
-            # pass
-        else:
-            scheduler.add_job(new_add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
+        # print('run new bg task')
+        # if message.from_user.id == int(DEV_ID):
+        #     print('arq test...')
+        #     await redis_pool.enqueue_job('new_add_product_task',
+        #                                  user_data,
+        #                                  _queue_name='arq:high')
+        #     # pass
+        # else:
+        scheduler.add_job(new_add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
         # else:
         #     scheduler.add_job(add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
     else:
