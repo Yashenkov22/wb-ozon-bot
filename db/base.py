@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
 from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, DateTime, TIMESTAMP, BLOB, JSON, BigInteger
 
-# Определяем базовый класс для моделей
+
 # Base = declarative_base()
 Base = automap_base()
 
@@ -168,6 +168,30 @@ class UserProductJob(Base):
     user_product_id = Column(Integer, ForeignKey('user_products.id'))
 
     user_product = relationship(UserProduct, back_populates="user_product_jobs")
+
+
+# class Category(Base):
+#     __tablename__ = 'categories'
+
+#     id = Column(Integer, primary_key=True, index=True)
+#     name = Column(String)
+#     parent_id = Column(BigInteger, ForeignKey('categories.id'), nullable=True, default=None)
+
+#     parent = relationship('Category', back_populates="child_categories")
+
+
+# class PopularProduct(Base):
+#     __tablename__ = 'popular_products'
+
+#     id = Column(Integer, primary_key=True, index=True)
+#     product_id = Column(BigInteger, ForeignKey('products.id'))
+#     category_id = Column(BigInteger, ForeignKey('categories.id'))
+#     start_price = Column(Integer)
+#     actual_price = Column(Integer)
+#     sale = Column(Integer)
+
+#     product = relationship(Product, back_populates="popular_products")
+#     category = relationship(Category, back_populates="popular_products")
 
 
 class WbPunkt(Base):

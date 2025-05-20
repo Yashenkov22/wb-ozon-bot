@@ -4,10 +4,11 @@ from db.base import get_session, UTM
 
 from schemas import UTMSchema
 
+
 async def add_utm_to_db(data: UTMSchema):
-    print('1 ',data.__dict__)
+    # print('1 ',data.__dict__)
     _data = data.model_dump()
-    print('2 ', _data)
+    # print('2 ', _data)
 
     query = (
         insert(

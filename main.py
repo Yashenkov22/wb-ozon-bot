@@ -29,6 +29,7 @@ from sqlalchemy import select, and_
 
 from sqlalchemy.ext.automap import automap_base
 
+from background.base import get_redis_background_pool
 from db.base import UserJob, engine, session, Base, db_url, get_session
 
 from middlewares.db import DbSessionMiddleware
@@ -128,8 +129,8 @@ WEBHOOK_PATH = f'/webhook_'
 # scheduler.add_jobstore('sqlalchemy', 'sqlalchemy', url=JOB_STORE_URL)
 
 
-dp.update.middleware(DbSessionMiddleware(session_pool=session,
-                                         scheduler=scheduler))
+# dp.update.middleware(DbSessionMiddleware(session_pool=session,
+#                                          scheduler=scheduler))
 
 async def init_db():
     async with engine.begin() as conn:
@@ -161,6 +162,11 @@ async def on_startup():
                         #   allowed_updates=['message', 'callback_query'])
     # await init_db()
     scheduler.start()
+
+    redis_pool = await get_redis_background_pool()
+    dp.update.middleware(DbSessionMiddleware(session_pool=session,
+                                         scheduler=scheduler,
+                                         redis_pool=redis_pool))
 
     # await test_migrate_on_new_sctucture_db()
     # await test_add_photo_to_exist_products()

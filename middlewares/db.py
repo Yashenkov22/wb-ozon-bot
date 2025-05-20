@@ -1,5 +1,7 @@
 from typing import Callable, Awaitable, Dict, Any
 
+from arq.connections import ArqRedis
+
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
@@ -13,10 +15,12 @@ from sqlalchemy.orm import sessionmaker
 class DbSessionMiddleware(BaseMiddleware):
     def __init__(self,
                  session_pool: async_sessionmaker,
-                 scheduler: AsyncIOScheduler):
+                 scheduler: AsyncIOScheduler,
+                 redis_pool: ArqRedis):
         super().__init__()
         self.session_pool = session_pool
         self.scheduler = scheduler
+        self.redis_pool = redis_pool
         # self.api_client = api_client
         # self.engine = engine
 
@@ -31,5 +35,6 @@ class DbSessionMiddleware(BaseMiddleware):
             data["session"] = session
 
         data['scheduler'] = self.scheduler
+        data['redis_pool'] = self.redis_pool
         
         return await handler(event, data)

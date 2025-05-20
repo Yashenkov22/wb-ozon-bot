@@ -35,6 +35,8 @@ from db.base import (OzonPunkt, Product, Punkt,
                      UserProductJob,
                      ProductPrice)
 
+from background.base import get_redis_background_pool, _redis_pool, get_redis_pool
+
 from keyboards import (add_graphic_btn, add_or_create_close_kb,
                        create_remove_and_edit_sale_kb,
                        create_remove_kb, new_create_remove_and_edit_sale_kb)
@@ -64,8 +66,12 @@ scheduler = AsyncIOScheduler(jobstores=jobstores)
 
 timezone = pytz.timezone('Europe/Moscow')
 
-scheduler_cron = CronTrigger(minute=1,
+# scheduler_cron = CronTrigger(minute=1,
+#                              timezone=timezone)
+
+scheduler_cron = IntervalTrigger(minutes=1,
                              timezone=timezone)
+
 
 scheduler_interval = IntervalTrigger(hours=1,
                                      timezone=timezone)
@@ -1328,11 +1334,11 @@ async def save_ozon_product(user_id: int,
     async with aiohttp.ClientSession() as aiosession:
         # _url = f"http://5.61.53.235:1441/product/{message.text}"
         if not del_zone:
-            _url = f"http://5.61.53.235:1441/product/{ozon_short_link}"
-            # _url = f"{OZON_API_URL}/product/{ozon_short_link}"
+            # _url = f"http://5.61.53.235:1441/product/{ozon_short_link}"
+            _url = f"{OZON_API_URL}/product/{ozon_short_link}"
         else:
-            _url = f"http://5.61.53.235:1441/product/{del_zone}/{ozon_short_link}"
-            # _url = f"{OZON_API_URL}/product/{del_zone}/{ozon_short_link}"
+            # _url = f"http://5.61.53.235:1441/product/{del_zone}/{ozon_short_link}"
+            _url = f"{OZON_API_URL}/product/{del_zone}/{ozon_short_link}"
 
         async with aiosession.get(url=_url,
                                     timeout=timeout) as response:
@@ -1345,6 +1351,7 @@ async def save_ozon_product(user_id: int,
         raise OzonAPICrashError()
 
     _new_short_link = res.split('|')[0]
+    print(_new_short_link)
 
     check_product_by_user =  await new_check_product_by_user_in_db(user_id=user_id,
                                                                 short_link=_new_short_link,
@@ -1353,7 +1360,8 @@ async def save_ozon_product(user_id: int,
     if check_product_by_user:
         raise OzonProductExistsError()
 
-    response_data = res.split('|')[-1]
+    response_data = res.split('|', maxsplit=1)[-1]
+    # print(response_data)
     json_data: dict = json.loads(response_data)
 
     photo_id = await try_get_ozon_product_photo(short_link=_new_short_link,
@@ -1583,7 +1591,7 @@ async def save_wb_product(user_id: int,
     timeout = aiohttp.ClientTimeout(total=15)
     async with aiohttp.ClientSession() as aiosession:
         # _url = f"http://172.18.0.7:8080/product/{del_zone}/{short_link}"
-        _url = f"http://5.61.53.235:1435/product/{del_zone}/{short_link}"
+        _url = f"{WB_API_URL}/product/{del_zone}/{short_link}"
         async with aiosession.get(url=_url,
                         timeout=timeout) as response:
 
@@ -2081,24 +2089,73 @@ async def send_fake_price(user_id: int,
             return
 
 
-def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
+async def new_push_ozon_job_wrapper(user_id: int,
+                                    product_id: int):
+    _redis_pool = get_redis_pool()
+
+    await _redis_pool.enqueue_job("new_push_check_ozon_price", user_id, product_id, _queue_name="arq:low")
+
+
+async def new_push_wb_job_wrapper(user_id: int,
+                                    product_id: int):
+    _redis_pool = get_redis_pool()
+    await _redis_pool.enqueue_job("new_push_check_wb_price", user_id, product_id, _queue_name="arq:low")
+
+
+
+async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     jobs: list[Job] = scheduler.get_jobs(jobstore='sqlalchemy')
+    # _redis = await get_redis_background_pool()
 
     print('start up update scheduler jobs...')
     for job in jobs:
+        # print(job)
+        # print(job.func)
+        # print(job.__dir__())
+        # print(job.kwargs)
         if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
             if job.id.find('wb') != -1:
-                # if job.id.find(DEV_ID) != -1 or job.id.find(SUB_DEV_ID) != -1:
+                # if job.id.find(DEV_ID) != -1:
+                #     # pass
+                #     user_id = job.kwargs.get('user_id')
+                #     product_id = job.kwargs.get('product_id')
+
+                #     # async def job_wrapper(user_id: int,
+                #     #                       product_id: int):
+                #     #     await _redis.enqueue_job("new_push_check_wb_price", user_id, product_id, _queue_name="arq:low")
+
+                #     modify_func = new_push_wb_job_wrapper
+
+                #     job.modify(func=modify_func,
+                #             trigger=scheduler_cron,
+                #             next_run_time=datetime.now(),
+                #             kwargs={'user_id': user_id,
+                #                     'product_id': product_id})
+                # else:
                 modify_func = new_push_check_wb_price
                 # else:
                 #     modify_func = push_check_wb_price
             else:
-                # if job.id.find(DEV_ID) != -1 or job.id.find(SUB_DEV_ID) != -1:
+                # if job.id.find(DEV_ID) != -1:
+                #     user_id = job.kwargs.get('user_id')
+                #     product_id = job.kwargs.get('product_id')
+
+                #     # async def job_wrapper(user_id: int,
+                #     #                       product_id: int):
+                #     #     await _redis.enqueue_job("new_push_check_ozon_price", user_id, product_id, _queue_name="arq:low")
+
+                #     modify_func = new_push_ozon_job_wrapper
+
+                #     job.modify(func=modify_func,
+                #             trigger=scheduler_cron,
+                #             next_run_time=datetime.now(),
+                #             kwargs={'user_id': user_id,
+                #                     'product_id': product_id})
+                # else:
                 modify_func = new_push_check_ozon_price
                 # else:
                 #     modify_func = push_check_ozon_price
             
-            job.modify(func=modify_func)
         
         elif job.id.find('delete_msg_task') != -1:
             modify_func = test_periodic_delete_old_message

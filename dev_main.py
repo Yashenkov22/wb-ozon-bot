@@ -37,6 +37,8 @@ from utils.storage import redis_client, storage
 from utils.scheduler import create_new_punkts_from_old, scheduler
 from utils.utm import add_utm_to_db
 
+from background.base import get_redis_background_pool
+
 from schemas import UTMSchema
 
 from config import (TOKEN,
@@ -316,11 +318,13 @@ async def main():
 
     # await test_migrate_on_new_sctucture_db()
     # await test_add_photo_to_exist_products()
-    startup_update_scheduler_jobs(scheduler)
+    redis_pool = await get_redis_background_pool()
+    # await startup_update_scheduler_jobs(scheduler)
 
-#     # #Add session and database connection in handlers 
+#     # #Add session and database connection in handlers
     dp.update.middleware(DbSessionMiddleware(session_pool=session,
-                                         scheduler=scheduler))
+                                         scheduler=scheduler,
+                                         redis_pool=redis_pool))
 
 #     # engine = create_engine(db_url,
 #     #                        echo=True)

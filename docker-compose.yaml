@@ -37,8 +37,8 @@ services:
     networks:
       - bot_network
     cpus: '0.5'
-    # ports:
-    #   - 6379:6379
+    ports:
+      - 6379:6379
     env_file:
       - ./.env
     command: redis-server --requirepass ${REDIS_PASSWORD} --save "10" "1" --appendonly no
@@ -49,6 +49,35 @@ services:
       driver: "json-file"
       options:
           max-size: "20m"
+
+  arq_high:
+    build: .
+    env_file:
+      - ./.env
+    environment:
+      - POSTGRES_HOST=psql_db
+      - REDIS_HOST=redis_tg_bot_db
+      # - DB_PORT=5432
+
+    networks:
+      - bot_network
+    command: arq background.high_worker.WorkerSettings
+    depends_on:
+      - redis_tg_bot_db
+
+  arq_low:
+    build: .
+    env_file:
+      - ./.env
+    environment:
+      - POSTGRES_HOST=psql_db
+      # - DB_PORT=5432
+      - REDIS_HOST=redis_tg_bot_db
+    networks:
+      - bot_network
+    command: arq background.low_worker.WorkerSettings
+    depends_on:
+      - redis_tg_bot_db
 
   psql_db:
     image: postgres:14

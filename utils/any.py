@@ -2,6 +2,8 @@ import json
 import aiohttp
 import csv
 
+import pandas as pd
+
 from datetime import datetime, timedelta
 
 from aiogram import types
@@ -126,3 +128,28 @@ async def send_data_to_yandex_metica(client_id: str,
             print('ERROR WITH REQUEST TO YANDEX', ex)
         
         print(f'YANDEX REQUEST status code {status}')
+
+
+
+def get_excel_data():
+    path = './Электроника.xlsx'
+
+
+    df = pd.read_excel(path, header=None)
+
+    # Преобразуем DataFrame в список списков
+    data_array = df.values.tolist()
+
+    # Выводим полученный массив
+    print(data_array)
+    
+    # xls = pd.ExcelFile(path)
+
+    # sheet_names = xls.sheet_names
+
+    # # Прочитать все листы в словарь DataFrame
+    # all_sheets = {sheet_name: xls.parse(sheet_name) for sheet_name in sheet_names}
+
+    # for name, data in all_sheets.items():
+    #     print(f"Лист: {name}")
+    #     print(data)

@@ -6,6 +6,8 @@ import aiohttp
 
 from datetime import datetime, timedelta
 
+from arq.connections import ArqRedis
+
 from aiogram import Router, types, Bot, F
 from aiogram.filters import Command, or_f, and_f
 from aiogram.fsm.context import FSMContext
@@ -42,6 +44,7 @@ from states import (AnyProductStates,
                     LocationState, NewEditSale,
                     PunktState)
 
+from utils.any import get_excel_data
 from utils.exc import NotEnoughGraphicData
 from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
                             check_has_punkt,
@@ -150,6 +153,29 @@ async def start(message: types.Message | types.CallbackQuery,
 
     except Exception as ex:
         print(ex)
+
+
+@main_router.message(Command('test_excel'))
+async def test_excel(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    # await state.set_state(LocationState.location)
+    # await message.answer('кинь координаты')
+    # await message.delete()
+    get_excel_data()
+
+#and_f(EditSale.new_sale), F.content_type == types.ContentType.TEXT
+@main_router.message(and_f(LocationState.location), F.content_type == types.ContentType.LOCATION)
+async def proccess_location(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler):
+    print(message.__dict__)
+    print(message.location)
+    await state.set_state()
 
 
 # @main_router.message(F.text == 'test_location')
@@ -2383,7 +2409,8 @@ async def any_input(message: types.Message,
                     state: FSMContext,
                     session: AsyncSession,
                     bot: Bot,
-                    scheduler: AsyncIOScheduler):
+                    scheduler: AsyncIOScheduler,
+                    redis_pool: ArqRedis):
     data = await state.get_data()
 
     await delete_prev_subactive_msg(data)
@@ -2413,7 +2440,14 @@ async def any_input(message: types.Message,
 
         # if message.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
         print('run new bg task')
-        scheduler.add_job(new_add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
+        if message.from_user.id == int(DEV_ID):
+            print('arq test...')
+            await redis_pool.enqueue_job('new_add_product_task',
+                                         user_data,
+                                         _queue_name='arq:high')
+            # pass
+        else:
+            scheduler.add_job(new_add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
         # else:
         #     scheduler.add_job(add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
     else:
