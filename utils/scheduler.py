@@ -2476,9 +2476,9 @@ async def send_fake_price(user_id: int,
 async def background_task_wrapper(*args, func_name, _queue_name):
     # print(args)
     _redis_pool = get_redis_pool()
-    await _redis_pool.enqueue_job(*args,
-                                  _queue_name=_queue_name,
-                                  func_name=func_name)
+    await _redis_pool.enqueue_job(func_name,
+                                  *args,
+                                  _queue_name=_queue_name)
 
 
 
@@ -2503,7 +2503,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
 
                     _kwargs = {
                         '_queue_name': 'arq:low',
-                        'func_name': 'new_push_check_ozon_price',
+                        'func_name': 'new_push_check_wb_price',
 
                     }
 
