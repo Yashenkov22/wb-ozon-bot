@@ -2565,7 +2565,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     job.modify(func=background_task_wrapper,
                                trigger=scheduler_cron,
                                next_run_time=datetime.now(),
-                               args=(f'periodic_delete_old_message', user_id, ),
+                               args=((f'periodic_delete_old_message', user_id,), ),
                                kwargs={'_queue_name': 'arq:low'})
                     continue
             else:
