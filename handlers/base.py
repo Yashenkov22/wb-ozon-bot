@@ -1,3 +1,4 @@
+import asyncio
 from math import ceil
 
 import pytz
@@ -172,7 +173,10 @@ async def test_excel(message: types.Message | types.CallbackQuery,
     # await state.set_state(LocationState.location)
     # await message.answer('кинь координаты')
     # await message.delete()
-    await add_popular_product_to_db(redis_pool)
+    # asyncio.create_task(add_popular_product_to_db(redis))
+    # await add_popular_product_to_db(redis_pool)
+    asyncio.create_task(add_popular_product_to_db(redis_pool))
+    await message.answer(text='run adding...')
 
 
 #and_f(EditSale.new_sale), F.content_type == types.ContentType.TEXT
