@@ -111,21 +111,23 @@ async def add_task_to_delete_old_message_for_users(user_id: int = None):
         user_id = user[0]
         job_id = f'delete_msg_task_{user_id}'
 
-        # scheduler.add_job(periodic_delete_old_message,
-        #                   trigger=scheduler_interval,
-        #                   id=job_id,
-        #                   jobstore='sqlalchemy',
-        #                   coalesce=True,
-        #                   kwargs={'user_id': user_id})
-
-        # планируется задача для фонового ARQ воркера
-        scheduler.add_job(background_task_wrapper,
-                          trigger=scheduler_interval,
-                          id=job_id,
-                          jobstore='sqlalchemy',
-                          coalesce=True,
-                          args=(f'periodic_delete_old_message', user_id),
-                          kwargs={'_queue_name': 'arq:low'})
+        if user_id != int(DEV_ID):
+            scheduler.add_job(periodic_delete_old_message,
+                            trigger=scheduler_interval,
+                            id=job_id,
+                            jobstore='sqlalchemy',
+                            coalesce=True,
+                            kwargs={'user_id': user_id})
+        else:
+            # планируется задача для фонового ARQ воркера
+            scheduler.add_job(background_task_wrapper,
+                            trigger=scheduler_interval,
+                            id=job_id,
+                            jobstore='sqlalchemy',
+                            coalesce=True,
+                            args=(user_id, ),
+                            kwargs={'_queue_name': 'arq:low',
+                                    'func_name': f'periodic_delete_old_message'})
         # job_id = f'popular_{marker}_{popular_product.id}'
         # job = scheduler.add_job(func=background_task_wrapper,
         #                     trigger='interval',
@@ -1201,8 +1203,9 @@ async def add_product_to_db_popular_product(data: dict,
                             minutes=2,
                             id=job_id,
                             coalesce=True,
-                            args=(f'push_check_{marker}_popular_product', popular_product.id), # func_name, *args
-                            kwargs={'_queue_name': 'arq:low'},
+                            args=(popular_product.id, ), # func_name, *args
+                            kwargs={'_queue_name': 'arq:low',
+                                    'func_name': f'push_check_{marker}_popular_product'},
                             jobstore='sqlalchemy')  # _queue_name
         print('jobbb',job)
         # except Exception as ex:
@@ -2470,10 +2473,12 @@ async def send_fake_price(user_id: int,
 
 
 # для планировании задачи в APScheduler и выполнения в ARQ worker`e
-async def background_task_wrapper(func_name, *args, _queue_name):
+async def background_task_wrapper(*args, func_name, _queue_name):
     # print(args)
     _redis_pool = get_redis_pool()
-    await _redis_pool.enqueue_job(func_name, *args, _queue_name=_queue_name)
+    await _redis_pool.enqueue_job(*args,
+                                  _queue_name=_queue_name,
+                                  func_name=func_name)
 
 
 
@@ -2494,13 +2499,12 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     user_id = job.kwargs.get('user_id')
                     product_id = job.kwargs.get('product_id')
 
-                    _args = (('new_push_check_ozon_price', user_id, product_id),)
+                    _args = ( user_id, product_id,)
 
                     _kwargs = {
-                        # 'func_name': 'new_push_check_wb_price',
-                        # 'user_id': user_id,
-                        # 'product_id': product_id,
                         '_queue_name': 'arq:low',
+                        'func_name': 'new_push_check_ozon_price',
+
                     }
 
                 #     # async def job_wrapper(user_id: int,
@@ -2525,13 +2529,14 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     user_id = job.kwargs.get('user_id')
                     product_id = job.kwargs.get('product_id')
 
-                    _args = (('new_push_check_ozon_price', user_id, product_id), )
+                    _args = (user_id, product_id, )
 
                     _kwargs = {
                         # 'func_name': 'new_push_check_ozon_price',
                         # 'user_id': user_id,
                         # 'product_id': product_id,
                         '_queue_name': 'arq:low',
+                        'func_name': 'new_push_check_ozon_price',
                     }
 
                 #     # async def job_wrapper(user_id: int,
@@ -2565,8 +2570,9 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     job.modify(func=background_task_wrapper,
                                trigger=scheduler_cron,
                                next_run_time=datetime.now(),
-                               args=((f'periodic_delete_old_message', user_id,), ),
-                               kwargs={'_queue_name': 'arq:low'})
+                               args=(user_id, ),
+                               kwargs={'_queue_name': 'arq:low',
+                                       'func_name': 'periodic_delete_old_message'})
                     continue
             else:
                 modify_func = test_periodic_delete_old_message
