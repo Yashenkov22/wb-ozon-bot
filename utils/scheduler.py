@@ -1200,7 +1200,7 @@ async def add_product_to_db_popular_product(data: dict,
         job_id = f'popular_{marker}_{popular_product.id}'
         job = scheduler.add_job(func=background_task_wrapper,
                             trigger='interval',
-                            minutes=2,
+                            hours=2,
                             id=job_id,
                             coalesce=True,
                             args=(f'push_check_{marker}_popular_product', popular_product.id, ), # func_name, *args
