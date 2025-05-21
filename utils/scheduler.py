@@ -2511,7 +2511,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                       jobstore='sqlalchemy',
                       id=job_id,
                       coalesce=True,
-                      kwargs={'user_id': user_id})
+                      kwargs={'user_id': _user_id})
     #
 
     print('start up update scheduler jobs...')
