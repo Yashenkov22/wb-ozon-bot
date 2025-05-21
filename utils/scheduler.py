@@ -2499,6 +2499,24 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         # print(job.kwargs)
         if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
             if job.id.find('wb') != -1:
+
+                _kwargs = job.kwargs
+
+                _queue_name = _kwargs.get('_queue_name')
+
+                if _queue_name:
+                    print(job.id)
+                    user_id, marker, product_id = job.id.split(':')
+
+                    modify_func = new_push_check_wb_price
+                    # else:
+                    #     modify_func = push_check_wb_price
+                    job.modify(func=modify_func,
+                                trigger=scheduler_cron,
+                                kwargs={'user_id': user_id,
+                                        'proudct_id': product_id})
+                    continue
+
                 # if job.id.find(DEV_ID) != -1:
                 # #     # pass
                 #     user_id = job.kwargs.get('user_id')
@@ -2539,6 +2557,23 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                             trigger=scheduler_cron)   
 
             else:
+                _kwargs = job.kwargs
+
+                _queue_name = _kwargs.get('_queue_name')
+
+                if _queue_name:
+                    print(job.id)
+                    user_id, marker, product_id = job.id.split(':')
+
+                    modify_func = new_push_check_ozon_price
+                    # else:
+                    #     modify_func = push_check_wb_price
+                    job.modify(func=modify_func,
+                                trigger=scheduler_cron,
+                                kwargs={'user_id': user_id,
+                                        'proudct_id': product_id})
+                    continue
+
                 # if job.id.find(DEV_ID) != -1:
                 #     user_id = job.kwargs.get('user_id')
                 #     product_id = job.kwargs.get('product_id')
