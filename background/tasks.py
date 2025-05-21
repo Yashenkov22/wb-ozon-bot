@@ -58,6 +58,7 @@ from config import DEV_ID, SUB_DEV_ID, WB_API_URL, OZON_API_URL, JOB_STORE_URL, 
 
 async def new_add_product_task(cxt, user_data: dict):
         try:
+            scheduler = cxt.get('scheduler')
             product_marker: str = user_data.get('product_marker')
             _add_msg_id: int = user_data.get('_add_msg_id')
             msg: tuple = user_data.get('msg')

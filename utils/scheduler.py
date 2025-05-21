@@ -1219,7 +1219,8 @@ async def add_product_to_db_popular_product(data: dict,
 async def add_product_to_db(data: dict,
                             marker: str,
                             is_first_product: bool,
-                            session: AsyncSession):
+                            session: AsyncSession,
+                            scheduler: AsyncIOScheduler):
     short_link = data.get('short_link')
     name = data.get('name')
     user_id = data.get('user_id')
@@ -1655,7 +1656,8 @@ async def save_ozon_product(user_id: int,
                             link: str,
                             name: str | None,
                             is_first_product: bool,
-                            session: AsyncSession):
+                            session: AsyncSession,
+                            scheduler: AsyncIOScheduler):
     if link.startswith('https://ozon.ru/t/'):
         _idx = link.find('/t/')
         _prefix = '/t/'
@@ -1806,7 +1808,8 @@ async def save_ozon_product(user_id: int,
     await add_product_to_db(_data,
                             'ozon',
                             is_first_product,
-                            session)
+                            session,
+                            scheduler)
     
 
 async def try_update_wb_product_photo(product_id: int,
@@ -1905,7 +1908,8 @@ async def save_wb_product(user_id: int,
                           link: str,
                           name: str | None,
                           is_first_product: bool,
-                          session: AsyncSession):
+                          session: AsyncSession,
+                          scheduler: AsyncIOScheduler):
     _prefix = 'catalog/'
 
     _idx_prefix = link.find(_prefix)
@@ -2007,7 +2011,8 @@ async def save_wb_product(user_id: int,
     await add_product_to_db(_data,
                             'wb',
                             is_first_product,
-                            session)
+                            session,
+                            scheduler)
 
 
 async def save_popular_product(product_data: dict,
@@ -2066,7 +2071,8 @@ async def new_save_product(user_data: dict,
                                 link=link,
                                 name=_name,
                                 is_first_product=is_first_product,
-                                session=session)
+                                session=session,
+                                scheduler=scheduler)
 
     elif link.find('wildberries') > 0:
         # save wb product
@@ -2074,7 +2080,8 @@ async def new_save_product(user_data: dict,
                               link=link,
                               name=_name,
                               is_first_product=is_first_product,
-                              session=session)
+                              session=session,
+                              scheduler=scheduler)
 
 
 async def test_add_photo_to_exist_products():
