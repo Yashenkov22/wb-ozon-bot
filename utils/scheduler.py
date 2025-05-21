@@ -1278,11 +1278,11 @@ async def add_product_to_db(data: dict,
     # job_id = 'test_job_id'
 
     if user_id == int(DEV_ID):
-                
+
         if marker == 'wb':
             func_name = 'new_push_check_wb_price'
         else:
-            scheduler_func = 'new_push_check_ozon_price'
+            func_name = 'new_push_check_ozon_price'
 
         job = scheduler.add_job(background_task_wrapper,
                                 trigger='interval',
