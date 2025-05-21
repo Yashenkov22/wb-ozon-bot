@@ -2473,7 +2473,7 @@ async def send_fake_price(user_id: int,
 
 
 # для планировании задачи в APScheduler и выполнения в ARQ worker`e
-async def background_task_wrapper(*args, func_name, _queue_name):
+async def background_task_wrapper(func_name, *args, _queue_name):
     # print(args)
     # _queue_name = kwargs.get('_queue_name')
     # func_name = kwargs.get('func_name')
