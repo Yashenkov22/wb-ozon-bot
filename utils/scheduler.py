@@ -2494,10 +2494,12 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     user_id = job.kwargs.get('user_id')
                     product_id = job.kwargs.get('product_id')
 
+                    _args = ('new_push_check_ozon_price', user_id, product_id)
+
                     _kwargs = {
-                        'func_name': 'new_push_check_wb_price',
-                        'user_id': user_id,
-                        'product_id': product_id,
+                        # 'func_name': 'new_push_check_wb_price',
+                        # 'user_id': user_id,
+                        # 'product_id': product_id,
                         '_queue_name': 'arq:low',
                     }
 
@@ -2510,6 +2512,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     job.modify(func=background_task_wrapper,
                                trigger=scheduler_cron,
                                next_run_time=datetime.now(),
+                               args=_args,
                             #    args=(f'new_push_check_wb_price', user_id, product_id, ),
                                kwargs=_kwargs)
                     continue
@@ -2522,10 +2525,12 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     user_id = job.kwargs.get('user_id')
                     product_id = job.kwargs.get('product_id')
 
+                    _args = ('new_push_check_ozon_price', user_id, product_id)
+
                     _kwargs = {
-                        'func_name': 'new_push_check_ozon_price',
-                        'user_id': user_id,
-                        'product_id': product_id,
+                        # 'func_name': 'new_push_check_ozon_price',
+                        # 'user_id': user_id,
+                        # 'product_id': product_id,
                         '_queue_name': 'arq:low',
                     }
 
@@ -2542,6 +2547,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     job.modify(func=background_task_wrapper,
                                trigger=scheduler_cron,
                                next_run_time=datetime.now(),
+                               args=_args,
                             #    args=(f'new_push_check_ozon_price', user_id, product_id, ),
                                kwargs=_kwargs)
                     continue
