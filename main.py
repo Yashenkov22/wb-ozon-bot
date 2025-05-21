@@ -59,8 +59,6 @@ from config import (TOKEN,
 # from handlers import main_router
 
 from handlers.base import main_router
-from handlers.ozon import ozon_router
-from handlers.wb import wb_router
 
 from bot22 import bot
 
@@ -82,8 +80,6 @@ from bot22 import bot
 # #####
 
 dp = Dispatcher(storage=storage)
-dp.include_router(ozon_router)
-dp.include_router(wb_router)
 dp.include_router(main_router)
 
 
@@ -171,7 +167,7 @@ async def on_startup():
     # await test_migrate_on_new_sctucture_db()
     # await test_add_photo_to_exist_products()
     # await create_new_punkts_from_old()
-    startup_update_scheduler_jobs(scheduler)
+    # startup_update_scheduler_jobs(scheduler)
     # await recreate_my_scheduler_jobs()
     # await add_task_to_delete_old_message_for_users()
 

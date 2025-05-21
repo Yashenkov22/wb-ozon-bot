@@ -34,7 +34,7 @@ from db.base import UserJob, engine, session, Base, db_url, get_session
 from middlewares.db import DbSessionMiddleware
 
 from utils.storage import redis_client, storage
-from utils.scheduler import create_new_punkts_from_old, scheduler
+from utils.scheduler import create_new_punkts_from_old, scheduler, startup_update_scheduler_jobs
 from utils.utm import add_utm_to_db
 
 from background.base import get_redis_background_pool
@@ -52,14 +52,6 @@ from config import (TOKEN,
 # from handlers import main_router
 
 from handlers.base import main_router
-from handlers.ozon import ozon_router
-from handlers.wb import wb_router
-
-from utils.scheduler import (startup_update_scheduler_jobs,
-                             add_task_to_delete_old_message_for_users,
-                             scheduler,
-                             test_migrate_on_new_sctucture_db,
-                             test_add_photo_to_exist_products)
 
 from bot22 import bot
 
@@ -313,13 +305,13 @@ async def main():
 
     # scheduler.add_jobstore('sqlalchemy', url=JOB_STORE_URL)
     # await create_new_punkts_from_old()
+    redis_pool = await get_redis_background_pool()
 
     scheduler.start()
 
     # await test_migrate_on_new_sctucture_db()
     # await test_add_photo_to_exist_products()
-    redis_pool = await get_redis_background_pool()
-    # await startup_update_scheduler_jobs(scheduler)
+    # startup_update_scheduler_jobs(scheduler)
 
 #     # #Add session and database connection in handlers
     dp.update.middleware(DbSessionMiddleware(session_pool=session,

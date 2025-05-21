@@ -19,7 +19,7 @@ WEBAPP_URL_THREE = os.environ.get('WEBAPP_URL_THREE')
 PUBLIC_URL = os.environ.get('PUBLIC_URL')
 
 
-JOB_STORE_URL = os.environ.get('JOB_STORE_URL')
+# JOB_STORE_URL = os.environ.get('JOB_STORE_URL')
 
 
 #DATABASE
@@ -28,6 +28,8 @@ DB_PASS = os.environ.get('POSTGRES_PASSWORD')
 DB_HOST = os.environ.get('POSTGRES_HOST')
 DB_PORT = os.environ.get('DB_PORT')
 DB_NAME = os.environ.get('DB_NAME')
+
+JOB_STORE_URL= f'postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 
 PGBOUNCER_HOST = os.environ.get('PGBOUNCER_HOST')
 

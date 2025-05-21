@@ -2,12 +2,17 @@ import json
 import aiohttp
 import csv
 
+from arq import ArqRedis
 import pandas as pd
 
 from datetime import datetime, timedelta
 
 from aiogram import types
 from aiogram.fsm.context import FSMContext
+
+# from .handlers import check_input_link
+
+# from background.base import _redis_pool
 
 from .storage import redis_client
 
@@ -37,6 +42,24 @@ def generate_sale_for_price(price: float):
         _sale = 500
     
     return _sale
+
+
+def generate_sale_for_price_popular_product(price: float):
+    price = float(price)
+
+    if 1 <= price <= 2000:
+        percent = 0.2
+    elif 2001 < price <= 15000:
+        percent = 0.15
+    elif 15001 < price <= 110000:
+        percent = 0.1
+    else:
+        percent = 0.5
+
+    _sale = price * percent
+    
+    return _sale
+
 
 
 async def add_message_to_delete_dict(message: types.Message,
@@ -131,25 +154,59 @@ async def send_data_to_yandex_metica(client_id: str,
 
 
 
-def get_excel_data():
-    path = './Электроника.xlsx'
+# def get_excel_data(path: str):
+#     # path = './Электроника.xlsx'
 
 
-    df = pd.read_excel(path, header=None)
+#     df = pd.read_excel(path, header=None)
 
-    # Преобразуем DataFrame в список списков
-    data_array = df.values.tolist()
+#     # Преобразуем DataFrame в список списков
+#     data_array = df.values.tolist()
 
-    # Выводим полученный массив
-    print(data_array)
+#     # Выводим полученный массив
+#     # print(data_array)
+
+#     for name, link, _, high_category, low_category, *_ in data_array:
+#         print('name', name)
+#         print('link', link)
+#         print('high_category', high_category)
+#         print('low_category', low_category)
     
-    # xls = pd.ExcelFile(path)
+#     # xls = pd.ExcelFile(path)
 
-    # sheet_names = xls.sheet_names
+#     # sheet_names = xls.sheet_names
 
-    # # Прочитать все листы в словарь DataFrame
-    # all_sheets = {sheet_name: xls.parse(sheet_name) for sheet_name in sheet_names}
+#     # # Прочитать все листы в словарь DataFrame
+#     # all_sheets = {sheet_name: xls.parse(sheet_name) for sheet_name in sheet_names}
 
-    # for name, data in all_sheets.items():
-    #     print(f"Лист: {name}")
-    #     print(data)
+#     # for name, data in all_sheets.items():
+#     #     print(f"Лист: {name}")
+#     #     print(data)
+
+# async def add_popular_product_to_db(_redis_pool: ArqRedis):
+#     data = get_excel_data(path='./Электроника.xlsx')
+
+#     _count = 0
+
+#     for name, link, _, high_category, low_category, *_  in data:
+#         if _count > 5:
+#             break
+#         # add product
+#         product_marker = check_input_link(link)
+
+#         product_data = {
+#             'name': name,
+#             'link': link,
+#             'high_category': high_category,
+#             'low_category': low_category,
+#             'product_marker': product_marker.lower(),
+#         }
+
+#         # await _redis_pool.enqueue_job()
+#         await _redis_pool.enqueue_job('add_popular_product',
+#                                         product_data,
+#                                         _queue_name='arq:low')
+#         _count += 1
+
+
+#     pass

@@ -3,12 +3,14 @@ import json
 import re
 
 import aiohttp
+import pandas as pd
 
 from datetime import datetime, timedelta
 from typing import Any, Literal
 
 from asyncio import sleep
 
+from arq import ArqRedis
 import pytz
 
 # import matplotlib.pyplot as plt
@@ -38,13 +40,13 @@ from db.base import (OzonPunkt, Punkt,
                      Product,
                      UserProduct)
 
-from utils.exc import NotEnoughGraphicData
-from utils.scheduler import (push_check_ozon_price,
+from .exc import NotEnoughGraphicData
+from .scheduler import (push_check_ozon_price,
                              push_check_wb_price,
                              add_task_to_delete_old_message_for_users)
-from utils.storage import redis_client
-from utils.any import send_data_to_yandex_metica
-from utils.pics import DEFAULT_PRODUCT_LIST_PHOTO_ID
+from .storage import redis_client
+from .any import send_data_to_yandex_metica
+from .pics import DEFAULT_PRODUCT_LIST_PHOTO_ID
 
 from keyboards import (add_back_btn,
                        add_pagination_btn, create_back_to_product_btn,
@@ -1476,16 +1478,46 @@ async def try_delete_faq_messages(data: dict):
         if faq_msg:
             _, _message_id = faq_msg
             question_msg_list.append(_message_id)
-        # print(question_msg_list)
 
         try:
             await bot.delete_messages(chat_id=_chat_id,
                                     message_ids=question_msg_list)
-            # for _msg in question_msg_list:
-            #     await bot.delete_message(chat_id=callback.from_user.id,
-            #                              message_id=_msg)
         except Exception as ex:
             print('ERROR WITH DELETE FAQ MESSAGES')
             pass
     except Exception as ex:
         print('TRY DELETE PREV FAQ MESSAGES', ex)
+
+
+def get_excel_data(path: str):
+    df = pd.read_excel(path, header=None)
+
+    data_array = df.values.tolist()
+
+    return data_array[1:]
+
+
+async def add_popular_product_to_db(_redis_pool: ArqRedis):
+    data = get_excel_data(path='./Электроника.xlsx')
+
+
+    for name, link, _, high_category, low_category, *_  in data:
+
+        product_marker = check_input_link(link)
+
+        product_data = {
+            'name': name,
+            'link': link,
+            'high_category': high_category,
+            'low_category': low_category,
+            'product_marker': product_marker.lower(),
+        }
+
+        await _redis_pool.enqueue_job(f'add_popular_product',
+                                        product_data=product_data,
+                                        _queue_name='arq:high')
+        
+        # чтобы тг не кидал ошибку о спаме в чат
+        await sleep(2)
+
+    pass

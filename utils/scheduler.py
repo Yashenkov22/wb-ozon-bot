@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import insert, select, and_, update, func, desc
 
-from db.base import (OzonPunkt, Product, Punkt,
+from db.base import (Category, ChannelLink, OzonPunkt, PopularProduct, Product, Punkt,
                      Subscription,
                      WbProduct,
                      WbPunkt,
@@ -46,7 +46,7 @@ from bot22 import bot
 from .storage import redis_client
 from .any import (generate_pretty_amount,
                   generate_sale_for_price,
-                  add_message_to_delete_dict,
+                  add_message_to_delete_dict, generate_sale_for_price_popular_product,
                   send_data_to_yandex_metica)
 from .pics import DEFAULT_PRODUCT_LIST_PHOTO_ID, DEFAULT_PRODUCT_PHOTO_ID
 from .cities import city_index_dict
@@ -111,12 +111,32 @@ async def add_task_to_delete_old_message_for_users(user_id: int = None):
         user_id = user[0]
         job_id = f'delete_msg_task_{user_id}'
 
-        scheduler.add_job(periodic_delete_old_message,
+        # scheduler.add_job(periodic_delete_old_message,
+        #                   trigger=scheduler_interval,
+        #                   id=job_id,
+        #                   jobstore='sqlalchemy',
+        #                   coalesce=True,
+        #                   kwargs={'user_id': user_id})
+
+        # планируется задача для фонового ARQ воркера
+        scheduler.add_job(background_task_wrapper,
                           trigger=scheduler_interval,
                           id=job_id,
                           jobstore='sqlalchemy',
                           coalesce=True,
-                          kwargs={'user_id': user_id})
+                          args=(f'periodic_delete_old_message', user_id),
+                          kwargs={'_queue_name': 'arq:low'})
+        # job_id = f'popular_{marker}_{popular_product.id}'
+        # job = scheduler.add_job(func=background_task_wrapper,
+        #                     trigger='interval',
+        #                     minutes=2,
+        #                     id=job_id,
+        #                     coalesce=True,
+        #                     args=(f'push_check_{marker}_popular_product', popular_product.id), # func_name, *args
+        #                     kwargs={'_queue_name': 'arq:low'},
+        #                     jobstore='sqlalchemy')  # _queue_name
+
+
 
 
 async def periodic_delete_old_message(user_id: int):
@@ -1028,6 +1048,171 @@ async def save_product(user_data: dict,
         pass
 
 
+async def add_product_to_db_popular_product(data: dict,
+                                            session: AsyncSession,
+                                            scheduler: AsyncIOScheduler):
+    short_link = data.get('short_link')
+    name = data.get('name')
+    photo_id = data.get('photo_id')
+    high_category = data.get('high_category')
+    low_category = data.get('low_category')
+    marker: str = data.get('product_marker')
+
+    check_product_query = (
+        select(
+            Product
+        )\
+        .where(
+            Product.short_link == short_link,
+        )
+    )
+
+    async with session as _session:
+        res = await _session.execute(check_product_query)
+
+        _product = res.scalar_one_or_none()
+
+        if not _product:
+            insert_data = {
+                'product_marker': marker,
+                'name': name,
+                'short_link': short_link,
+                'photo_id': photo_id,
+            }
+
+            _product = Product(**insert_data)
+            _session.add(_product)
+
+            await _session.flush()
+            await _session.commit()
+        
+    product_id = _product.id
+    print('product_id',product_id)
+
+    check_high_category_query = (
+        select(
+            Category
+        )\
+        .where(
+            Category.name == high_category,
+        )
+    )
+
+    check_low_category_query = (
+        select(
+            Category
+        )\
+        .where(
+            Category.name == low_category,
+        )
+    )
+
+    default_channel_query = (
+        select(
+            ChannelLink
+        )\
+        .where(
+            ChannelLink.name == 'Общий',
+        )
+    )
+
+    async with session as _session:
+        high_res = await _session.execute(check_high_category_query)
+        low_res = await _session.execute(check_low_category_query)
+        default_channel_res = await _session.execute(default_channel_query)
+    
+        high_category_obj = high_res.scalar_one_or_none()
+        low_category_obj = low_res.scalar_one_or_none()
+        default_channel_obj = default_channel_res.scalar_one_or_none()
+
+        if not high_category_obj:
+            insert_data = {
+                'name': high_category,
+            }
+            
+            high_category_obj = Category(**insert_data)
+            high_category_obj.channel_links.append(default_channel_obj)
+
+            session.add(high_category_obj)
+            await _session.flush()
+
+            await _session.commit()
+
+        if not low_category_obj:
+            insert_data = {
+                'name': low_category,
+                'parent_id': high_category_obj.id,
+            }
+            
+            low_category_obj = Category(**insert_data)
+            low_category_obj.channel_links.append(default_channel_obj)
+
+            _session.add(low_category_obj)
+            await _session.flush()
+
+            await _session.commit()
+
+    # async with session as _session:
+    #     res = await _session.execute(check_product_query)
+
+    # _product = res.scalar_one_or_none()
+
+    # if not _product:
+    #     insert_data = {
+    #         'product_marker': marker,
+    #         'name': name,
+    #         'short_link': short_link,
+    #         'photo_id': photo_id,
+    #     }
+
+    #     _product = Product(**insert_data)
+    #     _session.add(_product)
+
+    #     await session.flush(_product)
+    
+    # product_id = _product.id
+
+    popular_product_data = {
+        'link': data.get('link'),
+        'product_id': product_id,
+        'start_price': data.get('start_price'),
+        'actual_price': data.get('actual_price'),
+        'sale': data.get('sale'),
+        'time_create': datetime.now(),
+        'category_id': low_category_obj.id,
+    }
+
+    popular_product = PopularProduct(**popular_product_data)
+
+    print('pop', popular_product)
+    
+    async with session as _session:
+        _session.add(popular_product)
+        await _session.flush()
+
+    # async with session as _session:
+        # try:
+        await _session.commit()
+        print('added!!!!!')
+
+        job_id = f'popular_{marker}_{popular_product.id}'
+        job = scheduler.add_job(func=background_task_wrapper,
+                            trigger='interval',
+                            minutes=2,
+                            id=job_id,
+                            coalesce=True,
+                            args=(f'push_check_{marker}_popular_product', popular_product.id), # func_name, *args
+                            kwargs={'_queue_name': 'arq:low'},
+                            jobstore='sqlalchemy')  # _queue_name
+        print('jobbb',job)
+        # except Exception as ex:
+        #     print('here')
+        #     print(ex)
+        #     await session.rollback()
+        # else:
+        #     pass
+
+
 async def add_product_to_db(data: dict,
                             marker: str,
                             is_first_product: bool,
@@ -1282,6 +1467,187 @@ async def try_get_ozon_product_photo(short_link: str,
         print("URL не найден")
 
 
+async def save_popular_ozon_product(product_data: dict,
+                                    session: AsyncSession,
+                                    scheduler: AsyncIOScheduler):
+    link: str = product_data.get('link')
+    name: str = product_data.get('name')
+
+    if link.startswith('https://ozon.ru/t/'):
+        _idx = link.find('/t/')
+        _prefix = '/t/'
+        ozon_short_link = 'croppedLink|' + link[_idx+len(_prefix):]
+        print(ozon_short_link)
+    else:
+        _prefix = 'product/'
+        _idx = link.rfind('product/')
+        ozon_short_link = link[(_idx + len(_prefix)):]
+
+    timeout = aiohttp.ClientTimeout(total=35)
+    async with aiohttp.ClientSession() as aiosession:
+        _url = f"{OZON_API_URL}/product/{ozon_short_link}"
+
+        async with aiosession.get(url=_url,
+                                    timeout=timeout) as response:
+            _status_code = response.status
+            print(f'OZON RESPONSE CODE {_status_code}')
+
+            res = await response.text()
+
+    if _status_code == 404 or res == '408 Request Timeout':
+        raise OzonAPICrashError()
+
+    _new_short_link = res.split('|')[0]
+    print(_new_short_link)
+
+    response_data = res.split('|', maxsplit=1)[-1]
+
+    json_data: dict = json.loads(response_data)
+
+    photo_id = await try_get_ozon_product_photo(short_link=_new_short_link,
+                                                text_data=res,
+                                                session=session)
+
+    if not photo_id:
+        photo_id = DEFAULT_PRODUCT_PHOTO_ID
+
+    w = re.findall(r'\"cardPrice.*currency?', res)
+
+    if w:
+        w = w[0].split(',')[:3]
+
+        _d = {
+            'price': None,
+            'originalPrice': None,
+            'cardPrice': None,
+        }
+
+        for k in _d:
+            if not all(v for v in _d.values()):
+                for q in w:
+                    if q.find(k) != -1:
+                        _name, price = q.split(':')
+                        price = price.replace('\\', '').replace('"', '')
+                        price = float(''.join(price.split()[:-1]))
+                        print(price)
+                        _d[k] = price
+                        break
+            else:
+                break
+
+        print(_d)
+        start_price = int(_d.get('cardPrice', 0))
+        actual_price = int(_d.get('cardPrice', 0))
+        basic_price = int(_d.get('price', 0))
+
+    else:
+        # try:
+            script_list = json_data.get('seo').get('script')
+
+            inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
+
+            # try:
+            inner_html_json: dict = json.loads(inner_html)
+            offers = inner_html_json.get('offers')
+
+            _price = offers.get('price')
+
+            start_price = int(_price)
+            actual_price = int(_price)
+            basic_price = int(_price)
+
+            print('Price', _price)
+    
+    # _sale = generate_sale_for_price(start_price) 
+    _sale = generate_sale_for_price_popular_product(start_price) # new !
+
+    _data = {
+        'link': link,
+        'short_link': _new_short_link,
+        'name': name,
+        'actual_price': actual_price,
+        'start_price': start_price,
+        'basic_price': basic_price,
+        'sale': _sale,
+        'photo_id': photo_id,
+        'product_marker': product_data.get('product_marker'),
+        'high_category': product_data.get('high_category'),
+        'low_category': product_data.get('low_category'),
+    }
+
+    await add_product_to_db_popular_product(_data,
+                                            session,
+                                            scheduler)
+
+
+async def save_popular_wb_product(product_data: dict,
+                                  session: AsyncSession,
+                                  scheduler: AsyncIOScheduler):
+    link = product_data.get('link')
+    name = product_data.get('name')
+
+    _prefix = 'catalog/'
+
+    _idx_prefix = link.find(_prefix)
+
+    short_link = link[_idx_prefix + len(_prefix):].split('/')[0]
+
+    del_zone = -1281648
+
+    timeout = aiohttp.ClientTimeout(total=15)
+    async with aiohttp.ClientSession() as aiosession:
+        _url = f"{WB_API_URL}/product/{del_zone}/{short_link}"
+        async with aiosession.get(url=_url,
+                        timeout=timeout) as response:
+
+                res = await response.json()
+
+    photo_id = await try_get_wb_product_photo(short_link=short_link,
+                                              session=session)
+
+    if not photo_id:
+        photo_id = DEFAULT_PRODUCT_PHOTO_ID
+
+    d = res.get('data')
+
+    sizes = d.get('products')[0].get('sizes')
+
+    _product_name = d.get('products')[0].get('name')
+
+    _basic_price = _product_price = None
+
+    for size in sizes:
+        _price = size.get('price')
+        if _price:
+            _basic_price = size.get('price').get('basic')
+            _product_price = size.get('price').get('product')
+
+            _basic_price = str(_basic_price)[:-2]
+            _product_price = str(_product_price)[:-2]
+
+            _product_price = float(_product_price)
+
+    print('WB price', _product_price)
+
+    _sale = generate_sale_for_price_popular_product(float(_product_price))
+
+    _data_name = name if name else _product_name
+
+    _data = {
+        'link': link,
+        'short_link': short_link,
+        'start_price': _product_price,
+        'actual_price': _product_price,
+        'sale': _sale,
+        'name': _data_name,
+        'photo_id': photo_id,
+    }
+
+    await add_product_to_db_popular_product(_data,
+                                            session,
+                                            scheduler)
+
+
 async def save_ozon_product(user_id: int,
                             link: str,
                             name: str | None,
@@ -1332,12 +1698,9 @@ async def save_ozon_product(user_id: int,
     # try:
     timeout = aiohttp.ClientTimeout(total=35)
     async with aiohttp.ClientSession() as aiosession:
-        # _url = f"http://5.61.53.235:1441/product/{message.text}"
         if not del_zone:
-            # _url = f"http://5.61.53.235:1441/product/{ozon_short_link}"
             _url = f"{OZON_API_URL}/product/{ozon_short_link}"
         else:
-            # _url = f"http://5.61.53.235:1441/product/{del_zone}/{ozon_short_link}"
             _url = f"{OZON_API_URL}/product/{del_zone}/{ozon_short_link}"
 
         async with aiosession.get(url=_url,
@@ -1361,7 +1724,7 @@ async def save_ozon_product(user_id: int,
         raise OzonProductExistsError()
 
     response_data = res.split('|', maxsplit=1)[-1]
-    print(response_data[:10])
+
     json_data: dict = json.loads(response_data)
 
     photo_id = await try_get_ozon_product_photo(short_link=_new_short_link,
@@ -1403,12 +1766,10 @@ async def save_ozon_product(user_id: int,
         basic_price = int(_d.get('price', 0))
 
     else:
-        # try:
             script_list = json_data.get('seo').get('script')
 
             inner_html = script_list[0].get('innerHTML') #.get('offers').get('price')
 
-            # try:
             inner_html_json: dict = json.loads(inner_html)
             offers = inner_html_json.get('offers')
 
@@ -1512,7 +1873,7 @@ async def try_get_wb_product_photo(short_link: str,
 
     api_check_id_channel = -1002558196527
 
-    _url = f"http://5.61.53.235:1435/product/image/{short_link}"
+    _url = f"{WB_API_URL}/product/image/{short_link}"
     timeout = aiohttp.ClientTimeout(total=15)
     async with aiohttp.ClientSession() as aiosession:
         async with aiosession.get(url=_url,
@@ -1590,7 +1951,6 @@ async def save_wb_product(user_id: int,
 
     timeout = aiohttp.ClientTimeout(total=15)
     async with aiohttp.ClientSession() as aiosession:
-        # _url = f"http://172.18.0.7:8080/product/{del_zone}/{short_link}"
         _url = f"{WB_API_URL}/product/{del_zone}/{short_link}"
         async with aiosession.get(url=_url,
                         timeout=timeout) as response:
@@ -1645,6 +2005,26 @@ async def save_wb_product(user_id: int,
                             'wb',
                             is_first_product,
                             session)
+
+
+async def save_popular_product(product_data: dict,
+                               session: AsyncSession,
+                               scheduler: AsyncIOScheduler):
+    link: str = product_data.get('link')
+    name: str = product_data.get('name')
+
+    if link.find('ozon') > 0:
+        # save popular ozon product
+        await save_popular_ozon_product(product_data=product_data,
+                                        session=session,
+                                        scheduler=scheduler)
+
+    elif link.find('wildberries') > 0:
+        pass
+        # save popular wb product
+        await save_popular_wb_product(product_data=product_data,
+                                      session=session,
+                                      scheduler=scheduler)
 
 
 async def new_save_product(user_data: dict,
@@ -2089,17 +2469,11 @@ async def send_fake_price(user_id: int,
             return
 
 
-async def new_push_ozon_job_wrapper(user_id: int,
-                                    product_id: int):
+# для планировании задачи в APScheduler и выполнения в ARQ worker`e
+async def background_task_wrapper(func_name, *args, _queue_name):
+    # print(args)
     _redis_pool = get_redis_pool()
-
-    await _redis_pool.enqueue_job("new_push_check_ozon_price", user_id, product_id, _queue_name="arq:low")
-
-
-async def new_push_wb_job_wrapper(user_id: int,
-                                    product_id: int):
-    _redis_pool = get_redis_pool()
-    await _redis_pool.enqueue_job("new_push_check_wb_price", user_id, product_id, _queue_name="arq:low")
+    await _redis_pool.enqueue_job(func_name, *args, _queue_name=_queue_name)
 
 
 
@@ -2115,50 +2489,67 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         # print(job.kwargs)
         if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
             if job.id.find('wb') != -1:
-                # if job.id.find(DEV_ID) != -1:
+                if job.id.find(DEV_ID) != -1:
                 #     # pass
-                #     user_id = job.kwargs.get('user_id')
-                #     product_id = job.kwargs.get('product_id')
+                    user_id = job.kwargs.get('user_id')
+                    product_id = job.kwargs.get('product_id')
 
                 #     # async def job_wrapper(user_id: int,
                 #     #                       product_id: int):
                 #     #     await _redis.enqueue_job("new_push_check_wb_price", user_id, product_id, _queue_name="arq:low")
 
-                #     modify_func = new_push_wb_job_wrapper
+                    # modify_func = background_task_wrapper
 
-                #     job.modify(func=modify_func,
-                #             trigger=scheduler_cron,
-                #             next_run_time=datetime.now(),
-                #             kwargs={'user_id': user_id,
-                #                     'product_id': product_id})
-                # else:
-                modify_func = new_push_check_wb_price
+                    job.modify(func=background_task_wrapper,
+                               trigger=scheduler_cron,
+                               next_run_time=datetime.now(),
+                               args=(f'new_push_check_wb_price', user_id, product_id, ),
+                               kwargs={'_queue_name': 'arq:low'})
+                    continue
+                else:
+                    modify_func = new_push_check_wb_price
                 # else:
                 #     modify_func = push_check_wb_price
             else:
-                # if job.id.find(DEV_ID) != -1:
-                #     user_id = job.kwargs.get('user_id')
-                #     product_id = job.kwargs.get('product_id')
+                if job.id.find(DEV_ID) != -1:
+                    user_id = job.kwargs.get('user_id')
+                    product_id = job.kwargs.get('product_id')
 
                 #     # async def job_wrapper(user_id: int,
                 #     #                       product_id: int):
                 #     #     await _redis.enqueue_job("new_push_check_ozon_price", user_id, product_id, _queue_name="arq:low")
 
                 #     modify_func = new_push_ozon_job_wrapper
-
                 #     job.modify(func=modify_func,
                 #             trigger=scheduler_cron,
                 #             next_run_time=datetime.now(),
                 #             kwargs={'user_id': user_id,
                 #                     'product_id': product_id})
-                # else:
-                modify_func = new_push_check_ozon_price
+                    job.modify(func=background_task_wrapper,
+                               trigger=scheduler_cron,
+                               next_run_time=datetime.now(),
+                               args=(f'new_push_check_ozon_price', user_id, product_id, ),
+                               kwargs={'_queue_name': 'arq:low'})
+                    continue
+                else:
+                    modify_func = new_push_check_ozon_price
                 # else:
                 #     modify_func = push_check_ozon_price
             job.modify(func=modify_func,
                        trigger=scheduler_cron)   
+            
         elif job.id.find('delete_msg_task') != -1:
-            modify_func = test_periodic_delete_old_message
+            user_id = job.id.split('_')[-1]
+            
+            if job.id.find(DEV_ID) != -1:
+                    job.modify(func=background_task_wrapper,
+                               trigger=scheduler_cron,
+                               next_run_time=datetime.now(),
+                               args=(f'periodic_delete_old_message', user_id, ),
+                               kwargs={'_queue_name': 'arq:low'})
+                    continue
+            else:
+                modify_func = test_periodic_delete_old_message
 
             job.modify(func=modify_func,
                        trigger=scheduler_interval)

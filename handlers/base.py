@@ -44,8 +44,9 @@ from states import (AnyProductStates,
                     LocationState, NewEditSale,
                     PunktState)
 
-from utils.any import get_excel_data
+# from utils.any import get_excel_data
 from utils.exc import NotEnoughGraphicData
+
 from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
                             check_has_punkt,
                             check_input_link,
@@ -56,8 +57,14 @@ from utils.handlers import (DEFAULT_PAGE_ELEMENT_COUNT,
                             try_delete_faq_messages,
                             try_delete_prev_list_msgs,
                             state_clear,
-                            add_message_to_delete_dict)
-from utils.scheduler import add_product_task, add_punkt_by_user, new_add_product_task, new_add_punkt_by_user
+                            add_message_to_delete_dict,
+                            add_popular_product_to_db)
+
+from utils.scheduler import (add_product_task,
+                             add_punkt_by_user,
+                             new_add_product_task,
+                             new_add_punkt_by_user,
+                             background_task_wrapper)
 
 from utils.cities import city_index_dict
 
@@ -160,11 +167,13 @@ async def test_excel(message: types.Message | types.CallbackQuery,
                             state: FSMContext,
                             session: AsyncSession,
                             bot: Bot,
-                            scheduler: AsyncIOScheduler):
+                            scheduler: AsyncIOScheduler,
+                            redis_pool: ArqRedis):
     # await state.set_state(LocationState.location)
     # await message.answer('кинь координаты')
     # await message.delete()
-    get_excel_data()
+    await add_popular_product_to_db(redis_pool)
+
 
 #and_f(EditSale.new_sale), F.content_type == types.ContentType.TEXT
 @main_router.message(and_f(LocationState.location), F.content_type == types.ContentType.LOCATION)
@@ -1053,7 +1062,14 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
     await state.set_state()
 
     # if message.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
-    scheduler.add_job(new_add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
+    # scheduler.add_job(new_add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
+
+    # планирование задачи для ARQ воркера
+    scheduler.add_job(background_task_wrapper,
+                      trigger=DateTrigger(run_date=datetime.now()),
+                      args=(f'add_punkt_by_user', punkt_data, ),
+                      kwargs={'_queue_name': 'arq:high'},
+                      jobstore='sqlalchemy')
     # else:
     #     scheduler.add_job(add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
 
@@ -2440,14 +2456,14 @@ async def any_input(message: types.Message,
 
         # if message.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
         # print('run new bg task')
-        # if message.from_user.id == int(DEV_ID):
-        #     print('arq test...')
-        #     await redis_pool.enqueue_job('new_add_product_task',
-        #                                  user_data,
-        #                                  _queue_name='arq:high')
+        if message.from_user.id == int(DEV_ID):
+            print('arq test...')
+            await redis_pool.enqueue_job('new_add_product_task',
+                                         user_data,
+                                         _queue_name='arq:high')
         #     # pass
-        # else:
-        scheduler.add_job(new_add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
+        else:
+            scheduler.add_job(new_add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
         # else:
         #     scheduler.add_job(add_product_task, DateTrigger(run_date=datetime.now()), (user_data, ))
     else:

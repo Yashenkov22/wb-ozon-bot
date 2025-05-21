@@ -7,7 +7,7 @@ from config import db_url, _db_url
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship
-from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, DateTime, TIMESTAMP, BLOB, JSON, BigInteger
+from sqlalchemy import Column, Integer, String, DATETIME, ForeignKey, Float, DateTime, TIMESTAMP, BLOB, JSON, BigInteger, Table
 
 
 # Base = declarative_base()
@@ -170,28 +170,60 @@ class UserProductJob(Base):
     user_product = relationship(UserProduct, back_populates="user_product_jobs")
 
 
-# class Category(Base):
-#     __tablename__ = 'categories'
+category_channel_association = Table(
+    'category_channel_association',
+    Base.metadata,
+    Column('id', Integer, primary_key=True),    
+    Column('category_id', Integer, ForeignKey('categories.id'), index=True),
+    Column('channel_link_id', Integer, ForeignKey('channel_links.id'), index=True)
+)
 
-#     id = Column(Integer, primary_key=True, index=True)
-#     name = Column(String)
-#     parent_id = Column(BigInteger, ForeignKey('categories.id'), nullable=True, default=None)
 
-#     parent = relationship('Category', back_populates="child_categories")
+class Category(Base):
+    __tablename__ = 'categories'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    parent_id = Column(BigInteger, ForeignKey('categories.id'), nullable=True, default=None)
+
+    parent = relationship('Category',remote_side=[id], back_populates="child_categories")
+    child_categories = relationship('Category', back_populates="parent")
+
+    channel_links = relationship(
+        'ChannelLink',
+        secondary=category_channel_association,
+        back_populates='categories'
+    )
 
 
-# class PopularProduct(Base):
-#     __tablename__ = 'popular_products'
+class ChannelLink(Base):
+    __tablename__ = 'channel_links'
 
-#     id = Column(Integer, primary_key=True, index=True)
-#     product_id = Column(BigInteger, ForeignKey('products.id'))
-#     category_id = Column(BigInteger, ForeignKey('categories.id'))
-#     start_price = Column(Integer)
-#     actual_price = Column(Integer)
-#     sale = Column(Integer)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    channel_id = Column(String)
 
-#     product = relationship(Product, back_populates="popular_products")
-#     category = relationship(Category, back_populates="popular_products")
+    categories = relationship(
+        'Category',
+        secondary=category_channel_association,
+        back_populates='channel_links'
+    )
+
+
+class PopularProduct(Base):
+    __tablename__ = 'popular_products'
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(BigInteger, ForeignKey('products.id'))
+    category_id = Column(BigInteger, ForeignKey('categories.id'))
+    start_price = Column(Integer)
+    actual_price = Column(Integer)
+    sale = Column(Integer)
+    link = Column(String)
+    time_create = Column(TIMESTAMP(timezone=True))
+
+    product = relationship(Product, back_populates="popular_products")
+    category = relationship(Category, back_populates="popular_products")
 
 
 class WbPunkt(Base):
