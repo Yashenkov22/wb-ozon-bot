@@ -1,5 +1,5 @@
 from background.tasks import (new_add_product_task,
-                              add_popular_product,
+                            #   add_popular_product,
                               add_punkt_by_user)
 from background.base import (redis_settings,
                              _redis_pool,
@@ -33,7 +33,7 @@ async def shutdown(ctx):
 class WorkerSettings:
     functions = [
         new_add_product_task,
-        add_popular_product,
+        # add_popular_product,
         add_punkt_by_user,
     ]
     on_startup = startup
