@@ -2586,19 +2586,19 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 # else:
                 modify_func = new_push_check_ozon_price
                 # else:
-                _kwargs = job.kwargs
-                _args = job.args
+                # _kwargs = job.kwargs
+                # _args = job.args
 
-                if job.id == '686339126:ozon:108':
-                    user_id = 686339126
-                    product_id = 108
+                # if job.id == '686339126:ozon:108':
+                #     user_id = 686339126
+                #     product_id = 108
 
-                    job.modify(func=modify_func,
-                           trigger=scheduler_cron,
-                           _args=(),
-                           kwargs={'user_id': user_id,
-                                   'product_id': product_id})
-                    continue
+                #     job.modify(func=modify_func,
+                #            trigger=scheduler_cron,
+                #            _args=(),
+                #            kwargs={'user_id': user_id,
+                                #    'product_id': product_id})
+                    # continue
 
 
                 # print(job.id)
