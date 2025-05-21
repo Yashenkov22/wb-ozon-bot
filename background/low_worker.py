@@ -35,7 +35,7 @@ class WorkerSettings:
         push_check_ozon_popular_product,
         push_check_wb_popular_product,
         periodic_delete_old_message,
-        add_popular_product,
+        # add_popular_product,
     ]
     on_startup = startup
     on_shutdown = shutdown
