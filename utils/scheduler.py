@@ -2473,10 +2473,10 @@ async def send_fake_price(user_id: int,
 
 
 # для планировании задачи в APScheduler и выполнения в ARQ worker`e
-async def background_task_wrapper(*args, **kwargs):
+async def background_task_wrapper(*args, func_name, _queue_name):
     # print(args)
-    _queue_name = kwargs.get('_queue_name')
-    func_name = kwargs.get('func_name')
+    # _queue_name = kwargs.get('_queue_name')
+    # func_name = kwargs.get('func_name')
 
     _redis_pool = get_redis_pool()
     await _redis_pool.enqueue_job(func_name,
