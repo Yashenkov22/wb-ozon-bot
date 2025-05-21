@@ -2492,7 +2492,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     print('start up update scheduler jobs...')
     for job in jobs:
         # print(job)
-        # print(job.func)
+        print(job.func)
         # print(job.__dir__())
         # print(job.args)
         print(job.kwargs)
