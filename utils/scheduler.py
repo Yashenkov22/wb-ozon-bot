@@ -2473,8 +2473,11 @@ async def send_fake_price(user_id: int,
 
 
 # для планировании задачи в APScheduler и выполнения в ARQ worker`e
-async def background_task_wrapper(*args, func_name, _queue_name):
+async def background_task_wrapper(*args, **kwargs):
     # print(args)
+    _queue_name = kwargs.get('_queue_name')
+    func_name = kwargs.get('func_name')
+
     _redis_pool = get_redis_pool()
     await _redis_pool.enqueue_job(func_name,
                                   *args,
@@ -2491,8 +2494,8 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         # print(job)
         # print(job.func)
         # print(job.__dir__())
-        print(job.args)
-        print(job.kwargs)
+        # print(job.args)
+        # print(job.kwargs)
         # print(job.kwargs)
         if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
             if job.id.find('wb') != -1:
