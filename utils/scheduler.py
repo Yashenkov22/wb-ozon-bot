@@ -2589,6 +2589,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 _kwargs = job.kwargs
                 _args = job.args
 
+                print(job.id)
                 print(_args, _kwargs)
                 #     modify_func = push_check_ozon_price
                 job.modify(func=modify_func,
