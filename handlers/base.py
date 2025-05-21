@@ -1061,15 +1061,16 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
 
     await state.set_state()
 
-    # if message.from_user.id in (int(DEV_ID), int(SUB_DEV_ID)):
-    # scheduler.add_job(new_add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
+    if message.from_user.id == int(DEV_ID):
+        scheduler.add_job(background_task_wrapper,
+                        trigger=DateTrigger(run_date=datetime.now()),
+                        args=(f'add_punkt_by_user', punkt_data, ),
+                        kwargs={'_queue_name': 'arq:high'},
+                        jobstore='sqlalchemy')
+    else:
+        scheduler.add_job(new_add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
 
     # планирование задачи для ARQ воркера
-    scheduler.add_job(background_task_wrapper,
-                      trigger=DateTrigger(run_date=datetime.now()),
-                      args=(f'add_punkt_by_user', punkt_data, ),
-                      kwargs={'_queue_name': 'arq:high'},
-                      jobstore='sqlalchemy')
     # else:
     #     scheduler.add_job(add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
 
