@@ -1203,10 +1203,9 @@ async def add_product_to_db_popular_product(data: dict,
                             minutes=2,
                             id=job_id,
                             coalesce=True,
-                            args=(popular_product.id, ), # func_name, *args
-                            kwargs={'_queue_name': 'arq:low',
-                                    'func_name': f'push_check_{marker}_popular_product'},
-                            jobstore='sqlalchemy')  # _queue_name
+                            args=(f'push_check_{marker}_popular_product', popular_product.id, ), # func_name, *args
+                            kwargs={'_queue_name': 'arq:low'},  # _queue_name
+                            jobstore='sqlalchemy')  
         print('jobbb',job)
         # except Exception as ex:
         #     print('here')
