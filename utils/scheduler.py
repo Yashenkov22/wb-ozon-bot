@@ -2555,16 +2555,16 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 #                         'proudct_id': product_id})
                 #     continue
 
-                if job.id.find(DEV_ID) != -1:
-                    modify_func = background_task_wrapper
-                    _args = job.args
-                    _kwargs = job.kwargs
+                # if job.id.find(DEV_ID) != -1:
+                #     modify_func = background_task_wrapper
+                #     _args = job.args
+                #     _kwargs = job.kwargs
 
 
-                    job.modify(func=modify_func,
-                               args=_args,
-                               kwargs=_kwargs)
-                    continue
+                #     job.modify(func=modify_func,
+                #                args=_args,
+                #                kwargs=_kwargs)
+                #     continue
                 #     user_id = job.kwargs.get('user_id')
                 #     product_id = job.kwargs.get('product_id')
 
@@ -2595,8 +2595,8 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 #                args=_args,
                 #                kwargs=_kwargs)
                 #     continue
-                else:
-                    modify_func = new_push_check_wb_price
+                # else:
+                modify_func = new_push_check_wb_price
                 # else:
                 #     modify_func = push_check_wb_price
                 job.modify(func=modify_func,
@@ -2604,16 +2604,16 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
 
             else:
 
-                if job.id.find(DEV_ID) != -1:
-                    modify_func = background_task_wrapper
-                    _args = job.args
-                    _kwargs = job.kwargs
+                # if job.id.find(DEV_ID) != -1:
+                #     modify_func = background_task_wrapper
+                #     _args = job.args
+                #     _kwargs = job.kwargs
 
 
-                    job.modify(func=modify_func,
-                               args=_args,
-                               kwargs=_kwargs)
-                    continue
+                #     job.modify(func=modify_func,
+                #                args=_args,
+                #                kwargs=_kwargs)
+                #     continue
 
                 # _kwargs = job.kwargs
 
@@ -2676,8 +2676,8 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     #            args=_args,
                     #         #    args=(f'new_push_check_ozon_price', user_id, product_id, ),
                     #            kwargs=_kwargs)
-                else:
-                    modify_func = new_push_check_ozon_price
+                # else:
+                modify_func = new_push_check_ozon_price
                 # else:
                 # _kwargs = job.kwargs
                 # _args = job.args
@@ -2703,16 +2703,16 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         elif job.id.find('delete_msg_task') != -1:
             user_id = job.id.split('_')[-1]
 
-            if job.id.find(DEV_ID) != -1:
-                modify_func = background_task_wrapper
-                _args = job.args
-                _kwargs = job.kwargs
+            # if job.id.find(DEV_ID) != -1:
+            #     modify_func = background_task_wrapper
+            #     _args = job.args
+            #     _kwargs = job.kwargs
 
 
-                job.modify(func=modify_func,
-                            args=_args,
-                            kwargs=_kwargs)
-                continue
+            #     job.modify(func=modify_func,
+            #                 args=_args,
+            #                 kwargs=_kwargs)
+            #     continue
 
             # if job.id.find(DEV_ID) != -1:
                     
@@ -2742,8 +2742,8 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     #            kwargs={'_queue_name': 'arq:low',
                     #                    'func_name': 'periodic_delete_old_message'})
                     # continue
-            else:
-                modify_func = test_periodic_delete_old_message
+            # else:
+            modify_func = test_periodic_delete_old_message
 
             job.modify(func=modify_func,
                     trigger=scheduler_interval)
