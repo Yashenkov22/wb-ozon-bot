@@ -1277,20 +1277,36 @@ async def add_product_to_db(data: dict,
     job_id = f'{user_id}:{marker}:{user_product_id}'
     # job_id = 'test_job_id'
 
-    if marker == 'wb':
-        scheduler_func = new_push_check_wb_price
-    else:
-        scheduler_func = new_push_check_ozon_price
+    if user_id == int(DEV_ID):
+                
+        if marker == 'wb':
+            func_name = 'new_push_check_wb_price'
+        else:
+            scheduler_func = 'new_push_check_ozon_price'
 
-    job = scheduler.add_job(scheduler_func,
-                            trigger='interval',
-                            minutes=15,
-                            id=job_id,
-                            jobstore='sqlalchemy',
-                            coalesce=True,
-                            kwargs={'user_id': user_id,
-                                    'product_id': user_product_id})
-    
+        job = scheduler.add_job(background_task_wrapper,
+                                trigger='interval',
+                                minutes=15,
+                                id=job_id,
+                                jobstore='sqlalchemy',
+                                coalesce=True,
+                                args=(func_name, user_id, product_id, ),
+                                kwargs={'_queue_name': 'arq:low'})
+    else:
+        if marker == 'wb':
+            scheduler_func = new_push_check_wb_price
+        else:
+            scheduler_func = new_push_check_ozon_price
+
+        job = scheduler.add_job(scheduler_func,
+                                trigger='interval',
+                                minutes=15,
+                                id=job_id,
+                                jobstore='sqlalchemy',
+                                coalesce=True,
+                                kwargs={'user_id': user_id,
+                                        'product_id': user_product_id})
+        
     _data = {
         'user_product_id': user_product_id,
         'job_id': job.id,
@@ -2504,14 +2520,14 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     # _redis = await get_redis_background_pool()
 
     #
-    _user_id = 516006297
-    job_id = f'delete_msg_task_{_user_id}'
-    scheduler.add_job(func=test_periodic_delete_old_message,
-                      trigger=scheduler_cron,
-                      jobstore='sqlalchemy',
-                      id=job_id,
-                      coalesce=True,
-                      kwargs={'user_id': _user_id})
+    # _user_id = 516006297
+    # job_id = f'delete_msg_task_{_user_id}'
+    # scheduler.add_job(func=test_periodic_delete_old_message,
+    #                   trigger=scheduler_cron,
+    #                   jobstore='sqlalchemy',
+    #                   id=job_id,
+    #                   coalesce=True,
+    #                   kwargs={'user_id': _user_id})
     #
 
     print('start up update scheduler jobs...')
