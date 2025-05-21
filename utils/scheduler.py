@@ -2492,6 +2492,13 @@ async def background_task_wrapper(func_name, *args, _queue_name):
 
 
 
+async def test_jobs(scheduler: AsyncIOScheduler):
+    jobs: list[Job] = scheduler.get_jobs(jobstore='sqlalchemy')
+
+    for job in jobs:
+        print('job', job.id, job.func, job.kwargs)
+        print('*' * 10)
+
 async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     jobs: list[Job] = scheduler.get_jobs(jobstore='sqlalchemy')
     # _redis = await get_redis_background_pool()
