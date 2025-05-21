@@ -2494,7 +2494,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     user_id = job.kwargs.get('user_id')
                     product_id = job.kwargs.get('product_id')
 
-                    _args = ('new_push_check_ozon_price', user_id, product_id)
+                    _args = (('new_push_check_ozon_price', user_id, product_id),)
 
                     _kwargs = {
                         # 'func_name': 'new_push_check_wb_price',
@@ -2525,7 +2525,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     user_id = job.kwargs.get('user_id')
                     product_id = job.kwargs.get('product_id')
 
-                    _args = ('new_push_check_ozon_price', user_id, product_id)
+                    _args = (('new_push_check_ozon_price', user_id, product_id), )
 
                     _kwargs = {
                         # 'func_name': 'new_push_check_ozon_price',
