@@ -2595,7 +2595,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
 
                     job.modify(func=modify_func,
                            trigger=scheduler_cron,
-                           _args=None,
+                           _args=(),
                            kwargs={'user_id': user_id,
                                    'product_id': product_id})
                     continue
