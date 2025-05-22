@@ -1204,7 +1204,7 @@ async def add_product_to_db_popular_product(data: dict,
                             id=job_id,
                             coalesce=True,
                             args=(f'push_check_{marker}_popular_product', popular_product.id, ), # func_name, *args
-                            kwargs={'_queue_name': 'arq:low'},  # _queue_name
+                            kwargs={'_queue_name': 'arq:popular'},  # _queue_name
                             jobstore='sqlalchemy')  
         print('jobbb',job)
         # except Exception as ex:
@@ -2545,8 +2545,8 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 print(job)
                 # print(job.func)
                 # print(job.__dir__())
-                print(job.args)
-                print(job.kwargs)
+                # print(job.args)
+                # print(job.kwargs)
                 # pass
                 # if job.id.find('wb') != -1:
                 #     _args = job.args
@@ -2559,10 +2559,10 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 #         _args = ('new_push_check_wb_price', *__args, )
                 #         _kwargs = {'_queue_name': 'arq:low'}
 
-                job.modify(func=background_task_wrapper,
-                        args=job.args,
-                        kwargs=job.kwargs,
-                        next_run_time=datetime.now())
+                # job.modify(func=background_task_wrapper,
+                #         args=job.args,
+                #         kwargs=job.kwargs,
+                #         next_run_time=datetime.now())
 
                     # _kwargs = job.kwargs
 
@@ -2746,8 +2746,8 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
             user_id = job.id.split('_')[-1]
             # print(job.func)
             # print(job.__dir__())
-            print(job.args)
-            print(job.kwargs)
+            # print(job.args)
+            # print(job.kwargs)
 
             # if job.id.find(DEV_ID) != -1:
             # #     modify_func = background_task_wrapper
@@ -2755,10 +2755,10 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
             # #     _kwargs = job.kwargs
 
 
-            job.modify(func=background_task_wrapper,
-                        args=job.args,
-                        kwargs=job.kwargs,
-                        next_run_time=datetime.now())
+            # job.modify(func=background_task_wrapper,
+            #             args=job.args,
+            #             kwargs=job.kwargs,
+            #             next_run_time=datetime.now())
             # else:
             #     _args = ('periodic_delete_old_message', int(user_id), )
             #     _kwargs = {'_queue_name': 'arq:low'}
