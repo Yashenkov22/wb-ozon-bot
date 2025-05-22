@@ -2542,7 +2542,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         # print(job.kwargs)
         if job.id.find('popular') == -1:
             if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
-                print(job)
+                print(job, job.kwargs)
                 # print(job.func)
                 # print(job.__dir__())
                 # print(job.args)
@@ -2740,7 +2740,8 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         #         job.modify(func=modify_func,
         #                    trigger=scheduler_cron)   
         elif job.id.find('popular') != -1:
-            job.modify(kwargs={'_queue_name': 'arq:popular'})
+            print(job, job.kwargs)
+            # job.modify(kwargs={'_queue_name': 'arq:popular'})
 
         elif job.id.find('delete_msg_task') != -1:
             user_id = job.id.split('_')[-1]
