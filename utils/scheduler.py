@@ -2541,7 +2541,19 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 print(job.args)
                 print(job.kwargs)
                 pass
-        #     if job.id.find('wb') != -1:
+            if job.id.find('wb') != -1:
+                _args = job.args
+
+                _user_id = job.kwargs['user_id']
+                _product_id = ['product_id']
+
+                if not _args:
+                    _args = ('new_push_check_wb_price', _user_id, _product_id, )
+                    _kwargs = {'_queue_name': 'arq:low'}
+
+                    job.modify(func=background_task_wrapper,
+                               args=_args,
+                               kwargs=_kwargs)
 
                 # _kwargs = job.kwargs
 
@@ -2607,7 +2619,20 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 # job.modify(func=modify_func,
                 #             trigger=scheduler_cron)   
 
-            # else:
+            else:
+                _args = job.args
+
+                _user_id = job.kwargs['user_id']
+                _product_id = job.kwargs['product_id']
+
+                if not _args:
+                    _args = ('new_push_check_ozon_price', _user_id, _product_id, )
+                    _kwargs = {'_queue_name': 'arq:low'}
+
+                    job.modify(func=background_task_wrapper,
+                               args=_args,
+                               kwargs=_kwargs)
+
 
                 # if job.id.find(DEV_ID) != -1:
                 #     modify_func = background_task_wrapper
