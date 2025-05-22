@@ -2523,7 +2523,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                       id=job_id,
                       coalesce=True,
                       args=(f'periodic_delete_old_message', _user_id, ),
-                      kwargs={'user_id': _user_id})
+                      kwargs={'_queue_name': 'arq:low'})
     
 
     print('start up update scheduler jobs...')
