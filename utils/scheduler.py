@@ -2529,13 +2529,14 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     print('start up update scheduler jobs...')
     for job in jobs:
         # print(job)
-        print(job.func)
-        # print(job.__dir__())
-        print(job.args)
-        print(job.kwargs)
+        # print(job.func)
+        # # print(job.__dir__())
+        # print(job.args)
+        # print(job.kwargs)
         # print(job.kwargs)
 
-        # if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
+        if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
+            pass
         #     if job.id.find('wb') != -1:
 
                 # _kwargs = job.kwargs
@@ -2700,10 +2701,14 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         #         job.modify(func=modify_func,
         #                    trigger=scheduler_cron)   
             
-        # elif job.id.find('delete_msg_task') != -1:
-        #     user_id = job.id.split('_')[-1]
+        elif job.id.find('delete_msg_task') != -1:
+            user_id = job.id.split('_')[-1]
 
-            # if job.id.find(DEV_ID) != -1:
+            if job.id.find(DEV_ID) != -1:
+                print(job.func)
+                # print(job.__dir__())
+                print(job.args)
+                print(job.kwargs)
             #     modify_func = background_task_wrapper
             #     _args = job.args
             #     _kwargs = job.kwargs
