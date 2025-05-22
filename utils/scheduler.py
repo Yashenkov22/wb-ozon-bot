@@ -2499,14 +2499,13 @@ async def background_task_wrapper(func_name, *args, _queue_name):
 
     _redis_pool = get_redis_pool()
 
-    _args_str = '.'.join([arg for arg in args])
+    # _args_str = '.'.join([arg for arg in args])
 
-    _job_id = f'{func_name}_{_args_str}'
+    # _job_id = f'{func_name}_{_args_str}'
 
     await _redis_pool.enqueue_job(func_name,
                                   *args,
-                                  _queue_name=_queue_name,
-                                  _job_id=_job_id)
+                                  _queue_name=_queue_name)
 
 
 
