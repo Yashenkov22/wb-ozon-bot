@@ -2542,7 +2542,8 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         # print(job.kwargs)
         if job.id.find('popular') == -1:
             if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
-                print(job.func)
+                print(job)
+                # print(job.func)
                 # print(job.__dir__())
                 print(job.args)
                 print(job.kwargs)
