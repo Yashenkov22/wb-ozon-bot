@@ -2717,7 +2717,15 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 job.modify(func=background_task_wrapper,
                             args=job.args,
                             kwargs=job.kwargs)
-                print('job modified')
+            else:
+                _args = ('periodic_delete_old_message', int(user_id), )
+                _kwargs = {'_queue_name': 'arq:low'}
+
+                job.modify(func=background_task_wrapper,
+                            args=_args,
+                            kwargs=_kwargs)
+
+            print('job modified')
             #     continue
 
             # if job.id.find(DEV_ID) != -1:
