@@ -680,14 +680,13 @@ async def push_check_ozon_popular_product(cxt,
                     #                       user_id=user_id,
                     #                       product_id=_id)
 
-                    _kb = add_or_create_close_kb(_kb)
+                    # _kb = add_or_create_close_kb(_kb)
 
                     for channel_link in channel_links:
                         msg = await bot.send_photo(chat_id=channel_link,
                                                 photo=photo_id,
                                                 caption=_text,
-                                                disable_notification=_disable_notification,
-                                                reply_markup=_kb.as_markup())
+                                                disable_notification=_disable_notification)
                         
                         await asyncio.sleep(0.2)
                         
@@ -835,14 +834,13 @@ async def push_check_wb_popular_product(cxt,
                     #                       user_id=user_id,
                     #                       product_id=_id)
 
-                    _kb = add_or_create_close_kb(_kb)
+                    # _kb = add_or_create_close_kb(_kb)
 
                     for channel_link in channel_links:
                         msg = await bot.send_photo(chat_id=channel_link,
                                                 photo=photo_id,
                                                 caption=_text,
-                                                disable_notification=_disable_notification,
-                                                reply_markup=_kb.as_markup())
+                                                disable_notification=_disable_notification)
                     
                     return
 
