@@ -1276,35 +1276,35 @@ async def add_product_to_db(data: dict,
     job_id = f'{user_id}:{marker}:{user_product_id}'
     # job_id = 'test_job_id'
 
-    if user_id == int(DEV_ID):
+    # if user_id == int(DEV_ID):
 
-        if marker == 'wb':
-            func_name = 'new_push_check_wb_price'
-        else:
-            func_name = 'new_push_check_ozon_price'
-
-        job = scheduler.add_job(background_task_wrapper,
-                                trigger='interval',
-                                minutes=15,
-                                id=job_id,
-                                jobstore='sqlalchemy',
-                                coalesce=True,
-                                args=(func_name, user_id, product_id, ),
-                                kwargs={'_queue_name': 'arq:low'})
+    if marker == 'wb':
+        func_name = 'new_push_check_wb_price'
     else:
-        if marker == 'wb':
-            scheduler_func = new_push_check_wb_price
-        else:
-            scheduler_func = new_push_check_ozon_price
+        func_name = 'new_push_check_ozon_price'
 
-        job = scheduler.add_job(scheduler_func,
-                                trigger='interval',
-                                minutes=15,
-                                id=job_id,
-                                jobstore='sqlalchemy',
-                                coalesce=True,
-                                kwargs={'user_id': user_id,
-                                        'product_id': user_product_id})
+    job = scheduler.add_job(background_task_wrapper,
+                            trigger='interval',
+                            minutes=15,
+                            id=job_id,
+                            jobstore='sqlalchemy',
+                            coalesce=True,
+                            args=(func_name, user_id, product_id, ),
+                            kwargs={'_queue_name': 'arq:low'})
+    # else:
+    #     if marker == 'wb':
+    #         scheduler_func = new_push_check_wb_price
+    #     else:
+    #         scheduler_func = new_push_check_ozon_price
+
+    #     job = scheduler.add_job(scheduler_func,
+    #                             trigger='interval',
+    #                             minutes=15,
+    #                             id=job_id,
+    #                             jobstore='sqlalchemy',
+    #                             coalesce=True,
+    #                             kwargs={'user_id': user_id,
+    #                                     'product_id': user_product_id})
         
     _data = {
         'user_product_id': user_product_id,
