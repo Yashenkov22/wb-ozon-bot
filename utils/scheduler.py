@@ -111,23 +111,23 @@ async def add_task_to_delete_old_message_for_users(user_id: int = None):
         user_id = user[0]
         job_id = f'delete_msg_task_{user_id}'
 
-        if user_id != int(DEV_ID):
-            scheduler.add_job(periodic_delete_old_message,
-                            trigger=scheduler_interval,
-                            id=job_id,
-                            jobstore='sqlalchemy',
-                            coalesce=True,
-                            kwargs={'user_id': user_id})
-        else:
+        # if user_id != int(DEV_ID):
+        scheduler.add_job(periodic_delete_old_message,
+                        trigger=scheduler_interval,
+                        id=job_id,
+                        jobstore='sqlalchemy',
+                        coalesce=True,
+                        kwargs={'user_id': user_id})
+        # else:
             # планируется задача для фонового ARQ воркера
-            scheduler.add_job(background_task_wrapper,
-                            trigger=scheduler_interval,
-                            id=job_id,
-                            jobstore='sqlalchemy',
-                            coalesce=True,
-                            args=(user_id, ),
-                            kwargs={'_queue_name': 'arq:low',
-                                    'func_name': f'periodic_delete_old_message'})
+            # scheduler.add_job(background_task_wrapper,
+            #                 trigger=scheduler_interval,
+            #                 id=job_id,
+            #                 jobstore='sqlalchemy',
+            #                 coalesce=True,
+            #                 args=(user_id, ),
+            #                 kwargs={'_queue_name': 'arq:low',
+            #                         'func_name': f'periodic_delete_old_message'})
         # job_id = f'popular_{marker}_{popular_product.id}'
         # job = scheduler.add_job(func=background_task_wrapper,
         #                     trigger='interval',
