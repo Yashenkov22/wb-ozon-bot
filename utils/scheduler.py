@@ -2544,11 +2544,12 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
             if job.id.find('wb') != -1:
                 _args = job.args
 
-                _user_id = job.kwargs['user_id']
-                _product_id = ['product_id']
+                # _user_id = job.kwargs['user_id']
+                # _product_id = ['product_id']
 
                 if not _args:
-                    _args = ('new_push_check_wb_price', _user_id, _product_id, )
+                    __args = job.kwargs.values()
+                    _args = ('new_push_check_wb_price', *__args, )
                     _kwargs = {'_queue_name': 'arq:low'}
 
                     job.modify(func=background_task_wrapper,
