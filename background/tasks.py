@@ -109,7 +109,7 @@ async def new_push_check_ozon_price(cxt,
                                     user_id: str,
                                     product_id: str):
     try:
-        
+        print(f'qwe {cxt['job_id']}')
         print(f'new 222 фоновая задача ozon {user_id}')
 
         async for session in get_session():
@@ -310,6 +310,7 @@ async def new_push_check_wb_price(cxt,
                                   user_id: str,
                                   product_id: str):
     try:
+        print(f'qwe {cxt['job_id']}')
         print(f'new 222 фоновая задача wb {user_id}')
 
         async for session in get_session():
