@@ -2744,33 +2744,34 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         #         job.modify(func=modify_func,
         #                    trigger=scheduler_cron)   
         elif job.id.find('popular') != -1:
-            print(job, job.kwargs)
+            pass
+            # print(job, job.kwargs)
             # job.modify(kwargs={'_queue_name': 'arq:popular'})
 
         elif job.id.find('delete_msg_task') != -1:
             user_id = job.id.split('_')[-1]
-            # print(job.func)
             # print(job.__dir__())
-            # print(job.args)
-            # print(job.kwargs)
+            print(job.func)
+            print(job.args)
+            print(job.kwargs)
 
             # if job.id.find(DEV_ID) != -1:
             # #     modify_func = background_task_wrapper
-            _args = job.args
-            # #     _kwargs = job.kwargs
-            if not _args:
-                __args = ('periodic_delete_old_message', int(user_id), )
-                _kwargs = {'_queue_name': 'arq:low'}
+            # _args = job.args
+            # # #     _kwargs = job.kwargs
+            # if not _args:
+            #     __args = ('periodic_delete_old_message', int(user_id), )
+            #     _kwargs = {'_queue_name': 'arq:low'}
 
-                job.modify(func=background_task_wrapper,
-                            args=__args,
-                            kwargs=_kwargs,
-                            interval=scheduler_interval)
-            else:
-                job.modify(func=background_task_wrapper,
-                            args=job.args,
-                            kwargs=job.kwargs,
-                            interval=scheduler_interval)
+            #     job.modify(func=background_task_wrapper,
+            #                 args=__args,
+            #                 kwargs=_kwargs,
+            #                 interval=scheduler_interval)
+            # else:
+            #     job.modify(func=background_task_wrapper,
+            #                 args=job.args,
+            #                 kwargs=job.kwargs,
+            #                 interval=scheduler_interval)
             # else:
             #     _args = ('periodic_delete_old_message', int(user_id), )
             #     _kwargs = {'_queue_name': 'arq:low'}
