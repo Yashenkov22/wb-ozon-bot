@@ -2514,17 +2514,17 @@ async def test_jobs(scheduler: AsyncIOScheduler):
 async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     jobs: list[Job] = scheduler.get_jobs(jobstore='sqlalchemy')
     # _redis = await get_redis_background_pool()
-
     #
-    # _user_id = 516006297
-    # job_id = f'delete_msg_task_{_user_id}'
-    # scheduler.add_job(func=test_periodic_delete_old_message,
-    #                   trigger=scheduler_cron,
-    #                   jobstore='sqlalchemy',
-    #                   id=job_id,
-    #                   coalesce=True,
-    #                   kwargs={'user_id': _user_id})
-    #
+    _user_id = 686339126
+    job_id = f'delete_msg_task_{_user_id}'
+    scheduler.add_job(func=background_task_wrapper,
+                      trigger=scheduler_cron,
+                      jobstore='sqlalchemy',
+                      id=job_id,
+                      coalesce=True,
+                      args=(f'periodic_delete_old_message', _user_id, ),
+                      kwargs={'user_id': _user_id})
+    
 
     print('start up update scheduler jobs...')
     for job in jobs:
