@@ -2560,14 +2560,14 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 #         __args = job.kwargs.values()
                 #         _args = ('new_push_check_wb_price', *__args, )
                 #         _kwargs = {'_queue_name': 'arq:low'}
-                _run_time = run_time + _timedelta
+                # _run_time = run_time + _timedelta
 
-                job.modify(func=background_task_wrapper,
-                        args=job.args,
-                        kwargs=job.kwargs,
-                        next_run_time=_run_time)
+                # job.modify(func=background_task_wrapper,
+                #         args=job.args,
+                #         kwargs=job.kwargs,
+                #         next_run_time=_run_time)
                 
-                _timedelta += timedelta(minutes=1)
+                # _timedelta += timedelta(minutes=1)
 
                     # _kwargs = job.kwargs
 
