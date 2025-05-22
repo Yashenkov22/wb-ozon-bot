@@ -41,4 +41,7 @@ class WorkerSettings:
     on_shutdown = shutdown
     queue_name = "arq:low"
     redis_settings = redis_settings
+    job_defaults = {
+        'max_tries': 1, 
+    }
 
