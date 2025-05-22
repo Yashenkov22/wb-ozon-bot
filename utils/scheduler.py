@@ -2540,100 +2540,100 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 # print(job.__dir__())
                 print(job.args)
                 print(job.kwargs)
-                pass
-            if job.id.find('wb') != -1:
-                _args = job.args
+                # pass
+                if job.id.find('wb') != -1:
+                    _args = job.args
 
-                # _user_id = job.kwargs['user_id']
-                # _product_id = ['product_id']
+                    # _user_id = job.kwargs['user_id']
+                    # _product_id = ['product_id']
 
-                if not _args:
-                    __args = job.kwargs.values()
-                    _args = ('new_push_check_wb_price', *__args, )
-                    _kwargs = {'_queue_name': 'arq:low'}
+                    if not _args:
+                        __args = job.kwargs.values()
+                        _args = ('new_push_check_wb_price', *__args, )
+                        _kwargs = {'_queue_name': 'arq:low'}
 
-                    job.modify(func=background_task_wrapper,
-                               args=_args,
-                               kwargs=_kwargs)
+                        job.modify(func=background_task_wrapper,
+                                args=_args,
+                                kwargs=_kwargs)
 
-                # _kwargs = job.kwargs
+                    # _kwargs = job.kwargs
 
-                # _queue_name = _kwargs.get('_queue_name')
+                    # _queue_name = _kwargs.get('_queue_name')
 
-                # if _queue_name:
-                #     print(job.id)
-                #     user_id, marker, product_id = job.id.split(':')
+                    # if _queue_name:
+                    #     print(job.id)
+                    #     user_id, marker, product_id = job.id.split(':')
 
-                #     modify_func = new_push_check_wb_price
-                #     # else:
-                #     #     modify_func = push_check_wb_price
-                #     job.modify(func=modify_func,
-                #                 trigger=scheduler_cron,
-                #                 kwargs={'user_id': user_id,
-                #                         'proudct_id': product_id})
-                #     continue
+                    #     modify_func = new_push_check_wb_price
+                    #     # else:
+                    #     #     modify_func = push_check_wb_price
+                    #     job.modify(func=modify_func,
+                    #                 trigger=scheduler_cron,
+                    #                 kwargs={'user_id': user_id,
+                    #                         'proudct_id': product_id})
+                    #     continue
 
-                # if job.id.find(DEV_ID) != -1:
-                #     modify_func = background_task_wrapper
-                #     _args = job.args
-                #     _kwargs = job.kwargs
+                    # if job.id.find(DEV_ID) != -1:
+                    #     modify_func = background_task_wrapper
+                    #     _args = job.args
+                    #     _kwargs = job.kwargs
 
 
-                #     job.modify(func=modify_func,
-                #                args=_args,
-                #                kwargs=_kwargs)
-                #     continue
-                #     user_id = job.kwargs.get('user_id')
-                #     product_id = job.kwargs.get('product_id')
+                    #     job.modify(func=modify_func,
+                    #                args=_args,
+                    #                kwargs=_kwargs)
+                    #     continue
+                    #     user_id = job.kwargs.get('user_id')
+                    #     product_id = job.kwargs.get('product_id')
 
-                #     _args = (user_id, product_id,)
+                    #     _args = (user_id, product_id,)
 
-                #     _kwargs = {
-                #         '_queue_name': 'arq:low',
-                #         'func_name': 'new_push_check_wb_price',
+                    #     _kwargs = {
+                    #         '_queue_name': 'arq:low',
+                    #         'func_name': 'new_push_check_wb_price',
 
-                #     }
+                    #     }
 
-                # #     # async def job_wrapper(user_id: int,
-                # #     #                       product_id: int):
-                # #     #     await _redis.enqueue_job("new_push_check_wb_price", user_id, product_id, _queue_name="arq:low")
+                    # #     # async def job_wrapper(user_id: int,
+                    # #     #                       product_id: int):
+                    # #     #     await _redis.enqueue_job("new_push_check_wb_price", user_id, product_id, _queue_name="arq:low")
 
-                #     # modify_func = background_task_wrapper
-                #     job.remove()
+                    #     # modify_func = background_task_wrapper
+                    #     job.remove()
 
-                #     job_id = f'{user_id}:wb:{product_id}'
+                    #     job_id = f'{user_id}:wb:{product_id}'
 
-                #     scheduler.add_job(func=background_task_wrapper,
-                #                trigger=scheduler_cron,
-                #                next_run_time=datetime.now(),
-                #                id=job_id,
-                #                coalesce=True,
-                #                jobstore='sqlalchemy',
-                #             #    args=(f'new_push_check_wb_price', user_id, product_id, ),
-                #                args=_args,
-                #                kwargs=_kwargs)
-                #     continue
-                # else:
-                # modify_func = new_push_check_wb_price
-                # else:
-                #     modify_func = push_check_wb_price
-                # job.modify(func=modify_func,
-                #             trigger=scheduler_cron)   
+                    #     scheduler.add_job(func=background_task_wrapper,
+                    #                trigger=scheduler_cron,
+                    #                next_run_time=datetime.now(),
+                    #                id=job_id,
+                    #                coalesce=True,
+                    #                jobstore='sqlalchemy',
+                    #             #    args=(f'new_push_check_wb_price', user_id, product_id, ),
+                    #                args=_args,
+                    #                kwargs=_kwargs)
+                    #     continue
+                    # else:
+                    # modify_func = new_push_check_wb_price
+                    # else:
+                    #     modify_func = push_check_wb_price
+                    # job.modify(func=modify_func,
+                    #             trigger=scheduler_cron)   
 
-            else:
-                _args = job.args
+                else:
+                    _args = job.args
 
-                # _user_id = job.kwargs['user_id']
-                # _product_id = job.kwargs['product_id']
+                    # _user_id = job.kwargs['user_id']
+                    # _product_id = job.kwargs['product_id']
 
-                if not _args:
-                    __args = job.kwargs.values()
-                    _args = ('new_push_check_ozon_price', *__args, )
-                    _kwargs = {'_queue_name': 'arq:low'}
+                    if not _args:
+                        __args = job.kwargs.values()
+                        _args = ('new_push_check_ozon_price', *__args, )
+                        _kwargs = {'_queue_name': 'arq:low'}
 
-                    job.modify(func=background_task_wrapper,
-                               args=_args,
-                               kwargs=_kwargs)
+                        job.modify(func=background_task_wrapper,
+                                args=_args,
+                                kwargs=_kwargs)
 
 
                 # if job.id.find(DEV_ID) != -1:
