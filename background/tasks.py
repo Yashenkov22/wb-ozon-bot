@@ -944,7 +944,7 @@ async def add_punkt_by_user(cxt,
             select(
                 Punkt.id
             )\
-            .where(user_id=user_id)
+            .where(Punkt.user_id == user_id)
         )
 
         async for session in get_session():
