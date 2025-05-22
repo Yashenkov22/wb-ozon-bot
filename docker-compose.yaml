@@ -79,6 +79,20 @@ services:
     depends_on:
       - redis_tg_bot_db
 
+  arq_popular:
+    build: .
+    env_file:
+      - ./.env
+    environment:
+      - POSTGRES_HOST=psql_db
+      # - DB_PORT=5432
+      - REDIS_HOST=redis_tg_bot_db
+    networks:
+      - bot_network
+    command: arq background.popular_worker.WorkerSettings
+    depends_on:
+      - redis_tg_bot_db
+
   psql_db:
     image: postgres:14
     # restart: always
