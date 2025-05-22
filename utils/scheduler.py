@@ -1289,7 +1289,7 @@ async def add_product_to_db(data: dict,
                             id=job_id,
                             jobstore='sqlalchemy',
                             coalesce=True,
-                            args=(func_name, user_id, product_id, ),
+                            args=(func_name, user_id, user_product_id, ),
                             kwargs={'_queue_name': 'arq:low'})
     # else:
     #     if marker == 'wb':
