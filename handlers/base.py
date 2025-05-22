@@ -1068,9 +1068,8 @@ async def add_punkt_proccess(message: types.Message | types.CallbackQuery,
     # if message.from_user.id == int(DEV_ID):
     scheduler.add_job(background_task_wrapper,
                     trigger=DateTrigger(run_date=datetime.now()),
-                    args=(punkt_data, ),
-                    kwargs={'_queue_name': 'arq:high',
-                            'func_name': 'add_punkt_by_user'},
+                    args=('add_punkt_by_user', punkt_data, ),
+                    kwargs={'_queue_name': 'arq:high'},
                     jobstore='sqlalchemy')
     # else:
     #     scheduler.add_job(new_add_punkt_by_user, DateTrigger(run_date=datetime.now()), (punkt_data, ))
