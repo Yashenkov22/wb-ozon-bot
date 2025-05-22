@@ -1801,10 +1801,10 @@ async def save_ozon_product(user_id: int,
 
             print('Price', _price)
     
-    if not name:
-        name = ' '.join(json_data.get('seo').get('title').split()[:4])
+    # if not name:
+    name = ' '.join(json_data.get('seo').get('title').split()[:4])
 
-        print('NAMEEE FROM SEO', name)
+    print('NAMEEE FROM SEO', name)
 
     _sale = generate_sale_for_price(start_price)
 
