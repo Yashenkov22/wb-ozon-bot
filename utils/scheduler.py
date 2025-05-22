@@ -2534,9 +2534,13 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         # print(job.args)
         # print(job.kwargs)
         # print(job.kwargs)
-
-        if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
-            pass
+        if job.id.find('popular') == -1:
+            if job.id.find('wb') != -1 or job.id.find('ozon') != -1:
+                print(job.func)
+                # print(job.__dir__())
+                print(job.args)
+                print(job.kwargs)
+                pass
         #     if job.id.find('wb') != -1:
 
                 # _kwargs = job.kwargs
@@ -2703,10 +2707,10 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
             
         elif job.id.find('delete_msg_task') != -1:
             user_id = job.id.split('_')[-1]
-            print(job.func)
+            # print(job.func)
             # print(job.__dir__())
-            print(job.args)
-            print(job.kwargs)
+            # print(job.args)
+            # print(job.kwargs)
 
             # if job.id.find(DEV_ID) != -1:
             # #     modify_func = background_task_wrapper
