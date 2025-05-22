@@ -2714,9 +2714,10 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
             #     _kwargs = job.kwargs
 
 
-            #     job.modify(func=modify_func,
-            #                 args=_args,
-            #                 kwargs=_kwargs)
+                job.modify(func=background_task_wrapper,
+                            args=job.args,
+                            kwargs=job.kwargs)
+                print('job modified')
             #     continue
 
             # if job.id.find(DEV_ID) != -1:
