@@ -2703,12 +2703,12 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
             
         elif job.id.find('delete_msg_task') != -1:
             user_id = job.id.split('_')[-1]
+            print(job.func)
+            # print(job.__dir__())
+            print(job.args)
+            print(job.kwargs)
 
             if job.id.find(DEV_ID) != -1:
-                print(job.func)
-                # print(job.__dir__())
-                print(job.args)
-                print(job.kwargs)
             #     modify_func = background_task_wrapper
             #     _args = job.args
             #     _kwargs = job.kwargs
