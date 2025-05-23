@@ -1498,7 +1498,7 @@ def get_excel_data(path: str):
 
 
 async def add_popular_product_to_db(_redis_pool: ArqRedis):
-    data = get_excel_data(path='./Бытовая техника.xlsx')
+    data = get_excel_data(path='./Все подряд хз поч.xlsx')
 
 
     for name, link, _, high_category, low_category, *_  in data:

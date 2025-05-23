@@ -157,17 +157,19 @@ async def on_startup():
                           drop_pending_updates=True)
                         #   allowed_updates=['message', 'callback_query'])
     # await init_db()
+    redis_pool = await get_redis_background_pool()
     scheduler.start()
 
-    redis_pool = await get_redis_background_pool()
-    dp.update.middleware(DbSessionMiddleware(session_pool=session,
-                                         scheduler=scheduler,
-                                         redis_pool=redis_pool))
+    dp.update.middleware(
+        DbSessionMiddleware(session_pool=session,
+                            scheduler=scheduler,
+                            redis_pool=redis_pool)
+        )
 
     # await test_migrate_on_new_sctucture_db()
     # await test_add_photo_to_exist_products()
     # await create_new_punkts_from_old()
-    await startup_update_scheduler_jobs(scheduler)
+    # await startup_update_scheduler_jobs(scheduler)
     # await test_jobs(scheduler)
     # await recreate_my_scheduler_jobs()
     # await add_task_to_delete_old_message_for_users()

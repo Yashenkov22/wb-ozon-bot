@@ -2516,6 +2516,7 @@ async def test_jobs(scheduler: AsyncIOScheduler):
         print('job', job.id, job.func, job.kwargs)
         print('*' * 10)
 
+
 async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
     jobs: list[Job] = scheduler.get_jobs(jobstore='sqlalchemy')
     # _redis = await get_redis_background_pool()
@@ -2557,17 +2558,17 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                 print(job.args)
                 print(job.kwargs)
 
-                _args = job.args
+                # _args = job.args
 
-                if not _args:
-                    __args = ('periodic_delete_old_message', int(user_id), )
-                    _kwargs = {'_queue_name': 'arq:low'}
+                # if not _args:
+                #     __args = ('periodic_delete_old_message', int(user_id), )
+                #     _kwargs = {'_queue_name': 'arq:low'}
 
-                    job.modify(func=background_task_wrapper,
-                                args=__args,
-                                kwargs=_kwargs,
-                                trigger=scheduler_interval)
-                    print(f'{job.id} modify!!!!')
+                #     job.modify(func=background_task_wrapper,
+                #                 args=__args,
+                #                 kwargs=_kwargs,
+                #                 trigger=scheduler_interval)
+                #     print(f'{job.id} modify!!!!')
 
 
                 # if job.id.find('wb') != -1:
