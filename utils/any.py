@@ -159,9 +159,9 @@ async def send_data_to_yandex_metica(client_id: str,
 
 def generate_percent_to_popular_product(start_price: float,
                                         actual_price: float):
-    percent = 100 * (1 - (start_price / actual_price))
+    percent = 100 * (1 - (actual_price / start_price))
 
-    return percent
+    return round(percent)
 
 # def get_excel_data(path: str):
 #     # path = './Электроника.xlsx'

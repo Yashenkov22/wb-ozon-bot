@@ -667,7 +667,7 @@ async def push_check_ozon_popular_product(cxt,
                     
                     percent = generate_percent_to_popular_product(start_price,
                                                                   _product_price)
-                    _text = f'🔥 {name} -{percent}% 🔥\n\n📉Было {pretty_start_price} -> <b><u>Стало {pretty_product_price}</u></b>\n\n➡️<a href="{link}">Ссылка на товар</a>'
+                    _text = f'🔥 {name} <b>-{percent}%</b> 🔥\n\n📉Было {pretty_start_price} -> <b><u>Стало {pretty_product_price}</u></b>\n\n➡️<a href="{link}">Ссылка на товар</a>'
 
                     if popular_product.category:
                         category_name = popular_product.category.name
@@ -822,7 +822,7 @@ async def push_check_wb_popular_product(cxt,
 
                     percent = generate_percent_to_popular_product(start_price,
                                                                   _product_price)
-                    _text = f'🔥 {name} -{percent}% 🔥\n\n📉Было {pretty_start_price} -> <b><u>Стало {pretty_product_price}</u></b>\n\n➡️<a href="{link}">Ссылка на товар</a>'
+                    _text = f'🔥 {name} <b>-{percent}%</b> 🔥\n\n📉Было {pretty_start_price} -> <b><u>Стало {pretty_product_price}</u></b>\n\n➡️<a href="{link}">Ссылка на товар</a>'
 
                     if popular_product.category:
                         category_name = popular_product.category.name
