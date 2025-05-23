@@ -2566,7 +2566,7 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
                     job.modify(func=background_task_wrapper,
                                 args=__args,
                                 kwargs=_kwargs,
-                                interval=scheduler_interval)
+                                trigger=scheduler_interval)
                     print(f'{job.id} modify!!!!')
 
 
