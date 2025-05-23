@@ -198,7 +198,7 @@ async def delete_popular_product(callback: types.Message | types.CallbackQuery,
             PopularProduct
         )\
         .where(
-            PopularProduct.id == popular_product_id
+            PopularProduct.id == int(popular_product_id)
         )
     )
 
