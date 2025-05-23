@@ -420,6 +420,31 @@ async def new_check_subscription_limit(user_id: int,
             return subscription_limit
 
 
+async def update_sale_for_popular_products():
+    query = (
+        select(
+            PopularProduct,
+        )
+    )
+
+    async for session in get_session():
+        async with session as _session:
+            res = await _session.execute(query)
+
+            popular_products = res.scalars().all()
+            
+            for popular_product in popular_products:
+                sale = popular_product.sale
+                popular_product.sale = generate_sale_for_price_popular_product(sale)
+                
+            try:
+                await _session.commit()
+                print('UDPATE POPULAR PRODUCTS SUCCESSFULLY')
+            except Exception as ex:
+                await _session.rollback()
+                print('UDPATE POPULAR PRODUCTS WITH ERROR')
+
+
 async def save_product(user_data: dict,
                        session: AsyncSession,
                        scheduler: AsyncIOScheduler,

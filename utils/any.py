@@ -48,13 +48,17 @@ def generate_sale_for_price_popular_product(price: float):
     price = float(price)
 
     if 1 <= price <= 2000:
+        percent = 0.3
+    elif 2001 < price <= 35000:
+        percent = 0.25
+    elif 35001 < price <= 50000:
         percent = 0.2
-    elif 2001 < price <= 15000:
+    elif 50001 < price <= 80000:
         percent = 0.15
-    elif 15001 < price <= 110000:
-        percent = 0.1
+    elif 80001 < price <= 110000:
+        percent = 0.10
     else:
-        percent = 0.5
+        percent = 0.7
 
     _sale = price * percent
     
@@ -153,6 +157,11 @@ async def send_data_to_yandex_metica(client_id: str,
         print(f'YANDEX REQUEST status code {status}')
 
 
+def generate_percent_to_popular_product(start_price: float,
+                                        actual_price: float):
+    percent = 100 * (1 - (start_price / actual_price))
+
+    return percent
 
 # def get_excel_data(path: str):
 #     # path = './Электроника.xlsx'

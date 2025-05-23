@@ -65,7 +65,7 @@ from utils.scheduler import (add_product_task,
                              add_punkt_by_user,
                              new_add_product_task,
                              new_add_punkt_by_user,
-                             background_task_wrapper)
+                             background_task_wrapper, update_sale_for_popular_products)
 
 from utils.cities import city_index_dict
 
@@ -170,12 +170,18 @@ async def test_excel(message: types.Message | types.CallbackQuery,
                             bot: Bot,
                             scheduler: AsyncIOScheduler,
                             redis_pool: ArqRedis):
-    # await state.set_state(LocationState.location)
-    # await message.answer('кинь координаты')
-    # await message.delete()
-    # asyncio.create_task(add_popular_product_to_db(redis))
-    # await add_popular_product_to_db(redis_pool)
     asyncio.create_task(add_popular_product_to_db(redis_pool))
+    await message.answer(text='run adding...')
+
+
+@main_router.message(Command('update_sale_popular'))
+async def test_excel(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler,
+                            redis_pool: ArqRedis):
+    asyncio.create_task(update_sale_for_popular_products())
     await message.answer(text='run adding...')
 
 

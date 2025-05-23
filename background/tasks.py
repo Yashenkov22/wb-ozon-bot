@@ -46,6 +46,7 @@ from utils.storage import redis_client
 from utils.any import (generate_pretty_amount,
                   generate_sale_for_price,
                   add_message_to_delete_dict,
+                  generate_percent_to_popular_product,
                   send_data_to_yandex_metica)
 from utils.pics import DEFAULT_PRODUCT_LIST_PHOTO_ID, DEFAULT_PRODUCT_PHOTO_ID
 from utils.cities import city_index_dict
@@ -659,12 +660,20 @@ async def push_check_ozon_popular_product(cxt,
                     #     print(f'LAST SEND PRICE VALIDATION STOP {last_send_price} | {_product_price}')
                     #     return
 
-                    if actual_price < _product_price:
-                        _text = f'популярный🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{name}</a>\n\nМаркетплейс: Ozon\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
-                        _disable_notification = True
-                    else:
-                        _text = f'популярный🚨 Изменилась цена на <a href="{link}">{name}</a>\n\nМаркетплейс: Ozon\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
-                        _disable_notification = False
+                    # if actual_price < _product_price:
+                    #     _text = f'популярный🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{name}</a>\n\nМаркетплейс: Ozon\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                    #     _disable_notification = True
+                    # else:
+                    
+                    percent = generate_percent_to_popular_product(start_price,
+                                                                  _product_price)
+                    _text = f'🔥 {name} -{percent}% 🔥\n\n📉Было {pretty_start_price} -> <b><u>Стало {pretty_product_price}</u></b>\n\n➡️<a href="{link}">Ссылка на товар</a>'
+
+                    if popular_product.category:
+                        category_name = popular_product.category.name
+                        _text += f'\n\n#{category_name.lower()}'
+                    # _text = f'популярный🚨 Изменилась цена на <a href="{link}">{name}</a>\n\nМаркетплейс: Ozon\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                    _disable_notification = False
 
 
                     channel_links = [channel.channel_id for channel in popular_product.category.channel_links]
@@ -811,17 +820,27 @@ async def push_check_wb_popular_product(cxt,
                 
                 if _waiting_price >= _product_price:
 
+                    percent = generate_percent_to_popular_product(start_price,
+                                                                  _product_price)
+                    _text = f'🔥 {name} -{percent}% 🔥\n\n📉Было {pretty_start_price} -> <b><u>Стало {pretty_product_price}</u></b>\n\n➡️<a href="{link}">Ссылка на товар</a>'
+
+                    if popular_product.category:
+                        category_name = popular_product.category.name
+                        _text += f'\n\n#{category_name.lower()}'
+                    # _text = f'популярный🚨 Изменилась цена на <a href="{link}">{name}</a>\n\nМаркетплейс: Ozon\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                    _disable_notification = False
+
                     # проверка, отправлялось ли уведомление с такой ценой в прошлый раз
                     # if last_send_price is not None and (last_send_price == _product_price):
                     #     print(f'LAST SEND PRICE VALIDATION STOP {last_send_price} | {_product_price}')
                     #     return
 
-                    if actual_price < _product_price:
-                        _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{name}</a>\n\nМаркетплейс: Wb\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
-                        _disable_notification = True
-                    else:
-                        _text = f'🚨 Изменилась цена на <a href="{link}">{name}</a>\n\nМаркетплейс: Wb\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
-                        _disable_notification = False
+                    # if actual_price < _product_price:
+                    #     _text = f'🔄 Цена повысилась, но всё ещё входит в выставленный диапазон скидки на товар <a href="{link}">{name}</a>\n\nМаркетплейс: Wb\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                    #     _disable_notification = True
+                    # else:
+                    #     _text = f'🚨 Изменилась цена на <a href="{link}">{name}</a>\n\nМаркетплейс: Wb\n\n🔄Отслеживаемая скидка: {pretty_sale}\n\n⬇️Цена по карте: {pretty_product_price} (дешевле на {start_price - _product_price}₽)\n\nНачальная цена: {pretty_start_price}\n\nПредыдущая цена: {pretty_actual_price}'
+                    #     _disable_notification = False
 
                     channel_links = [channel.channel_id for channel in popular_product.category.channel_links]
 

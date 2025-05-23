@@ -27,7 +27,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from bot22 import bot
 
-from db.base import (OzonPunkt, Punkt,
+from db.base import (OzonPunkt, PopularProduct, Punkt,
                      Subscription,
                      User,
                      WbProduct,
