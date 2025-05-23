@@ -99,7 +99,7 @@ event_loop = asyncio.new_event_loop()
 asyncio.set_event_loop(event_loop)
 config = Config(app=app,
                 loop=event_loop,
-                workers=4,
+                workers=2,
                 host='0.0.0.0',
                 port=8001)
 server = Server(config)
