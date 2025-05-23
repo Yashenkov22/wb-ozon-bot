@@ -595,3 +595,14 @@ def create_question_faq_kb():
                                         callback_data='question_country_product'))
     
     return _kb
+
+
+
+def create_remove_popular_kb(marker: str,
+                             popular_product_id: int):
+    _kb = InlineKeyboardBuilder()
+
+    _kb.row(types.InlineKeyboardButton(text='Перестать отслеживать товар',
+                                       callback_data=f'popular_product:{marker}:{popular_product_id}'))
+    
+    return _kb

@@ -36,9 +36,12 @@ from db.base import (Category, ChannelLink, OzonPunkt, PopularProduct, Product, 
                      UserProductJob,
                      ProductPrice)
 
-from keyboards import (add_graphic_btn, add_or_create_close_kb,
+from keyboards import (add_graphic_btn,
+                       add_or_create_close_kb,
                        create_remove_and_edit_sale_kb,
-                       create_remove_kb, new_create_remove_and_edit_sale_kb)
+                       create_remove_kb,
+                       create_remove_popular_kb,
+                       new_create_remove_and_edit_sale_kb)
 
 from bot22 import bot
 
@@ -679,6 +682,9 @@ async def push_check_ozon_popular_product(cxt,
                     channel_links = [channel.channel_id for channel in popular_product.category.channel_links]
 
                     print(channel_links)
+
+                    _kb = create_remove_popular_kb(marker=popular_product.product.product_marker,
+                                                   popular_product_id=popular_product.id)
                     # _kb = new_create_remove_and_edit_sale_kb(user_id=user_id,
                     #                                          product_id=product_id,
                     #                                          marker='ozon',
@@ -695,7 +701,8 @@ async def push_check_ozon_popular_product(cxt,
                         msg = await bot.send_photo(chat_id=channel_link,
                                                 photo=photo_id,
                                                 caption=_text,
-                                                disable_notification=_disable_notification)
+                                                disable_notification=_disable_notification,
+                                                reply_markup=_kb.as_markup())
                         
                         await asyncio.sleep(0.2)
                         
@@ -844,6 +851,10 @@ async def push_check_wb_popular_product(cxt,
 
                     channel_links = [channel.channel_id for channel in popular_product.category.channel_links]
 
+                    _kb = create_remove_popular_kb(marker=popular_product.product.product_marker,
+                                                   popular_product_id=popular_product.id)
+
+
                     # _kb = new_create_remove_and_edit_sale_kb(user_id=user_id,
                     #                                          product_id=product_id,
                     #                                          marker='wb',
@@ -859,7 +870,8 @@ async def push_check_wb_popular_product(cxt,
                         msg = await bot.send_photo(chat_id=channel_link,
                                                 photo=photo_id,
                                                 caption=_text,
-                                                disable_notification=_disable_notification)
+                                                disable_notification=_disable_notification,
+                                                reply_markup=_kb.as_markup())
                     
                     return
 

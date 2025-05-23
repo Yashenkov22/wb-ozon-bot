@@ -74,7 +74,7 @@ from utils.pics import start_pic, faq_pic_dict, DEFAULT_PRODUCT_LIST_PHOTO_ID
 from utils.storage import redis_client
 
 from db.base import (OzonProduct as OzonProductModel,
-                     OzonPunkt, ProductCityGraphic, Punkt,
+                     OzonPunkt, PopularProduct, ProductCityGraphic, Punkt,
                      User,
                      UserJob,
                      WbProduct,
@@ -174,15 +174,54 @@ async def test_excel(message: types.Message | types.CallbackQuery,
     await message.answer(text='run adding...')
 
 
-@main_router.message(Command('update_sale_popular'))
-async def test_excel(message: types.Message | types.CallbackQuery,
-                            state: FSMContext,
-                            session: AsyncSession,
-                            bot: Bot,
-                            scheduler: AsyncIOScheduler,
-                            redis_pool: ArqRedis):
-    asyncio.create_task(update_sale_for_popular_products())
-    await message.answer(text='run adding...')
+# @main_router.message(Command('update_sale_popular'))
+# async def test_excel(message: types.Message | types.CallbackQuery,
+#                             state: FSMContext,
+#                             session: AsyncSession,
+#                             bot: Bot,
+#                             scheduler: AsyncIOScheduler,
+#                             redis_pool: ArqRedis):
+#     asyncio.create_task(update_sale_for_popular_products())
+#     await message.answer(text='run adding...')
+@main_router.callback_query(F.data.startswith('popular_product'))
+async def delete_popular_product(callback: types.Message | types.CallbackQuery,
+                                 state: FSMContext,
+                                 session: AsyncSession,
+                                 bot: Bot,
+                                 scheduler: AsyncIOScheduler):
+    _, marker, popular_product_id = callback.data.split(':')
+
+    scheduler_job_id = f'popular_{marker}_{popular_product_id}'
+
+    delete_popular_product_query = (
+        delete(
+            PopularProduct
+        )\
+        .where(
+            PopularProduct.id == popular_product_id
+        )
+    )
+
+    async with session as _session:
+        await _session.execute(delete_popular_product_query)
+
+        try:
+            await _session.commit()
+            scheduler.remove_job(job_id=scheduler_job_id,
+                                jobstore='sqlalchemy')
+        except Exception as ex:
+            print(ex)
+            await _session.rollback()
+
+    try:
+        # await bot.delete_message(chat_id=)
+        await callback.message.delete()
+        await callback.answer(text='Популярный товар удалён ✅',
+                              show_alert=True)
+    except Exception as ex:
+        await callback.answer(text='Что то не так',
+                              show_alert=True)
+
 
 
 #and_f(EditSale.new_sale), F.content_type == types.ContentType.TEXT
