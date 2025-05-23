@@ -434,8 +434,8 @@ async def update_sale_for_popular_products():
             popular_products = res.scalars().all()
             
             for popular_product in popular_products:
-                sale = popular_product.sale
-                popular_product.sale = generate_sale_for_price_popular_product(sale)
+                start_price = popular_product.start_price
+                popular_product.sale = generate_sale_for_price_popular_product(start_price)
                 
             try:
                 await _session.commit()
