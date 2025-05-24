@@ -1515,7 +1515,7 @@ async def add_popular_product_to_db(_redis_pool: ArqRedis):
 
         await _redis_pool.enqueue_job(f'add_popular_product',
                                         product_data=product_data,
-                                        _queue_name='arq:high')
+                                        _queue_name='arq:popular')
         
         # чтобы тг не кидал ошибку о спаме в чат
         await sleep(2)
