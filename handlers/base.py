@@ -174,15 +174,17 @@ async def start(message: types.Message | types.CallbackQuery,
 #     await message.answer(text='run adding...')
 
 
-# @main_router.message(Command('update_sale_popular'))
-# async def test_excel(message: types.Message | types.CallbackQuery,
-#                             state: FSMContext,
-#                             session: AsyncSession,
-#                             bot: Bot,
-#                             scheduler: AsyncIOScheduler,
-#                             redis_pool: ArqRedis):
-#     asyncio.create_task(update_sale_for_popular_products())
-#     await message.answer(text='run adding...')
+@main_router.message(Command('update_sale_popular'))
+async def test_excel(message: types.Message | types.CallbackQuery,
+                            state: FSMContext,
+                            session: AsyncSession,
+                            bot: Bot,
+                            scheduler: AsyncIOScheduler,
+                            redis_pool: ArqRedis):
+    asyncio.create_task(update_sale_for_popular_products())
+    await message.answer(text='run adding...')
+
+    
 @main_router.callback_query(F.data.startswith('popular_product'))
 async def delete_popular_product(callback: types.Message | types.CallbackQuery,
                                  state: FSMContext,
