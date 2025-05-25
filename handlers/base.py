@@ -163,15 +163,15 @@ async def start(message: types.Message | types.CallbackQuery,
         print(ex)
 
 
-@main_router.message(Command('test_excel'))
-async def test_excel(message: types.Message | types.CallbackQuery,
-                            state: FSMContext,
-                            session: AsyncSession,
-                            bot: Bot,
-                            scheduler: AsyncIOScheduler,
-                            redis_pool: ArqRedis):
-    asyncio.create_task(add_popular_product_to_db(redis_pool))
-    await message.answer(text='run adding...')
+# @main_router.message(Command('test_excel'))
+# async def test_excel(message: types.Message | types.CallbackQuery,
+#                             state: FSMContext,
+#                             session: AsyncSession,
+#                             bot: Bot,
+#                             scheduler: AsyncIOScheduler,
+#                             redis_pool: ArqRedis):
+#     asyncio.create_task(add_popular_product_to_db(redis_pool))
+#     await message.answer(text='run adding...')
 
 
 # @main_router.message(Command('update_sale_popular'))

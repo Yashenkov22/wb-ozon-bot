@@ -2791,9 +2791,9 @@ async def startup_update_scheduler_jobs(scheduler: AsyncIOScheduler):
         #         job.modify(func=modify_func,
         #                    trigger=scheduler_cron)   
         elif job.id.find('popular') != -1:
+            job.modify(kwargs={'_queue_name': 'arq:popular'})
             pass
             # print(job, job.kwargs)
-            job.modify(kwargs={'_queue_name': 'arq:popular'})
 
         # elif job.id.find('delete_msg_task') != -1:
         #     user_id = job.id.split('_')[-1]

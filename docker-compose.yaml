@@ -32,7 +32,7 @@ services:
           max-size: "20m"
 
   redis_tg_bot_db:
-    image: redis:alpine
+    image: redis:latest
     restart: on-failure
     networks:
       - bot_network
